@@ -2,77 +2,203 @@
 <html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>QR Code 掃描器</title>
+  <title>植物導覽 QR 掃描器</title>
   <script src="https://unpkg.com/html5-qrcode"></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f7f7f7;
-      margin: 0;
-      padding: 20px;
-      color: #222;
+    :root{
+      --bg: #f6f2e8;
+      --card: rgba(255,255,255,0.92);
+      --text: #2f3a2f;
+      --muted: #6c7a67;
+      --primary: #4f7a57;
+      --primary-dark: #3e6245;
+      --secondary: #e7efe4;
+      --border: rgba(79,122,87,0.12);
+      --shadow: 0 10px 30px rgba(69,89,63,0.12);
     }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 24px 16px 40px;
+      font-family: "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(168,196,140,0.22), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(122,160,110,0.16), transparent 24%),
+        linear-gradient(180deg, #f8f5ec 0%, #f2ede0 100%);
+    }
+
     .wrap {
-      max-width: 560px;
+      max-width: 760px;
       margin: 0 auto;
     }
-    .card {
-      background: #fff;
-      border-radius: 18px;
-      padding: 24px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-      margin-bottom: 16px;
+
+    .hero {
+      margin-bottom: 18px;
+      padding: 22px 22px 18px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, rgba(90,130,94,0.94), rgba(127,162,112,0.90));
+      color: #fff;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
     }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -20px;
+      top: -20px;
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.08);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.22);
+      color: #fff;
+      font-size: 13px;
+      margin-bottom: 10px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      line-height: 1.25;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero p {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.7;
+      color: rgba(255,255,255,0.93);
+      position: relative;
+      z-index: 1;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 22px;
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+      backdrop-filter: blur(6px);
+    }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: 22px;
+      line-height: 1.35;
+    }
+
+    h3 {
+      margin: 0 0 12px;
+      font-size: 18px;
+      line-height: 1.4;
+    }
+
+    p {
+      margin: 0 0 12px;
+      line-height: 1.8;
+      font-size: 16px;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
     #reader {
       width: 100%;
+      overflow: hidden;
+      border-radius: 18px;
     }
-    .btn {
-      display: block;
+
+    .btn, button {
       width: 100%;
-      box-sizing: border-box;
-      border: 0;
-      border-radius: 12px;
-      padding: 14px;
+      display: block;
+      border-radius: 16px;
+      padding: 14px 16px;
       font-size: 16px;
       margin-top: 12px;
       text-decoration: none;
+      transition: all 0.2s ease;
+      border: 0;
       text-align: center;
-      background: #efefef;
-      color: #222;
+      cursor: pointer;
     }
+
+    button {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: #fff;
+      box-shadow: 0 8px 18px rgba(79,122,87,0.22);
+    }
+
+    .btn {
+      background: var(--secondary);
+      color: var(--text);
+      border: 1px solid rgba(79,122,87,0.10);
+    }
+
     textarea {
       width: 100%;
       box-sizing: border-box;
-      border: 1px solid #ddd;
-      border-radius: 12px;
+      border: 1px solid rgba(79,122,87,0.18);
+      border-radius: 16px;
       padding: 14px;
       font-size: 16px;
+      min-height: 110px;
+      background: #fffdf9;
+      color: var(--text);
+      outline: none;
       margin-top: 12px;
-      min-height: 100px;
     }
-    button {
-      display: block;
-      width: 100%;
-      box-sizing: border-box;
-      border: 0;
-      border-radius: 12px;
-      padding: 14px;
-      font-size: 16px;
-      margin-top: 12px;
-      background: #1f7aff;
-      color: #fff;
+
+    textarea:focus {
+      border-color: rgba(79,122,87,0.45);
+      box-shadow: 0 0 0 4px rgba(79,122,87,0.08);
     }
-    .muted {
-      color: #666;
-      font-size: 14px;
+
+    .section-title {
+      font-size: 13px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    @media (max-width: 640px) {
+      body { padding: 18px 12px 32px; }
+      .hero { padding: 18px 18px 16px; border-radius: 20px; }
+      .hero h1 { font-size: 24px; }
+      .card { padding: 18px; border-radius: 18px; }
+      h2 { font-size: 20px; }
     }
   </style>
 </head>
 <body>
   <div class="wrap">
+    <div class="hero">
+      <div class="badge">植物導覽集章</div>
+      <h1>植物導覽 QR 掃描器</h1>
+      <p>掃描植物牌上的 QR code，快速開啟植物介紹頁並累積導覽點數。</p>
+    </div>
+
     <div class="card">
-      <h2>QR Code 掃描器</h2>
-      <p id="status" class="muted">請允許相機權限，並對準 QR code。</p>
+      <div class="section-title">Scanner</div>
+      <h2>開始掃描</h2>
+      <p id="status" class="muted">請允許相機權限，並將鏡頭對準植物牌上的 QR code。</p>
     </div>
 
     <div class="card">
@@ -80,12 +206,14 @@
     </div>
 
     <div class="card">
+      <div class="section-title">Manual Open</div>
       <h3>手動貼上 QR code 連結</h3>
       <textarea id="manualUrl" placeholder="請貼上掃到的 QR code 連結"></textarea>
       <button id="openManualBtn">開啟連結</button>
     </div>
 
     <div class="card">
+      <div class="section-title">Navigation</div>
       <a class="btn" id="homeBtn" href="#">回活動首頁</a>
     </div>
   </div>
@@ -137,13 +265,13 @@
     }
 
     function onScanSuccess(decodedText, decodedResult) {
-      statusEl.textContent = "掃描成功，正在開啟連結…";
+      statusEl.textContent = "掃描成功，正在開啟植物頁面…";
       scanner.clear().catch(() => {});
       openScannedUrl(decodedText);
     }
 
     function onScanFailure(error) {
-      // 不持續顯示，避免畫面閃動
+      // 不持續顯示錯誤，避免畫面閃動
     }
 
     let scanner;
