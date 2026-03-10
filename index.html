@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QR Code 掃描器</title>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f7f7f7;
+      margin: 0;
+      padding: 20px;
+      color: #222;
+    }
+    .wrap {
+      max-width: 560px;
+      margin: 0 auto;
+    }
+    .card {
+      background: #fff;
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      margin-bottom: 16px;
+    }
+    #reader {
+      width: 100%;
+    }
+    .btn {
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      border: 0;
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 16px;
+      margin-top: 12px;
+      text-decoration: none;
+      text-align: center;
+      background: #efefef;
+      color: #222;
+    }
+    textarea {
+      width: 100%;
+      box-sizing: border-box;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 16px;
+      margin-top: 12px;
+      min-height: 100px;
+    }
+    button {
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      border: 0;
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 16px;
+      margin-top: 12px;
+      background: #1f7aff;
+      color: #fff;
+    }
+    .muted {
+      color: #666;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h2>QR Code 掃描器</h2>
+      <p id="status" class="muted">請允許相機權限，並對準 QR code。</p>
+    </div>
+
+    <div class="card">
+      <div id="reader"></div>
+    </div>
+
+    <div class="card">
+      <h3>手動貼上 QR code 連結</h3>
+      <textarea id="manualUrl" placeholder="請貼上掃到的 QR code 連結"></textarea>
+      <button id="openManualBtn">開啟連結</button>
+    </div>
+
+    <div class="card">
+      <a class="btn" id="homeBtn" href="#">回活動首頁</a>
+    </div>
+  </div>
+
+  <script>
+    function normalizePhone(phone) {
+      let p = String(phone || "").replace(/\D/g, "").trim();
+      if (p.length === 9 && p.startsWith("9")) p = "0" + p;
+      return p;
+    }
+
+    function getQueryParam(name) {
+      const u = new URL(window.location.href);
+      return u.searchParams.get(name) || "";
+    }
+
+    const phoneFromUrl = normalizePhone(getQueryParam("phone"));
+    const homeFromUrl = getQueryParam("home");
+
+    const phone = phoneFromUrl || normalizePhone(localStorage.getItem("savedPhone") || "");
+    if (phone) {
+      localStorage.setItem("savedPhone", phone);
+    }
+
+    const statusEl = document.getElementById("status");
+    const manualBtn = document.getElementById("openManualBtn");
+    const manualUrlEl = document.getElementById("manualUrl");
+    const homeBtn = document.getElementById("homeBtn");
+
+    if (homeFromUrl) {
+      homeBtn.href = homeFromUrl;
+    }
+
+    function injectPhone(url, phone) {
+      try {
+        const u = new URL(url);
+        if (phone && !u.searchParams.get("phone")) {
+          u.searchParams.set("phone", phone);
+        }
+        return u.toString();
+      } catch (e) {
+        return url;
+      }
+    }
+
+    function openScannedUrl(url) {
+      const finalUrl = injectPhone(url, phone);
+      window.location.href = finalUrl;
+    }
+
+    function onScanSuccess(decodedText, decodedResult) {
+      statusEl.textContent = "掃描成功，正在開啟連結…";
+      scanner.clear().catch(() => {});
+      openScannedUrl(decodedText);
+    }
+
+    function onScanFailure(error) {
+      // 不持續顯示，避免畫面閃動
+    }
+
+    let scanner;
+    try {
+      scanner = new Html5QrcodeScanner(
+        "reader",
+        { fps: 10, qrbox: 250, rememberLastUsedCamera: true },
+        false
+      );
+      scanner.render(onScanSuccess, onScanFailure);
+    } catch (err) {
+      statusEl.textContent = "掃碼元件載入失敗，請改用手動貼上連結。";
+    }
+
+    manualBtn.addEventListener("click", function () {
+      const url = (manualUrlEl.value || "").trim();
+      if (!url) {
+        statusEl.textContent = "請先貼上 QR code 連結";
+        return;
+      }
+      openScannedUrl(url);
+    });
+  </script>
+</body>
+</html>
