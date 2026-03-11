@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>QR Code 掃描器</title>
+  <title>QR 探索掃描站</title>
   <script src="https://unpkg.com/html5-qrcode"></script>
   <style>
     body {
@@ -17,10 +17,7 @@
         linear-gradient(180deg, #f8f5ec 0%, #f2ede0 100%);
     }
 
-    .wrap {
-      max-width: 720px;
-      margin: 0 auto;
-    }
+    .wrap { max-width: 720px; margin: 0 auto; }
 
     .hero {
       margin-bottom: 18px;
@@ -135,14 +132,8 @@
       color: #2f3a2f;
     }
 
-    #stopBtn {
-      display: none;
-    }
-
-    .muted {
-      color: #6c7a67;
-      font-size: 14px;
-    }
+    #stopBtn { display: none; }
+    .muted { color: #6c7a67; font-size: 14px; }
 
     @media (max-width: 640px) {
       body { padding: 18px 12px 32px; }
@@ -157,16 +148,16 @@
   <div class="wrap">
     <div class="hero">
       <div class="badge">植物導覽集章</div>
-      <h1>QR Code 掃描站</h1>
-      <p>請使用後置鏡頭掃描植物牌或活動點位的 QR code。</p>
+      <h1>QR 探索掃描站</h1>
+      <p>請使用後置鏡頭掃描植物牌或展區任務點，開啟對應的植物介紹或探索內容。</p>
     </div>
 
     <div class="card">
       <div class="section-title">Scanner</div>
-      <h2>啟動後置鏡頭掃描</h2>
-      <p id="status">按下下方按鈕後，系統會優先開啟後置鏡頭。</p>
+      <h2>開始掃描探索標記</h2>
+      <p id="status">按下下方按鈕後，系統會優先開啟後置鏡頭，開始掃描植物與展區標記。</p>
 
-      <button id="startBtn" class="primary">啟動後置鏡頭掃描</button>
+      <button id="startBtn" class="primary">啟動後置鏡頭</button>
       <button id="stopBtn" class="secondary">停止掃描</button>
 
       <div id="reader" style="margin-top:16px;"></div>
@@ -184,7 +175,7 @@
     const startBtn = document.getElementById("startBtn");
     const stopBtn = document.getElementById("stopBtn");
 
-    function onScanSuccess(decodedText, decodedResult) {
+    function onScanSuccess(decodedText) {
       if (scannerRunning && html5QrCode) {
         html5QrCode.stop().catch(() => {});
         scannerRunning = false;
@@ -200,13 +191,9 @@
       html5QrCode = new Html5Qrcode("reader");
 
       try {
-        // 先強制後置鏡頭
         await html5QrCode.start(
           { facingMode: { exact: "environment" } },
-          {
-            fps: 10,
-            qrbox: { width: 250, height: 250 }
-          },
+          { fps: 10, qrbox: { width: 250, height: 250 } },
           onScanSuccess
         );
 
@@ -217,13 +204,9 @@
         return;
       } catch (err1) {
         try {
-          // 若 exact 不支援，就退回 environment
           await html5QrCode.start(
             { facingMode: "environment" },
-            {
-              fps: 10,
-              qrbox: { width: 250, height: 250 }
-            },
+            { fps: 10, qrbox: { width: 250, height: 250 } },
             onScanSuccess
           );
 
