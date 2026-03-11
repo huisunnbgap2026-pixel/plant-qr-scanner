@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>植物探索導覽站</title>
+  <style>
+    :root{
+      --bg1:#f7f4ea;
+      --bg2:#eef3e8;
+      --card:#ffffff;
+      --text:#203024;
+      --muted:#5f6f62;
+      --primary:#3f6e49;
+      --primary-dark:#2f5838;
+      --soft:#e8f0e4;
+      --border:#cfdccc;
+      --shadow:0 8px 20px rgba(40,60,40,.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body{
+      margin:0;
+      padding:20px 14px 36px;
+      font-family:"Noto Sans TC","Microsoft JhengHei",Arial,sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(168,196,140,0.18), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(122,160,110,0.12), transparent 24%),
+        linear-gradient(180deg, var(--bg1) 0%, var(--bg2) 100%);
+      font-size:18px;
+    }
+
+    .wrap{
+      max-width:860px;
+      margin:0 auto;
+    }
+
+    .hero{
+      margin-bottom:18px;
+      padding:26px 24px 22px;
+      border-radius:24px;
+      background:linear-gradient(135deg, rgba(79,122,87,.97), rgba(121,158,106,.93));
+      color:#fff;
+      box-shadow:var(--shadow);
+      position:relative;
+      overflow:hidden;
+    }
+
+    .hero:before,
+    .hero:after{
+      content:"";
+      position:absolute;
+      border-radius:50%;
+      background:rgba(255,255,255,.08);
+    }
+
+    .hero:before{
+      width:170px;
+      height:170px;
+      top:-50px;
+      right:-30px;
+    }
+
+    .hero:after{
+      width:100px;
+      height:100px;
+      bottom:-20px;
+      left:-10px;
+    }
+
+    .hero h1{
+      margin:0 0 10px;
+      font-size:34px;
+      line-height:1.25;
+      position:relative;
+      z-index:1;
+    }
+
+    .hero p{
+      margin:0;
+      font-size:18px;
+      line-height:1.9;
+      color:rgba(255,255,255,.96);
+      position:relative;
+      z-index:1;
+    }
+
+    .card{
+      background:var(--card);
+      border:2px solid var(--border);
+      border-radius:22px;
+      padding:22px;
+      box-shadow:var(--shadow);
+      margin-bottom:16px;
+    }
+
+    .section-title{
+      font-size:14px;
+      letter-spacing:1px;
+      text-transform:uppercase;
+      color:var(--muted);
+      margin-bottom:8px;
+      font-weight:700;
+    }
+
+    h2{
+      margin:0 0 12px;
+      font-size:28px;
+      line-height:1.35;
+    }
+
+    p{
+      margin:0 0 14px;
+      line-height:1.9;
+      color:var(--muted);
+      font-size:18px;
+    }
+
+    .lead{
+      font-size:19px;
+      color:var(--text);
+    }
+
+    .status-box{
+      margin-top:14px;
+      padding:16px 18px;
+      border-radius:18px;
+      background:#f6faf3;
+      border:2px solid #d7e3d3;
+      text-align:left;
+    }
+
+    .status-label{
+      font-size:16px;
+      color:var(--muted);
+      margin-bottom:8px;
+      font-weight:700;
+    }
+
+    .status-text{
+      font-size:22px;
+      color:var(--text);
+      line-height:1.8;
+      font-weight:700;
+    }
+
+    .feature{
+      border:2px solid #d7e3d3;
+      background:#f6faf3;
+      border-radius:18px;
+      padding:18px;
+    }
+
+    .feature p{
+      margin-bottom:0;
+      font-size:18px;
+      color:var(--text);
+    }
+
+    input, button, a.btn{
+      width:100%;
+      display:block;
+      box-sizing:border-box;
+      border-radius:18px;
+      padding:18px 16px;
+      font-size:20px;
+      margin-top:14px;
+      text-decoration:none;
+      border:0;
+      text-align:center;
+    }
+
+    input{
+      background:#fff;
+      border:2px solid #cfdccc;
+      color:var(--text);
+      outline:none;
+      transition:all .2s ease;
+    }
+
+    input:focus{
+      border-color:rgba(63,110,73,.7);
+      box-shadow:0 0 0 4px rgba(63,110,73,.10);
+    }
+
+    button.primary, a.btn.primary{
+      background:linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color:#fff;
+      box-shadow:0 6px 16px rgba(63,110,73,.18);
+      cursor:pointer;
+      font-weight:700;
+    }
+
+    a.btn.secondary{
+      background:var(--soft);
+      color:var(--text);
+      border:2px solid #d7e3d3;
+      font-weight:700;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:14px;
+      margin-top:8px;
+    }
+
+    #manualBox{ display:none; }
+    #actionBox{ display:none; }
+
+    @media (max-width:700px){
+      body{ padding:16px 12px 28px; }
+      .hero{ padding:22px 18px 18px; border-radius:20px; }
+      .hero h1{ font-size:28px; }
+      .hero p{ font-size:17px; }
+      .card{ padding:18px; border-radius:18px; }
+      h2{ font-size:24px; }
+      p{ font-size:17px; }
+      .status-text{ font-size:20px; }
+      input, button, a.btn{ font-size:19px; padding:17px 14px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <h1>植物探索導覽站</h1>
+      <p>系統會先完成探索紀錄，若達成 bonus 將顯示植物徽章，再開啟植物介紹頁面。</p>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Plant Guide</div>
+      <h2>植物探索入口</h2>
+      <p class="lead">掃描植物牌後，會前往植物介紹頁。</p>
+
+      <div class="status-box">
+        <div class="status-label">目前狀態</div>
+        <div id="status" class="status-text">正在準備導覽…</div>
+      </div>
+
+      <div id="manualBox">
+        <label for="phoneInput" style="display:block; margin-top:16px; margin-bottom:8px; font-size:16px; color:#5f6f62; font-weight:700;">
+          手機號碼
+        </label>
+        <input id="phoneInput" type="text" placeholder="例如：0912345678" inputmode="numeric" autocomplete="tel">
+        <button id="savePhoneBtn" class="primary">送出並前往植物介紹</button>
+      </div>
+
+      <div id="actionBox">
+        <a id="goBtn" class="btn primary" href="#" target="_top">重新前往植物介紹頁</a>
+
+        <div class="grid">
+          <a id="scanBtn" class="btn secondary" href="#" target="_top">繼續探索植物</a>
+          <a id="queryBtn" class="btn secondary" href="#" target="_top">查看探索進度</a>
+          <a id="rewardBtn" class="btn secondary" href="#" target="_top">查看探索獎勵</a>
+          <a id="homeBtn" class="btn secondary" href="#" target="_top">返回展區首頁</a>
+        </div>
+
+        <div class="feature" style="margin-top:16px;">
+          <p>若沒有自動跳轉，可直接按上方按鈕重新進入植物介紹頁。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const APP_URL = "https://script.google.com/macros/s/AKfycbyoFlYdQfjyJUu0onsq2DOI5wZJmRcNI2maSEbU7b5uKiSQmajfFRJGYL8OisrhhNUYKg/exec";
+    const SCANNER_URL = "https://huisunnbgap2026-pixel.github.io/plant-qr-scanner/index.html";
+    const AUTO_KEY = "plant_auto_opened_";
+
+    function normalizePhone(phone) {
+      let p = String(phone || "").replace(/\D/g, "").trim();
+      if (p.length === 9 && p.startsWith("9")) p = "0" + p;
+      return p;
+    }
+
+    function getParam(name) {
+      const url = new URL(window.location.href);
+      return url.searchParams.get(name) || "";
+    }
+
+    function buildUrl(base, params) {
+      const u = new URL(base);
+      Object.keys(params).forEach(function(key) {
+        u.searchParams.set(key, params[key]);
+      });
+      return u.toString();
+    }
+
+    const plantId = getParam("plant");
+    const pageUrl = getParam("page");
+
+    const statusEl = document.getElementById("status");
+    const manualBox = document.getElementById("manualBox");
+    const actionBox = document.getElementById("actionBox");
+    const phoneInput = document.getElementById("phoneInput");
+    const savePhoneBtn = document.getElementById("savePhoneBtn");
+
+    const goBtn = document.getElementById("goBtn");
+    const scanBtn = document.getElementById("scanBtn");
+    const queryBtn = document.getElementById("queryBtn");
+    const rewardBtn = document.getElementById("rewardBtn");
+    const homeBtn = document.getElementById("homeBtn");
+
+    function setActionLinks(phone) {
+      const homeUrl = buildUrl(APP_URL, { mode: "home", phone: phone });
+      const queryUrl = buildUrl(APP_URL, { mode: "query", phone: phone });
+      const rewardUrl = buildUrl(APP_URL, { mode: "rewards", phone: phone });
+      const scanUrl = buildUrl(SCANNER_URL, {
+        phone: phone,
+        home: homeUrl
+      });
+      const goUrl = buildUrl(APP_URL, {
+        mode: "plant_go",
+        plant: plantId,
+        phone: phone
+      });
+
+      goBtn.href = goUrl;
+      scanBtn.href = scanUrl;
+      queryBtn.href = queryUrl;
+      rewardBtn.href = rewardUrl;
+      homeBtn.href = homeUrl;
+    }
+
+    function showActionBox() {
+      actionBox.style.display = "block";
+    }
+
+    function startWithPhone(phone) {
+      setActionLinks(phone);
+      showActionBox();
+
+      const alreadyAutoOpened = sessionStorage.getItem(AUTO_KEY + plantId) === "1";
+      if (alreadyAutoOpened) {
+        statusEl.textContent = "你已回到植物探索站，可重新進入植物介紹，或使用下方功能按鈕。";
+        return;
+      }
+
+      sessionStorage.setItem(AUTO_KEY + plantId, "1");
+      statusEl.textContent = "正在開啟植物介紹頁…";
+
+      const goUrl = `${APP_URL}?mode=plant_go&plant=${encodeURIComponent(plantId)}&phone=${encodeURIComponent(phone)}`;
+      window.location.href = goUrl;
+    }
+
+    function start() {
+      if (!plantId || !pageUrl) {
+        statusEl.textContent = "缺少植物資料，請重新掃描 QR code。";
+        return;
+      }
+
+      const savedPhone = normalizePhone(localStorage.getItem("savedPhone") || "");
+      if (!savedPhone) {
+        statusEl.textContent = "請先輸入手機號碼。";
+        manualBox.style.display = "block";
+        return;
+      }
+
+      startWithPhone(savedPhone);
+    }
+
+    savePhoneBtn.addEventListener("click", function () {
+      const phone = normalizePhone(phoneInput.value);
+      if (!phone) {
+        statusEl.textContent = "請先輸入正確手機號碼。";
+        return;
+      }
+
+      localStorage.setItem("savedPhone", phone);
+      manualBox.style.display = "none";
+      startWithPhone(phone);
+    });
+
+    start();
+  </script>
+</body>
+</html>
