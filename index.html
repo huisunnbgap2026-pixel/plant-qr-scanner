@@ -214,6 +214,10 @@
       <div id="reader" style="margin-top:18px;"></div>
 
       <div class="feature" style="margin-top:16px;">
+        <p id="currentPhoneText">目前登入手機：未偵測</p>
+      </div>
+
+      <div class="feature" style="margin-top:16px;">
         <p>若無法開啟鏡頭，請改用 Safari 或 Chrome，並確認網站已允許相機權限。</p>
       </div>
     </div>
@@ -243,6 +247,7 @@
     const homeBtn = document.getElementById("homeBtn");
     const queryBtn = document.getElementById("queryBtn");
     const rewardBtn = document.getElementById("rewardBtn");
+    const currentPhoneText = document.getElementById("currentPhoneText");
 
     function normalizePhone(phone) {
       let p = String(phone || "").replace(/\D/g, "").trim();
@@ -253,16 +258,63 @@
     function buildUrl(base, params) {
       const u = new URL(base);
       Object.keys(params).forEach(function(key) {
-        u.searchParams.set(key, params[key]);
+        if (params[key] !== undefined && params[key] !== null && params[key] !== "") {
+          u.searchParams.set(key, params[key]);
+        }
       });
       return u.toString();
     }
 
+    function getUrlPhone() {
+      const params = new URLSearchParams(window.location.search);
+      return normalizePhone(params.get("phone") || "");
+    }
+
+    function getCurrentPhone() {
+      const urlPhone = getUrlPhone();
+      if (urlPhone) return urlPhone;
+      return normalizePhone(localStorage.getItem("savedPhone") || "");
+    }
+
+    function syncPhoneFromUrl() {
+      const urlPhone = getUrlPhone();
+      if (urlPhone) {
+        localStorage.setItem("savedPhone", urlPhone);
+      }
+    }
+
     function setNavLinks() {
-      const phone = normalizePhone(localStorage.getItem("savedPhone") || "");
+      const phone = getCurrentPhone();
       homeBtn.href = buildUrl(APP_URL, { mode: "home", phone: phone });
       queryBtn.href = buildUrl(APP_URL, { mode: "query", phone: phone });
       rewardBtn.href = buildUrl(APP_URL, { mode: "rewards", phone: phone });
+      currentPhoneText.textContent = phone ? ("目前登入手機：" + phone) : "目前登入手機：未偵測";
+    }
+
+    function buildScannedTarget(decodedText) {
+      const phone = getCurrentPhone();
+      if (!phone) return decodedText;
+
+      try {
+        const url = new URL(decodedText);
+
+        const isAppsScriptTarget =
+          url.origin === "https://script.google.com" &&
+          url.pathname.indexOf("/macros/s/") !== -1;
+
+        if (isAppsScriptTarget) {
+          const mode = (url.searchParams.get("mode") || "").trim().toLowerCase();
+
+          if ((mode === "plant_go" || mode === "stamp" || mode === "home" || mode === "query" || mode === "rewards") &&
+              !normalizePhone(url.searchParams.get("phone") || "")) {
+            url.searchParams.set("phone", phone);
+          }
+        }
+
+        return url.toString();
+      } catch (e) {
+        return decodedText;
+      }
     }
 
     function onScanSuccess(decodedText) {
@@ -270,8 +322,10 @@
         html5QrCode.stop().catch(() => {});
         scannerRunning = false;
       }
+
+      const targetUrl = buildScannedTarget(decodedText);
       statusEl.textContent = "已掃描成功，正在開啟內容…";
-      window.top.location.href = decodedText;
+      window.top.location.href = targetUrl;
     }
 
     async function startScanner() {
@@ -324,7 +378,9 @@
       statusEl.textContent = "已停止掃描。";
     }
 
+    syncPhoneFromUrl();
     setNavLinks();
+
     startBtn.addEventListener("click", startScanner);
     stopBtn.addEventListener("click", stopScanner);
   </script>
