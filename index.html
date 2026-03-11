@@ -1,29 +1,16 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-Hant">
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>植物導覽 QR 掃描器</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR Code 掃描器</title>
   <script src="https://unpkg.com/html5-qrcode"></script>
   <style>
-    :root{
-      --bg: #f6f2e8;
-      --card: rgba(255,255,255,0.92);
-      --text: #2f3a2f;
-      --muted: #6c7a67;
-      --primary: #4f7a57;
-      --primary-dark: #3e6245;
-      --secondary: #e7efe4;
-      --border: rgba(79,122,87,0.12);
-      --shadow: 0 10px 30px rgba(69,89,63,0.12);
-    }
-
-    * { box-sizing: border-box; }
-
     body {
       margin: 0;
       padding: 24px 16px 40px;
       font-family: "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif;
-      color: var(--text);
+      color: #2f3a2f;
       background:
         radial-gradient(circle at top left, rgba(168,196,140,0.22), transparent 28%),
         radial-gradient(circle at bottom right, rgba(122,160,110,0.16), transparent 24%),
@@ -31,7 +18,7 @@
     }
 
     .wrap {
-      max-width: 760px;
+      max-width: 720px;
       margin: 0 auto;
     }
 
@@ -41,7 +28,7 @@
       border-radius: 24px;
       background: linear-gradient(135deg, rgba(90,130,94,0.94), rgba(127,162,112,0.90));
       color: #fff;
-      box-shadow: var(--shadow);
+      box-shadow: 0 10px 30px rgba(69,89,63,0.12);
       position: relative;
       overflow: hidden;
     }
@@ -87,95 +74,74 @@
     }
 
     .card {
-      background: var(--card);
-      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.94);
+      border: 1px solid rgba(79,122,87,0.12);
       border-radius: 22px;
-      padding: 22px;
-      box-shadow: var(--shadow);
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(69,89,63,0.12);
       margin-bottom: 16px;
-      backdrop-filter: blur(6px);
-    }
-
-    h2 {
-      margin: 0 0 14px;
-      font-size: 22px;
-      line-height: 1.35;
-    }
-
-    h3 {
-      margin: 0 0 12px;
-      font-size: 18px;
-      line-height: 1.4;
-    }
-
-    p {
-      margin: 0 0 12px;
-      line-height: 1.8;
-      font-size: 16px;
-    }
-
-    .muted {
-      color: var(--muted);
-      font-size: 14px;
-    }
-
-    #reader {
-      width: 100%;
-      overflow: hidden;
-      border-radius: 18px;
-    }
-
-    .btn, button {
-      width: 100%;
-      display: block;
-      border-radius: 16px;
-      padding: 14px 16px;
-      font-size: 16px;
-      margin-top: 12px;
-      text-decoration: none;
-      transition: all 0.2s ease;
-      border: 0;
-      text-align: center;
-      cursor: pointer;
-    }
-
-    button {
-      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      color: #fff;
-      box-shadow: 0 8px 18px rgba(79,122,87,0.22);
-    }
-
-    .btn {
-      background: var(--secondary);
-      color: var(--text);
-      border: 1px solid rgba(79,122,87,0.10);
-    }
-
-    textarea {
-      width: 100%;
-      box-sizing: border-box;
-      border: 1px solid rgba(79,122,87,0.18);
-      border-radius: 16px;
-      padding: 14px;
-      font-size: 16px;
-      min-height: 110px;
-      background: #fffdf9;
-      color: var(--text);
-      outline: none;
-      margin-top: 12px;
-    }
-
-    textarea:focus {
-      border-color: rgba(79,122,87,0.45);
-      box-shadow: 0 0 0 4px rgba(79,122,87,0.08);
     }
 
     .section-title {
       font-size: 13px;
       letter-spacing: 1px;
       text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 8px;
+      color: #6c7a67;
+      margin-bottom: 10px;
+    }
+
+    h2 {
+      margin: 0 0 12px;
+      font-size: 22px;
+      line-height: 1.35;
+    }
+
+    p {
+      margin: 0 0 12px;
+      line-height: 1.8;
+      color: #6c7a67;
+      font-size: 16px;
+    }
+
+    #reader {
+      width: 100%;
+      max-width: 520px;
+      margin: 0 auto;
+      overflow: hidden;
+      border-radius: 18px;
+    }
+
+    button, a.btn {
+      width: 100%;
+      box-sizing: border-box;
+      display: block;
+      border-radius: 14px;
+      padding: 14px 16px;
+      font-size: 16px;
+      margin-top: 12px;
+      text-decoration: none;
+      border: 0;
+      text-align: center;
+      cursor: pointer;
+    }
+
+    button.primary, a.btn.primary {
+      background: linear-gradient(135deg, #4f7a57, #3e6245);
+      color: #fff;
+    }
+
+    button.secondary, a.btn.secondary {
+      background: #e7efe4;
+      color: #2f3a2f;
+    }
+
+    #stopBtn {
+      display: none;
+    }
+
+    .muted {
+      color: #6c7a67;
+      font-size: 14px;
     }
 
     @media (max-width: 640px) {
@@ -191,109 +157,102 @@
   <div class="wrap">
     <div class="hero">
       <div class="badge">植物導覽集章</div>
-      <h1>植物導覽 QR 掃描器</h1>
-      <p>掃描植物牌上的 QR code，快速開啟植物介紹頁並累積導覽點數。</p>
+      <h1>QR Code 掃描站</h1>
+      <p>請使用後置鏡頭掃描植物牌或活動點位的 QR code。</p>
     </div>
 
     <div class="card">
       <div class="section-title">Scanner</div>
-      <h2>開始掃描</h2>
-      <p id="status" class="muted">請允許相機權限，並將鏡頭對準植物牌上的 QR code。</p>
-    </div>
+      <h2>啟動後置鏡頭掃描</h2>
+      <p id="status">按下下方按鈕後，系統會優先開啟後置鏡頭。</p>
 
-    <div class="card">
-      <div id="reader"></div>
-    </div>
+      <button id="startBtn" class="primary">啟動後置鏡頭掃描</button>
+      <button id="stopBtn" class="secondary">停止掃描</button>
 
-    <div class="card">
-      <div class="section-title">Manual Open</div>
-      <h3>手動貼上 QR code 連結</h3>
-      <textarea id="manualUrl" placeholder="請貼上掃到的 QR code 連結"></textarea>
-      <button id="openManualBtn">開啟連結</button>
-    </div>
-
-    <div class="card">
-      <div class="section-title">Navigation</div>
-      <a class="btn" id="homeBtn" href="#">回活動首頁</a>
+      <div id="reader" style="margin-top:16px;"></div>
+      <p class="muted" style="margin-top:12px;">
+        若無法開啟鏡頭，請改用 Safari 或 Chrome，並確認網站已允許相機權限。
+      </p>
     </div>
   </div>
 
   <script>
-    function normalizePhone(phone) {
-      let p = String(phone || "").replace(/\D/g, "").trim();
-      if (p.length === 9 && p.startsWith("9")) p = "0" + p;
-      return p;
-    }
-
-    function getQueryParam(name) {
-      const u = new URL(window.location.href);
-      return u.searchParams.get(name) || "";
-    }
-
-    const phoneFromUrl = normalizePhone(getQueryParam("phone"));
-    const homeFromUrl = getQueryParam("home");
-
-    const phone = phoneFromUrl || normalizePhone(localStorage.getItem("savedPhone") || "");
-    if (phone) {
-      localStorage.setItem("savedPhone", phone);
-    }
+    let html5QrCode = null;
+    let scannerRunning = false;
 
     const statusEl = document.getElementById("status");
-    const manualBtn = document.getElementById("openManualBtn");
-    const manualUrlEl = document.getElementById("manualUrl");
-    const homeBtn = document.getElementById("homeBtn");
-
-    if (homeFromUrl) {
-      homeBtn.href = homeFromUrl;
-    }
-
-    function injectPhone(url, phone) {
-      try {
-        const u = new URL(url);
-        if (phone && !u.searchParams.get("phone")) {
-          u.searchParams.set("phone", phone);
-        }
-        return u.toString();
-      } catch (e) {
-        return url;
-      }
-    }
-
-    function openScannedUrl(url) {
-      const finalUrl = injectPhone(url, phone);
-      window.location.href = finalUrl;
-    }
+    const startBtn = document.getElementById("startBtn");
+    const stopBtn = document.getElementById("stopBtn");
 
     function onScanSuccess(decodedText, decodedResult) {
-      statusEl.textContent = "掃描成功，正在開啟植物頁面…";
-      scanner.clear().catch(() => {});
-      openScannedUrl(decodedText);
-    }
-
-    function onScanFailure(error) {
-      // 不持續顯示錯誤，避免畫面閃動
-    }
-
-    let scanner;
-    try {
-      scanner = new Html5QrcodeScanner(
-        "reader",
-        { fps: 10, qrbox: 250, rememberLastUsedCamera: true },
-        false
-      );
-      scanner.render(onScanSuccess, onScanFailure);
-    } catch (err) {
-      statusEl.textContent = "掃碼元件載入失敗，請改用手動貼上連結。";
-    }
-
-    manualBtn.addEventListener("click", function () {
-      const url = (manualUrlEl.value || "").trim();
-      if (!url) {
-        statusEl.textContent = "請先貼上 QR code 連結";
-        return;
+      if (scannerRunning && html5QrCode) {
+        html5QrCode.stop().catch(() => {});
+        scannerRunning = false;
       }
-      openScannedUrl(url);
-    });
+      statusEl.textContent = "已掃描成功，正在開啟內容…";
+      window.top.location.href = decodedText;
+    }
+
+    async function startScanner() {
+      if (scannerRunning) return;
+
+      statusEl.textContent = "正在啟動後置鏡頭…";
+      html5QrCode = new Html5Qrcode("reader");
+
+      try {
+        // 先強制後置鏡頭
+        await html5QrCode.start(
+          { facingMode: { exact: "environment" } },
+          {
+            fps: 10,
+            qrbox: { width: 250, height: 250 }
+          },
+          onScanSuccess
+        );
+
+        scannerRunning = true;
+        startBtn.style.display = "none";
+        stopBtn.style.display = "block";
+        statusEl.textContent = "後置鏡頭已啟動，請將 QR code 對準框內。";
+        return;
+      } catch (err1) {
+        try {
+          // 若 exact 不支援，就退回 environment
+          await html5QrCode.start(
+            { facingMode: "environment" },
+            {
+              fps: 10,
+              qrbox: { width: 250, height: 250 }
+            },
+            onScanSuccess
+          );
+
+          scannerRunning = true;
+          startBtn.style.display = "none";
+          stopBtn.style.display = "block";
+          statusEl.textContent = "鏡頭已啟動，請將 QR code 對準框內。";
+          return;
+        } catch (err2) {
+          statusEl.textContent = "無法開啟後置鏡頭，請確認相機權限是否允許，或改用 Safari / Chrome。";
+        }
+      }
+    }
+
+    async function stopScanner() {
+      if (!html5QrCode || !scannerRunning) return;
+
+      try {
+        await html5QrCode.stop();
+      } catch (e) {}
+
+      scannerRunning = false;
+      stopBtn.style.display = "none";
+      startBtn.style.display = "block";
+      statusEl.textContent = "已停止掃描。";
+    }
+
+    startBtn.addEventListener("click", startScanner);
+    stopBtn.addEventListener("click", stopScanner);
   </script>
 </body>
 </html>
