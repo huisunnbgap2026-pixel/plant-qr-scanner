@@ -291,41 +291,74 @@
       currentPhoneText.textContent = phone ? ("目前登入手機：" + phone) : "目前登入手機：未偵測";
     }
 
-    function buildScannedTarget(decodedText) {
-      const phone = getCurrentPhone();
-      if (!phone) return decodedText;
-
-      try {
-        const url = new URL(decodedText);
-
-        const isAppsScriptTarget =
-          url.origin === "https://script.google.com" &&
-          url.pathname.indexOf("/macros/s/") !== -1;
-
-        if (isAppsScriptTarget) {
-          const mode = (url.searchParams.get("mode") || "").trim().toLowerCase();
-
-          if ((mode === "plant_go" || mode === "stamp" || mode === "home" || mode === "query" || mode === "rewards") &&
-              !normalizePhone(url.searchParams.get("phone") || "")) {
-            url.searchParams.set("phone", phone);
-          }
-        }
-
-        return url.toString();
-      } catch (e) {
-        return decodedText;
+    async function handlePlantGoViaApi(urlObj, phone) {
+      const plantId = (urlObj.searchParams.get("plant") || "").trim();
+      if (!plantId) {
+        window.top.location.href = urlObj.toString();
+        return;
       }
+
+      const apiUrl = buildUrl(APP_URL, {
+        mode: "plant_go_api",
+        plant: plantId,
+        phone: phone
+      });
+
+      statusEl.textContent = "已掃描成功，正在記錄植物探索…";
+
+      const res = await fetch(apiUrl, { method: "GET" });
+      const data = await res.json();
+
+      if (!data || !data.success || !data.pageUrl) {
+        throw new Error((data && data.message) || "植物探索記錄失敗");
+      }
+
+      statusEl.textContent = "探索紀錄完成，正在前往植物介紹頁…";
+      window.top.location.href = data.pageUrl;
     }
 
-    function onScanSuccess(decodedText) {
+    async function onScanSuccess(decodedText) {
       if (scannerRunning && html5QrCode) {
         html5QrCode.stop().catch(() => {});
         scannerRunning = false;
       }
 
-      const targetUrl = buildScannedTarget(decodedText);
-      statusEl.textContent = "已掃描成功，正在開啟內容…";
-      window.top.location.href = targetUrl;
+      const phone = getCurrentPhone();
+      if (!phone) {
+        statusEl.textContent = "找不到手機號碼，請先回首頁登入。";
+        return;
+      }
+
+      try {
+        const url = new URL(decodedText);
+        const isAppsScriptTarget =
+          url.origin === "https://script.google.com" &&
+          url.pathname.indexOf("/macros/s/") !== -1;
+
+        if (!isAppsScriptTarget) {
+          statusEl.textContent = "已掃描成功，正在開啟內容…";
+          window.top.location.href = decodedText;
+          return;
+        }
+
+        const mode = (url.searchParams.get("mode") || "").trim().toLowerCase();
+
+        if (mode === "plant_go") {
+          await handlePlantGoViaApi(url, phone);
+          return;
+        }
+
+        if ((mode === "stamp" || mode === "home" || mode === "query" || mode === "rewards") &&
+            !normalizePhone(url.searchParams.get("phone") || "")) {
+          url.searchParams.set("phone", phone);
+        }
+
+        statusEl.textContent = "已掃描成功，正在開啟內容…";
+        window.top.location.href = url.toString();
+      } catch (e) {
+        statusEl.textContent = "已掃描成功，正在開啟內容…";
+        window.top.location.href = decodedText;
+      }
     }
 
     async function startScanner() {
