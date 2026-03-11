@@ -17,7 +17,7 @@
         linear-gradient(180deg, #f8f5ec 0%, #f2ede0 100%);
     }
 
-    .wrap { max-width: 720px; margin: 0 auto; }
+    .wrap { max-width: 760px; margin: 0 auto; }
 
     .hero {
       margin-bottom: 18px;
@@ -135,12 +135,20 @@
     #stopBtn { display: none; }
     .muted { color: #6c7a67; font-size: 14px; }
 
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
     @media (max-width: 640px) {
       body { padding: 18px 12px 32px; }
       .hero { padding: 18px 18px 16px; border-radius: 20px; }
       .hero h1 { font-size: 24px; }
       .card { padding: 18px; border-radius: 18px; }
       h2 { font-size: 20px; }
+      .grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -165,15 +173,53 @@
         若無法開啟鏡頭，請改用 Safari 或 Chrome，並確認網站已允許相機權限。
       </p>
     </div>
+
+    <div class="card">
+      <div class="section-title">Navigation</div>
+      <h2>探索捷徑</h2>
+      <div class="grid">
+        <a id="homeBtn" class="btn secondary" href="#" target="_top">回首頁</a>
+        <a id="queryBtn" class="btn secondary" href="#" target="_top">查看進度</a>
+        <a id="rewardBtn" class="btn secondary" href="#" target="_top">查看獎勵</a>
+        <a id="collectionBtn" class="btn secondary" href="https://sites.google.com/view/nat-bot-gard-nchu/%E9%A6%96%E9%A0%81/%E7%9B%AE%E5%89%8D%E9%A4%A8%E8%97%8F" target="_top">瀏覽館藏</a>
+      </div>
+    </div>
   </div>
 
   <script>
     let html5QrCode = null;
     let scannerRunning = false;
 
+    const APP_URL = "https://script.google.com/macros/s/AKfycbyoFlYdQfjyJUu0onsq2DOI5wZJmRcNI2maSEbU7b5uKiSQmajfFRJGYL8OisrhhNUYKg/exec";
+
     const statusEl = document.getElementById("status");
     const startBtn = document.getElementById("startBtn");
     const stopBtn = document.getElementById("stopBtn");
+
+    const homeBtn = document.getElementById("homeBtn");
+    const queryBtn = document.getElementById("queryBtn");
+    const rewardBtn = document.getElementById("rewardBtn");
+
+    function normalizePhone(phone) {
+      let p = String(phone || "").replace(/\D/g, "").trim();
+      if (p.length === 9 && p.startsWith("9")) p = "0" + p;
+      return p;
+    }
+
+    function buildUrl(base, params) {
+      const u = new URL(base);
+      Object.keys(params).forEach(function(key) {
+        u.searchParams.set(key, params[key]);
+      });
+      return u.toString();
+    }
+
+    function setNavLinks() {
+      const phone = normalizePhone(localStorage.getItem("savedPhone") || "");
+      homeBtn.href = buildUrl(APP_URL, { mode: "home", phone: phone });
+      queryBtn.href = buildUrl(APP_URL, { mode: "query", phone: phone });
+      rewardBtn.href = buildUrl(APP_URL, { mode: "rewards", phone: phone });
+    }
 
     function onScanSuccess(decodedText) {
       if (scannerRunning && html5QrCode) {
@@ -234,6 +280,7 @@
       statusEl.textContent = "已停止掃描。";
     }
 
+    setNavLinks();
     startBtn.addEventListener("click", startScanner);
     stopBtn.addEventListener("click", stopScanner);
   </script>
