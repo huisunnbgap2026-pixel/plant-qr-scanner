@@ -249,7 +249,9 @@
     function buildUrl(base, params) {
       const u = new URL(base);
       Object.keys(params).forEach(function(key) {
-        u.searchParams.set(key, params[key]);
+        if (params[key] !== undefined && params[key] !== null && params[key] !== "") {
+          u.searchParams.set(key, params[key]);
+        }
       });
       return u.toString();
     }
@@ -257,7 +259,7 @@
     const plantId = getParam("plant");
     const pageUrl = getParam("page");
     const done = getParam("done");
-    const phoneFromUrl = getParam("phone");
+    const phoneFromUrl = normalizePhone(getParam("phone"));
 
     const statusEl = document.getElementById("status");
     const manualBox = document.getElementById("manualBox");
@@ -271,6 +273,21 @@
     const rewardBtn = document.getElementById("rewardBtn");
     const homeBtn = document.getElementById("homeBtn");
 
+    function getCurrentPhone() {
+      if (phoneFromUrl) return phoneFromUrl;
+      return normalizePhone(localStorage.getItem("savedPhone") || "");
+    }
+
+    function syncPhone() {
+      const phone = getCurrentPhone();
+      if (phone) localStorage.setItem("savedPhone", phone);
+      return phone;
+    }
+
+    function getAutoKey(phone) {
+      return AUTO_KEY + plantId + "_" + normalizePhone(phone);
+    }
+
     function setActionLinks(phone) {
       const homeUrl = buildUrl(APP_URL, { mode: "home", phone: phone });
       const queryUrl = buildUrl(APP_URL, { mode: "query", phone: phone });
@@ -279,9 +296,8 @@
         phone: phone,
         home: homeUrl
       });
-      const goUrl = pageUrl;
 
-      goBtn.href = goUrl;
+      goBtn.href = pageUrl;
       scanBtn.href = scanUrl;
       queryBtn.href = queryUrl;
       rewardBtn.href = rewardUrl;
@@ -293,19 +309,32 @@
     }
 
     function startWithPhone(phone) {
-      setActionLinks(phone);
+      const normalizedPhone = normalizePhone(phone);
+      if (!normalizedPhone) {
+        statusEl.textContent = "請先輸入正確手機號碼。";
+        manualBox.style.display = "block";
+        return;
+      }
+
+      localStorage.setItem("savedPhone", normalizedPhone);
+      setActionLinks(normalizedPhone);
       showActionBox();
 
-      const alreadyAutoOpened = sessionStorage.getItem(AUTO_KEY + plantId) === "1";
+      const alreadyAutoOpened = sessionStorage.getItem(getAutoKey(normalizedPhone)) === "1";
       if (alreadyAutoOpened) {
         statusEl.textContent = "你已回到植物探索站，可重新進入植物介紹，或使用下方功能按鈕。";
         return;
       }
 
-      sessionStorage.setItem(AUTO_KEY + plantId, "1");
+      sessionStorage.setItem(getAutoKey(normalizedPhone), "1");
       statusEl.textContent = "正在記錄探索並開啟植物介紹頁…";
 
-      const goUrl = `${APP_URL}?mode=plant_go&plant=${encodeURIComponent(plantId)}&phone=${encodeURIComponent(phone)}`;
+      const goUrl = buildUrl(APP_URL, {
+        mode: "plant_go",
+        plant: plantId,
+        phone: normalizedPhone
+      });
+
       window.location.href = goUrl;
     }
 
@@ -315,12 +344,17 @@
         return;
       }
 
+      const currentPhone = syncPhone();
+
       if (done === "1") {
-        const finalPhone = normalizePhone(phoneFromUrl || localStorage.getItem("savedPhone") || "");
-        if (finalPhone) localStorage.setItem("savedPhone", finalPhone);
+        if (!currentPhone) {
+          statusEl.textContent = "缺少手機號碼，請重新掃描 QR code。";
+          manualBox.style.display = "block";
+          return;
+        }
 
         statusEl.textContent = "正在開啟植物介紹頁…";
-        setActionLinks(finalPhone);
+        setActionLinks(currentPhone);
         showActionBox();
 
         setTimeout(function () {
@@ -329,14 +363,13 @@
         return;
       }
 
-      const savedPhone = normalizePhone(localStorage.getItem("savedPhone") || "");
-      if (!savedPhone) {
+      if (!currentPhone) {
         statusEl.textContent = "請先輸入手機號碼。";
         manualBox.style.display = "block";
         return;
       }
 
-      startWithPhone(savedPhone);
+      startWithPhone(currentPhone);
     }
 
     savePhoneBtn.addEventListener("click", function () {
@@ -346,7 +379,6 @@
         return;
       }
 
-      localStorage.setItem("savedPhone", phone);
       manualBox.style.display = "none";
       startWithPhone(phone);
     });
