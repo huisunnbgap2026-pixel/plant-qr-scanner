@@ -209,7 +209,7 @@
         <label for="phoneInput" style="display:block; margin-top:16px; margin-bottom:8px; font-size:16px; color:#5f6f62; font-weight:700;">
           手機號碼
         </label>
-        <input id="phoneInput" type="text" placeholder="例如：0912345678" inputmode="numeric" autocomplete="tel">
+        <input id="phoneInput" type="text" placeholder="例如：0912345678" inputmode="numeric" autocomplete="off" autocorrect="off" autocapitalize="off">
         <button id="savePhoneBtn" class="primary">送出並前往植物介紹</button>
       </div>
 
@@ -285,7 +285,6 @@
     let pendingCallbackName = null;
     let pendingTimer = null;
     let redirectTimer = null;
-    let markBeaconImg = null;
 
     function getCurrentPhone() {
       if (phoneFromUrl) return phoneFromUrl;
@@ -346,8 +345,6 @@
         }
       }
       pendingCallbackName = null;
-
-      markBeaconImg = null;
     }
 
     function redirectToPlantPage(delayMs) {
@@ -360,19 +357,6 @@
       redirectTimer = setTimeout(function() {
         openTarget(pageUrl);
       }, delayMs || 0);
-    }
-
-    function fireMarkBeacon(phone) {
-      const beaconUrl = buildUrl(APP_URL, {
-        mode: "plant_mark_api",
-        plant: plantId,
-        phone: phone,
-        _: Date.now().toString()
-      });
-
-      markBeaconImg = new Image();
-      markBeaconImg.referrerPolicy = "no-referrer";
-      markBeaconImg.src = beaconUrl;
     }
 
     function startJsonpRecord(phone) {
@@ -434,11 +418,6 @@
 
       sessionStorage.setItem(getAutoKey(normalizedPhone), "1");
       statusEl.textContent = "正在記錄探索並開啟植物介紹頁…";
-
-      // 先送一個 beacon，提升真正記點成功率
-      fireMarkBeacon(normalizedPhone);
-
-      // 再跑 JSONP callback，成功就正常跳轉
       startJsonpRecord(normalizedPhone);
     }
 
@@ -447,6 +426,10 @@
         statusEl.textContent = "缺少植物資料，請重新掃描 QR code。";
         return;
       }
+
+      window.addEventListener("load", function () {
+        if (phoneInput) phoneInput.value = "";
+      });
 
       const currentPhone = syncPhone();
 
