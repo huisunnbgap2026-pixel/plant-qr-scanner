@@ -214,10 +214,6 @@
       <div id="reader" style="margin-top:18px;"></div>
 
       <div class="feature" style="margin-top:16px;">
-        <p id="currentPhoneText">目前登入手機：未偵測</p>
-      </div>
-
-      <div class="feature" style="margin-top:16px;">
         <p>若無法開啟鏡頭，請改用 Safari 或 Chrome，並確認網站已允許相機權限。</p>
       </div>
     </div>
@@ -226,6 +222,7 @@
       <div class="section-title">Navigation</div>
       <h2>探索捷徑</h2>
       <div class="grid">
+        <a id="scanAgainBtn" class="btn primary" href="#" target="_top">繼續探索植物</a>
         <a id="homeBtn" class="btn secondary" href="#" target="_top">返回展區首頁</a>
         <a id="queryBtn" class="btn secondary" href="#" target="_top">查看探索進度</a>
         <a id="rewardBtn" class="btn secondary" href="#" target="_top">查看探索獎勵</a>
@@ -239,15 +236,16 @@
     let scannerRunning = false;
 
     const APP_URL = "https://script.google.com/macros/s/AKfycbyoFlYdQfjyJUu0onsq2DOI5wZJmRcNI2maSEbU7b5uKiSQmajfFRJGYL8OisrhhNUYKg/exec";
+    const SCANNER_URL = "https://huisunnbgap2026-pixel.github.io/plant-qr-scanner/index.html";
 
     const statusEl = document.getElementById("status");
     const startBtn = document.getElementById("startBtn");
     const stopBtn = document.getElementById("stopBtn");
 
+    const scanAgainBtn = document.getElementById("scanAgainBtn");
     const homeBtn = document.getElementById("homeBtn");
     const queryBtn = document.getElementById("queryBtn");
     const rewardBtn = document.getElementById("rewardBtn");
-    const currentPhoneText = document.getElementById("currentPhoneText");
 
     function normalizePhone(phone) {
       let p = String(phone || "").replace(/\D/g, "").trim();
@@ -285,10 +283,16 @@
 
     function setNavLinks() {
       const phone = getCurrentPhone();
-      homeBtn.href = buildUrl(APP_URL, { mode: "home", phone: phone });
+      const homeUrl = buildUrl(APP_URL, { mode: "home", phone: phone });
+      const scanUrl = buildUrl(SCANNER_URL, {
+        phone: phone,
+        home: homeUrl
+      });
+
+      scanAgainBtn.href = scanUrl;
+      homeBtn.href = homeUrl;
       queryBtn.href = buildUrl(APP_URL, { mode: "query", phone: phone });
       rewardBtn.href = buildUrl(APP_URL, { mode: "rewards", phone: phone });
-      currentPhoneText.textContent = phone ? ("目前登入手機：" + phone) : "目前登入手機：未偵測";
     }
 
     async function handlePlantGoViaApi(urlObj, phone) {
@@ -309,7 +313,7 @@
       const res = await fetch(apiUrl, { method: "GET" });
       const data = await res.json();
 
-      if (!data || !data.success || !data.pageUrl) {
+      if (!data || !data.pageUrl) {
         throw new Error((data && data.message) || "植物探索記錄失敗");
       }
 
@@ -344,8 +348,15 @@
         const mode = (url.searchParams.get("mode") || "").trim().toLowerCase();
 
         if (mode === "plant_go") {
-          await handlePlantGoViaApi(url, phone);
-          return;
+          try {
+            await handlePlantGoViaApi(url, phone);
+            return;
+          } catch (err) {
+            url.searchParams.set("phone", phone);
+            statusEl.textContent = "正在切換備援模式開啟植物頁…";
+            window.top.location.href = url.toString();
+            return;
+          }
         }
 
         if ((mode === "stamp" || mode === "home" || mode === "query" || mode === "rewards") &&
