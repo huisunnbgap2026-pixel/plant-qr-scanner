@@ -281,6 +281,44 @@
       }
     }
 
+    function openTarget(url) {
+      try {
+        window.location.replace(url);
+      } catch (e) {
+        window.location.href = url;
+      }
+    }
+
+    function normalizePageUrl(url) {
+      const raw = String(url || "").trim();
+      if (!raw) return "";
+
+      try {
+        const u = new URL(raw);
+        return u.toString();
+      } catch (e) {
+        return raw;
+      }
+    }
+
+    async function fetchJsonWithTimeout(url, timeoutMs) {
+      const controller = new AbortController();
+      const timer = setTimeout(function() {
+        controller.abort();
+      }, timeoutMs);
+
+      try {
+        const res = await fetch(url, {
+          method: "GET",
+          signal: controller.signal,
+          cache: "no-store"
+        });
+        return await res.json();
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+
     function setNavLinks() {
       const phone = getCurrentPhone();
       const homeUrl = buildUrl(APP_URL, { mode: "home", phone: phone });
@@ -298,27 +336,44 @@
     async function handlePlantGoViaApi(urlObj, phone) {
       const plantId = (urlObj.searchParams.get("plant") || "").trim();
       if (!plantId) {
-        window.top.location.href = urlObj.toString();
+        openTarget(urlObj.toString());
         return;
       }
 
-      const apiUrl = buildUrl(APP_URL, {
-        mode: "plant_go_api",
+      const fallbackUrl = buildUrl(APP_URL, {
+        mode: "plant_go",
         plant: plantId,
         phone: phone
       });
 
+      const apiUrl = buildUrl(APP_URL, {
+        mode: "plant_go_api",
+        plant: plantId,
+        phone: phone,
+        _: Date.now().toString()
+      });
+
       statusEl.textContent = "已掃描成功，正在記錄植物探索…";
 
-      const res = await fetch(apiUrl, { method: "GET" });
-      const data = await res.json();
+      let data;
+      try {
+        data = await fetchJsonWithTimeout(apiUrl, 2500);
+      } catch (err) {
+        statusEl.textContent = "記錄逾時，改用備援模式開啟植物頁…";
+        openTarget(fallbackUrl);
+        return;
+      }
 
-      if (!data || !data.pageUrl) {
-        throw new Error((data && data.message) || "植物探索記錄失敗");
+      const pageUrl = normalizePageUrl(data && data.pageUrl);
+
+      if (!pageUrl) {
+        statusEl.textContent = "找不到植物頁網址，改用備援模式…";
+        openTarget(fallbackUrl);
+        return;
       }
 
       statusEl.textContent = "探索紀錄完成，正在前往植物介紹頁…";
-      window.top.location.href = data.pageUrl;
+      openTarget(pageUrl);
     }
 
     async function onScanSuccess(decodedText) {
@@ -341,22 +396,15 @@
 
         if (!isAppsScriptTarget) {
           statusEl.textContent = "已掃描成功，正在開啟內容…";
-          window.top.location.href = decodedText;
+          openTarget(decodedText);
           return;
         }
 
         const mode = (url.searchParams.get("mode") || "").trim().toLowerCase();
 
         if (mode === "plant_go") {
-          try {
-            await handlePlantGoViaApi(url, phone);
-            return;
-          } catch (err) {
-            url.searchParams.set("phone", phone);
-            statusEl.textContent = "正在切換備援模式開啟植物頁…";
-            window.top.location.href = url.toString();
-            return;
-          }
+          await handlePlantGoViaApi(url, phone);
+          return;
         }
 
         if ((mode === "stamp" || mode === "home" || mode === "query" || mode === "rewards") &&
@@ -365,10 +413,10 @@
         }
 
         statusEl.textContent = "已掃描成功，正在開啟內容…";
-        window.top.location.href = url.toString();
+        openTarget(url.toString());
       } catch (e) {
         statusEl.textContent = "已掃描成功，正在開啟內容…";
-        window.top.location.href = decodedText;
+        openTarget(decodedText);
       }
     }
 
