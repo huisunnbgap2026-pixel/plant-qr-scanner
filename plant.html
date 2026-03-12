@@ -174,7 +174,6 @@
 
     #manualBox{ display:none; }
     #actionBox{ display:none; }
-    #pingFrame{ display:none; width:0; height:0; border:0; }
 
     @media (max-width:700px){
       body{ padding:16px 12px 28px; }
@@ -231,8 +230,6 @@
     </div>
   </div>
 
-  <iframe id="pingFrame" title="ping"></iframe>
-
   <script>
     const APP_URL = "https://script.google.com/macros/s/AKfycbyoFlYdQfjyJUu0onsq2DOI5wZJmRcNI2maSEbU7b5uKiSQmajfFRJGYL8OisrhhNUYKg/exec";
     const SCANNER_URL = "https://huisunnbgap2026-pixel.github.io/plant-qr-scanner/index.html";
@@ -276,7 +273,6 @@
     const actionBox = document.getElementById("actionBox");
     const phoneInput = document.getElementById("phoneInput");
     const savePhoneBtn = document.getElementById("savePhoneBtn");
-    const pingFrame = document.getElementById("pingFrame");
 
     const goBtn = document.getElementById("goBtn");
     const scanBtn = document.getElementById("scanBtn");
@@ -285,6 +281,9 @@
     const homeBtn = document.getElementById("homeBtn");
 
     let redirected = false;
+    let pendingScript = null;
+    let pendingCallbackName = null;
+    let pendingTimer = null;
 
     function getCurrentPhone() {
       if (phoneFromUrl) return phoneFromUrl;
@@ -321,11 +320,67 @@
       actionBox.style.display = "block";
     }
 
+    function cleanupPending() {
+      if (pendingTimer) {
+        clearTimeout(pendingTimer);
+        pendingTimer = null;
+      }
+
+      if (pendingScript && pendingScript.parentNode) {
+        pendingScript.parentNode.removeChild(pendingScript);
+      }
+      pendingScript = null;
+
+      if (pendingCallbackName && window[pendingCallbackName]) {
+        try {
+          delete window[pendingCallbackName];
+        } catch (e) {
+          window[pendingCallbackName] = undefined;
+        }
+      }
+      pendingCallbackName = null;
+    }
+
     function redirectToPlantPage() {
       if (redirected) return;
       redirected = true;
+      cleanupPending();
       statusEl.textContent = "探索紀錄完成，正在前往植物介紹頁…";
       openTarget(pageUrl);
+    }
+
+    function startJsonpRecord(phone) {
+      const callbackName = "plantMarkDone_" + Date.now() + "_" + Math.floor(Math.random() * 1000000);
+      pendingCallbackName = callbackName;
+
+      window[callbackName] = function(data) {
+        statusEl.textContent = "探索紀錄完成，正在前往植物介紹頁…";
+        redirectToPlantPage();
+      };
+
+      const jsonpUrl = buildUrl(APP_URL, {
+        mode: "plant_mark_jsonp",
+        plant: plantId,
+        phone: phone,
+        callback: callbackName,
+        _: Date.now().toString()
+      });
+
+      const script = document.createElement("script");
+      pendingScript = script;
+      script.src = jsonpUrl;
+
+      script.onerror = function() {
+        statusEl.textContent = "記錄失敗，正在直接前往植物介紹頁…";
+        redirectToPlantPage();
+      };
+
+      document.body.appendChild(script);
+
+      pendingTimer = setTimeout(function() {
+        statusEl.textContent = "記錄逾時，正在直接前往植物介紹頁…";
+        redirectToPlantPage();
+      }, 4000);
     }
 
     function startWithPhone(phone) {
@@ -353,23 +408,7 @@
 
       sessionStorage.setItem(getAutoKey(normalizedPhone), "1");
       statusEl.textContent = "正在記錄探索並開啟植物介紹頁…";
-
-      const pingUrl = buildUrl(APP_URL, {
-        mode: "plant_mark_api",
-        plant: plantId,
-        phone: normalizedPhone,
-        _: Date.now().toString()
-      });
-
-      pingFrame.onload = function() {
-        redirectToPlantPage();
-      };
-
-      pingFrame.src = pingUrl;
-
-      setTimeout(function() {
-        redirectToPlantPage();
-      }, 2500);
+      startJsonpRecord(normalizedPhone);
     }
 
     function start() {
