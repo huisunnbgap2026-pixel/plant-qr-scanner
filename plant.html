@@ -284,6 +284,8 @@
     let pendingScript = null;
     let pendingCallbackName = null;
     let pendingTimer = null;
+    let redirectTimer = null;
+    let markBeaconImg = null;
 
     function getCurrentPhone() {
       if (phoneFromUrl) return phoneFromUrl;
@@ -326,6 +328,11 @@
         pendingTimer = null;
       }
 
+      if (redirectTimer) {
+        clearTimeout(redirectTimer);
+        redirectTimer = null;
+      }
+
       if (pendingScript && pendingScript.parentNode) {
         pendingScript.parentNode.removeChild(pendingScript);
       }
@@ -339,14 +346,33 @@
         }
       }
       pendingCallbackName = null;
+
+      markBeaconImg = null;
     }
 
-    function redirectToPlantPage() {
+    function redirectToPlantPage(delayMs) {
       if (redirected) return;
       redirected = true;
       cleanupPending();
-      statusEl.textContent = "探索紀錄完成，正在前往植物介紹頁…";
-      openTarget(pageUrl);
+
+      statusEl.textContent = "正在前往植物介紹頁…";
+
+      redirectTimer = setTimeout(function() {
+        openTarget(pageUrl);
+      }, delayMs || 0);
+    }
+
+    function fireMarkBeacon(phone) {
+      const beaconUrl = buildUrl(APP_URL, {
+        mode: "plant_mark_api",
+        plant: plantId,
+        phone: phone,
+        _: Date.now().toString()
+      });
+
+      markBeaconImg = new Image();
+      markBeaconImg.referrerPolicy = "no-referrer";
+      markBeaconImg.src = beaconUrl;
     }
 
     function startJsonpRecord(phone) {
@@ -355,7 +381,7 @@
 
       window[callbackName] = function(data) {
         statusEl.textContent = "探索紀錄完成，正在前往植物介紹頁…";
-        redirectToPlantPage();
+        redirectToPlantPage(120);
       };
 
       const jsonpUrl = buildUrl(APP_URL, {
@@ -371,16 +397,16 @@
       script.src = jsonpUrl;
 
       script.onerror = function() {
-        statusEl.textContent = "記錄失敗，正在直接前往植物介紹頁…";
-        redirectToPlantPage();
+        statusEl.textContent = "正在前往植物介紹頁…";
+        redirectToPlantPage(250);
       };
 
       document.body.appendChild(script);
 
       pendingTimer = setTimeout(function() {
-        statusEl.textContent = "記錄逾時，正在直接前往植物介紹頁…";
-        redirectToPlantPage();
-      }, 4000);
+        statusEl.textContent = "正在前往植物介紹頁…";
+        redirectToPlantPage(250);
+      }, 2500);
     }
 
     function startWithPhone(phone) {
@@ -408,6 +434,11 @@
 
       sessionStorage.setItem(getAutoKey(normalizedPhone), "1");
       statusEl.textContent = "正在記錄探索並開啟植物介紹頁…";
+
+      // 先送一個 beacon，提升真正記點成功率
+      fireMarkBeacon(normalizedPhone);
+
+      // 再跑 JSONP callback，成功就正常跳轉
       startJsonpRecord(normalizedPhone);
     }
 
