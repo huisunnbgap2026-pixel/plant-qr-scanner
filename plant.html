@@ -230,160 +230,179 @@
     </div>
   </div>
 
-  <script>
-    const APP_URL = "https://script.google.com/macros/s/AKfycbyoFlYdQfjyJUu0onsq2DOI5wZJmRcNI2maSEbU7b5uKiSQmajfFRJGYL8OisrhhNUYKg/exec";
-    const SCANNER_URL = "https://huisunnbgap2026-pixel.github.io/plant-qr-scanner/index.html";
-    const AUTO_KEY = "plant_auto_opened_";
+<script>
+  const APP_URL = "https://script.google.com/macros/s/AKfycbyoFlYdQfjyJUu0onsq2DOI5wZJmRcNI2maSEbU7b5uKiSQmajfFRJGYL8OisrhhNUYKg/exec";
+  const SCANNER_URL = "https://huisunnbgap2026-pixel.github.io/plant-qr-scanner/index.html";
+  const AUTO_KEY = "plant_auto_opened_";
 
-    function normalizePhone(phone) {
-      let p = String(phone || "").replace(/\D/g, "").trim();
-      if (p.length === 9 && p.startsWith("9")) p = "0" + p;
-      return p;
+  function normalizePhone(phone) {
+    let p = String(phone || "").replace(/\D/g, "").trim();
+    if (p.length === 9 && p.startsWith("9")) p = "0" + p;
+    return p;
+  }
+
+  function getParam(name) {
+    const url = new URL(window.location.href);
+    return url.searchParams.get(name) || "";
+  }
+
+  function buildUrl(base, params) {
+    const u = new URL(base);
+    Object.keys(params).forEach(function(key) {
+      if (params[key] !== undefined && params[key] !== null && params[key] !== "") {
+        u.searchParams.set(key, params[key]);
+      }
+    });
+    return u.toString();
+  }
+
+  function openTarget(url) {
+    try {
+      window.location.replace(url);
+    } catch (e) {
+      window.location.href = url;
     }
+  }
 
-    function getParam(name) {
-      const url = new URL(window.location.href);
-      return url.searchParams.get(name) || "";
-    }
+  async function fetchJsonWithTimeout(url, timeoutMs) {
+    const controller = new AbortController();
+    const timer = setTimeout(function() {
+      controller.abort();
+    }, timeoutMs);
 
-    function buildUrl(base, params) {
-      const u = new URL(base);
-      Object.keys(params).forEach(function(key) {
-        if (params[key] !== undefined && params[key] !== null && params[key] !== "") {
-          u.searchParams.set(key, params[key]);
-        }
+    try {
+      const res = await fetch(url, {
+        method: "GET",
+        signal: controller.signal,
+        cache: "no-store"
       });
-      return u.toString();
+      return await res.json();
+    } finally {
+      clearTimeout(timer);
     }
+  }
 
-    const plantId = getParam("plant");
-    const pageUrl = getParam("page");
-    const done = getParam("done");
-    const phoneFromUrl = normalizePhone(getParam("phone"));
+  const plantId = getParam("plant");
+  const pageUrl = getParam("page");
+  const phoneFromUrl = normalizePhone(getParam("phone"));
 
-    const statusEl = document.getElementById("status");
-    const manualBox = document.getElementById("manualBox");
-    const actionBox = document.getElementById("actionBox");
-    const phoneInput = document.getElementById("phoneInput");
-    const savePhoneBtn = document.getElementById("savePhoneBtn");
+  const statusEl = document.getElementById("status");
+  const manualBox = document.getElementById("manualBox");
+  const actionBox = document.getElementById("actionBox");
+  const phoneInput = document.getElementById("phoneInput");
+  const savePhoneBtn = document.getElementById("savePhoneBtn");
 
-    const goBtn = document.getElementById("goBtn");
-    const scanBtn = document.getElementById("scanBtn");
-    const queryBtn = document.getElementById("queryBtn");
-    const rewardBtn = document.getElementById("rewardBtn");
-    const homeBtn = document.getElementById("homeBtn");
+  const goBtn = document.getElementById("goBtn");
+  const scanBtn = document.getElementById("scanBtn");
+  const queryBtn = document.getElementById("queryBtn");
+  const rewardBtn = document.getElementById("rewardBtn");
+  const homeBtn = document.getElementById("homeBtn");
 
-    function getCurrentPhone() {
-      if (phoneFromUrl) return phoneFromUrl;
-      return normalizePhone(localStorage.getItem("savedPhone") || "");
-    }
+  function getCurrentPhone() {
+    if (phoneFromUrl) return phoneFromUrl;
+    return normalizePhone(localStorage.getItem("savedPhone") || "");
+  }
 
-    function syncPhone() {
-      const phone = getCurrentPhone();
-      if (phone) localStorage.setItem("savedPhone", phone);
-      return phone;
-    }
+  function syncPhone() {
+    const phone = getCurrentPhone();
+    if (phone) localStorage.setItem("savedPhone", phone);
+    return phone;
+  }
 
-    function getAutoKey(phone) {
-      return AUTO_KEY + plantId + "_" + normalizePhone(phone);
-    }
+  function getAutoKey(phone) {
+    return AUTO_KEY + plantId + "_" + normalizePhone(phone);
+  }
 
-    function setActionLinks(phone) {
-      const homeUrl = buildUrl(APP_URL, { mode: "home", phone: phone });
-      const queryUrl = buildUrl(APP_URL, { mode: "query", phone: phone });
-      const rewardUrl = buildUrl(APP_URL, { mode: "rewards", phone: phone });
-      const scanUrl = buildUrl(SCANNER_URL, {
-        phone: phone,
-        home: homeUrl
-      });
-
-      goBtn.href = pageUrl;
-      scanBtn.href = scanUrl;
-      queryBtn.href = queryUrl;
-      rewardBtn.href = rewardUrl;
-      homeBtn.href = homeUrl;
-    }
-
-    function showActionBox() {
-      actionBox.style.display = "block";
-    }
-
-    function startWithPhone(phone) {
-      const normalizedPhone = normalizePhone(phone);
-      if (!normalizedPhone) {
-        statusEl.textContent = "請先輸入正確手機號碼。";
-        manualBox.style.display = "block";
-        return;
-      }
-
-      localStorage.setItem("savedPhone", normalizedPhone);
-      setActionLinks(normalizedPhone);
-      showActionBox();
-
-      const alreadyAutoOpened = sessionStorage.getItem(getAutoKey(normalizedPhone)) === "1";
-      if (alreadyAutoOpened) {
-        statusEl.textContent = "你已回到植物探索站，可重新進入植物介紹，或使用下方功能按鈕。";
-        return;
-      }
-
-      sessionStorage.setItem(getAutoKey(normalizedPhone), "1");
-      statusEl.textContent = "正在記錄探索並開啟植物介紹頁…";
-
-      const goUrl = buildUrl(APP_URL, {
-        mode: "plant_go",
-        plant: plantId,
-        phone: normalizedPhone
-      });
-
-      window.location.href = goUrl;
-    }
-
-    function start() {
-      if (!plantId || !pageUrl) {
-        statusEl.textContent = "缺少植物資料，請重新掃描 QR code。";
-        return;
-      }
-
-      const currentPhone = syncPhone();
-
-      if (done === "1") {
-        if (!currentPhone) {
-          statusEl.textContent = "缺少手機號碼，請重新掃描 QR code。";
-          manualBox.style.display = "block";
-          return;
-        }
-
-        statusEl.textContent = "正在開啟植物介紹頁…";
-        setActionLinks(currentPhone);
-        showActionBox();
-
-        setTimeout(function () {
-          window.top.location.href = pageUrl;
-        }, 200);
-        return;
-      }
-
-      if (!currentPhone) {
-        statusEl.textContent = "請先輸入手機號碼。";
-        manualBox.style.display = "block";
-        return;
-      }
-
-      startWithPhone(currentPhone);
-    }
-
-    savePhoneBtn.addEventListener("click", function () {
-      const phone = normalizePhone(phoneInput.value);
-      if (!phone) {
-        statusEl.textContent = "請先輸入正確手機號碼。";
-        return;
-      }
-
-      manualBox.style.display = "none";
-      startWithPhone(phone);
+  function setActionLinks(phone) {
+    const homeUrl = buildUrl(APP_URL, { mode: "home", phone: phone });
+    const queryUrl = buildUrl(APP_URL, { mode: "query", phone: phone });
+    const rewardUrl = buildUrl(APP_URL, { mode: "rewards", phone: phone });
+    const scanUrl = buildUrl(SCANNER_URL, {
+      phone: phone,
+      home: homeUrl
     });
 
-    start();
-  </script>
+    goBtn.href = pageUrl;
+    scanBtn.href = scanUrl;
+    queryBtn.href = queryUrl;
+    rewardBtn.href = rewardUrl;
+    homeBtn.href = homeUrl;
+  }
+
+  function showActionBox() {
+    actionBox.style.display = "block";
+  }
+
+  async function startWithPhone(phone) {
+    const normalizedPhone = normalizePhone(phone);
+    if (!normalizedPhone) {
+      statusEl.textContent = "請先輸入正確手機號碼。";
+      manualBox.style.display = "block";
+      return;
+    }
+
+    localStorage.setItem("savedPhone", normalizedPhone);
+    setActionLinks(normalizedPhone);
+    showActionBox();
+
+    const alreadyAutoOpened = sessionStorage.getItem(getAutoKey(normalizedPhone)) === "1";
+    if (alreadyAutoOpened) {
+      statusEl.textContent = "你已回到植物探索站，可重新進入植物介紹，或使用下方功能按鈕。";
+      return;
+    }
+
+    sessionStorage.setItem(getAutoKey(normalizedPhone), "1");
+    statusEl.textContent = "正在記錄探索並開啟植物介紹頁…";
+
+    const apiUrl = buildUrl(APP_URL, {
+      mode: "plant_go_api",
+      plant: plantId,
+      phone: normalizedPhone,
+      _: Date.now().toString()
+    });
+
+    try {
+      const data = await fetchJsonWithTimeout(apiUrl, 2500);
+      if (data && data.pageUrl) {
+        statusEl.textContent = "探索紀錄完成，正在前往植物介紹頁…";
+        openTarget(data.pageUrl);
+        return;
+      }
+    } catch (e) {}
+
+    statusEl.textContent = "正在直接前往植物介紹頁…";
+    openTarget(pageUrl);
+  }
+
+  function start() {
+    if (!plantId || !pageUrl) {
+      statusEl.textContent = "缺少植物資料，請重新掃描 QR code。";
+      return;
+    }
+
+    const currentPhone = syncPhone();
+
+    if (!currentPhone) {
+      statusEl.textContent = "請先輸入手機號碼。";
+      manualBox.style.display = "block";
+      return;
+    }
+
+    startWithPhone(currentPhone);
+  }
+
+  savePhoneBtn.addEventListener("click", function () {
+    const phone = normalizePhone(phoneInput.value);
+    if (!phone) {
+      statusEl.textContent = "請先輸入正確手機號碼。";
+      return;
+    }
+
+    manualBox.style.display = "none";
+    startWithPhone(phone);
+  });
+
+  start();
+</script>
 </body>
 </html>
