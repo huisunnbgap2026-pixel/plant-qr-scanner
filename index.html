@@ -5,299 +5,54 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>QR 探索掃描站</title>
   <script src="https://unpkg.com/html5-qrcode"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;800&family=Noto+Serif+TC:wght@600;700;900&display=swap" rel="stylesheet">
   <style>
-    :root{
-      --bg1:#f6f2e8;
-      --bg2:#e8f1e4;
-      --bg3:#d8e6d1;
-      --card:#ffffff;
-      --text:#213227;
-      --muted:#5f6f62;
-      --primary:#3f6e49;
-      --primary-dark:#2f5838;
-      --soft:#eef5ea;
-      --border:#d5e0d0;
-      --shadow:0 10px 24px rgba(43,70,47,.08);
-    }
-
-    * { box-sizing: border-box; }
-
-    body{
-      margin:0;
-      padding:22px 14px 38px;
-      font-family:"Noto Sans TC","Microsoft JhengHei",Arial,sans-serif;
-      color:var(--text);
-      background:
-        radial-gradient(circle at 8% 10%, rgba(130,165,110,.18), transparent 18%),
-        radial-gradient(circle at 92% 14%, rgba(110,150,100,.14), transparent 18%),
-        radial-gradient(circle at 18% 88%, rgba(170,190,130,.15), transparent 16%),
-        linear-gradient(180deg, var(--bg1) 0%, var(--bg2) 52%, var(--bg3) 100%);
-      font-size:18px;
-      position:relative;
-      overflow-x:hidden;
-    }
-
-    body:before,
-    body:after{
-      position:fixed;
-      pointer-events:none;
-      opacity:.12;
-      z-index:0;
-      font-size:88px;
-      line-height:1;
-    }
-
-    body:before{
-      content:"🍃";
-      left:10px;
-      top:68px;
-      transform:rotate(-8deg);
-    }
-
-    body:after{
-      content:"🌿";
-      right:14px;
-      bottom:42px;
-      transform:rotate(10deg);
-    }
-
-    .wrap{
-      max-width:860px;
-      margin:0 auto;
-      position:relative;
-      z-index:1;
-    }
-
-    .hero{
-      margin-bottom:18px;
-      padding:28px 24px 24px;
-      border-radius:28px;
-      background:
-        radial-gradient(circle at top right, rgba(255,255,255,.14), transparent 24%),
-        linear-gradient(140deg, rgba(54,92,61,.98), rgba(92,133,94,.94) 52%, rgba(131,164,110,.92) 100%);
-      color:#fff;
-      box-shadow:var(--shadow);
-      position:relative;
-      overflow:hidden;
-    }
-
-    .hero:before{
-      content:"";
-      position:absolute;
-      inset:auto -30px -36px -30px;
-      height:92px;
-      background:
-        radial-gradient(circle at 8% 100%, rgba(34,56,38,.28) 0 16%, transparent 17%),
-        radial-gradient(circle at 22% 100%, rgba(34,56,38,.22) 0 17%, transparent 18%),
-        radial-gradient(circle at 40% 100%, rgba(34,56,38,.18) 0 18%, transparent 19%),
-        radial-gradient(circle at 58% 100%, rgba(34,56,38,.22) 0 16%, transparent 17%),
-        radial-gradient(circle at 76% 100%, rgba(34,56,38,.24) 0 16%, transparent 17%),
-        radial-gradient(circle at 92% 100%, rgba(34,56,38,.2) 0 15%, transparent 16%);
-    }
-
-    .hero h1{
-      margin:0 0 10px;
-      font-size:34px;
-      line-height:1.25;
-      position:relative;
-      z-index:1;
-    }
-
-    .hero p{
-      margin:0;
-      font-size:18px;
-      line-height:1.9;
-      color:rgba(255,255,255,.96);
-      position:relative;
-      z-index:1;
-    }
-
-    .hero-ornaments{
-      display:flex;
-      gap:10px;
-      margin-top:16px;
-      position:relative;
-      z-index:1;
-      flex-wrap:wrap;
-    }
-
-    .hero-ornaments span{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      width:42px;
-      height:42px;
-      border-radius:50%;
-      background:rgba(255,255,255,.14);
-      font-size:21px;
-    }
-
-    .card{
-      background:rgba(255,255,255,.94);
-      border:2px solid var(--border);
-      border-radius:24px;
-      padding:22px;
-      box-shadow:var(--shadow);
-      margin-bottom:16px;
-      backdrop-filter:blur(2px);
-    }
-
-    .section-title{
-      font-size:14px;
-      letter-spacing:1px;
-      text-transform:uppercase;
-      color:var(--muted);
-      margin-bottom:8px;
-      font-weight:700;
-    }
-
-    h2{
-      margin:0 0 12px;
-      font-size:28px;
-      line-height:1.35;
-    }
-
-    p{
-      margin:0 0 14px;
-      line-height:1.9;
-      color:var(--muted);
-      font-size:18px;
-    }
-
-    .lead{
-      font-size:19px;
-      color:var(--text);
-    }
-
-    .feature{
-      border:2px solid #dbe6d6;
-      background:#f8fbf5;
-      border-radius:20px;
-      padding:18px;
-    }
-
-    .feature p{
-      margin-bottom:0;
-      font-size:18px;
-      color:var(--text);
-    }
-
-    .forest-row{
-      display:grid;
-      grid-template-columns:repeat(4, 1fr);
-      gap:10px;
-      margin-top:16px;
-    }
-
-    .forest-pill{
-      border-radius:18px;
-      background:linear-gradient(135deg, #f7fbf4, #edf5e8);
-      border:2px solid #dbe6d6;
-      padding:12px 10px;
-      text-align:center;
-      font-size:16px;
-      color:#39543f;
-      font-weight:700;
-    }
-
-    #reader{
-      width:100%;
-      max-width:560px;
-      margin:0 auto;
-      overflow:hidden;
-      border-radius:18px;
-      border:2px solid #dbe6d6;
-      background:#f8fbf5;
-      min-height:40px;
-    }
-
-    button, a.btn{
-      width:100%;
-      display:block;
-      box-sizing:border-box;
-      border-radius:18px;
-      padding:18px 16px;
-      font-size:20px;
-      margin-top:14px;
-      text-decoration:none;
-      border:0;
-      text-align:center;
-    }
-
-    button.primary, a.btn.primary{
-      background:linear-gradient(135deg, var(--primary), var(--primary-dark));
-      color:#fff;
-      box-shadow:0 8px 18px rgba(63,110,73,.18);
-      cursor:pointer;
-      font-weight:700;
-    }
-
-    button.secondary, a.btn.secondary{
-      background:var(--soft);
-      color:var(--text);
-      border:2px solid #dbe6d6;
-      font-weight:700;
-    }
-
-    #stopBtn{
-      display:none;
-    }
-
-    .grid{
-      display:grid;
-      grid-template-columns:1fr;
-      gap:14px;
-      margin-top:8px;
-    }
-
-    @media (max-width:700px){
-      body{ padding:16px 12px 28px; }
-      .hero{ padding:24px 18px 20px; border-radius:22px; }
-      .hero h1{ font-size:28px; }
-      .hero p{ font-size:17px; }
-      .card{ padding:18px; border-radius:20px; }
-      h2{ font-size:24px; }
-      p{ font-size:17px; }
-      button, a.btn{ font-size:19px; padding:17px 14px; }
-      .forest-row{ grid-template-columns:repeat(2, 1fr); }
-    }
+    :root{--bg:#edf5ec;--card:#fffef9;--card-soft:#f8fbf6;--text:#27352a;--muted:#627063;--primary:#55795c;--primary-dark:#3f5d45;--line:#d6e3d3;--shadow:0 8px 20px rgba(63,93,66,.08)}
+    *{box-sizing:border-box}
+    body{margin:0;padding:22px 14px 38px;font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;color:var(--text);background:radial-gradient(circle at 10% 10%, rgba(122,158,120,.07), transparent 18%),radial-gradient(circle at 88% 14%, rgba(122,158,120,.07), transparent 18%),radial-gradient(circle at 15% 85%, rgba(122,158,120,.06), transparent 18%),radial-gradient(circle at 82% 88%, rgba(122,158,120,.06), transparent 16%),var(--bg);position:relative;overflow-x:hidden}
+    .wrap{max-width:860px;margin:0 auto;position:relative;z-index:1}
+    .hero{margin-bottom:18px;padding:28px 22px 24px;border-radius:26px;background:linear-gradient(145deg, rgba(89,124,94,.96), rgba(123,157,116,.94));color:#fff;box-shadow:var(--shadow);border:2px solid rgba(255,255,255,.18);position:relative;overflow:hidden}
+    .hero h1{margin:0 0 10px;font-family:"Noto Serif TC",serif;font-size:36px;font-weight:900}
+    .hero p{margin:0;font-size:18px;line-height:1.95;color:rgba(255,255,255,.96)}
+    .hero-ornaments{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+    .hero-ornaments span{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.14);font-size:21px}
+    .card{background:var(--card);border:2px solid var(--line);border-radius:22px;padding:22px;box-shadow:var(--shadow);margin-bottom:16px;position:relative}
+    .card:after{content:"";position:absolute;inset:8px;border:1px dashed rgba(126,153,120,.18);border-radius:16px;pointer-events:none}
+    .section-title{font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#71826f;margin-bottom:8px;font-weight:800}
+    h2{margin:0 0 12px;font-family:"Noto Serif TC",serif;font-size:29px;font-weight:700;color:#2b3b2f}
+    p{margin:0 0 14px;line-height:1.95;color:var(--muted);font-size:18px}
+    .lead{font-size:19px;color:var(--text)}
+    .feature{border:2px solid var(--line);background:var(--card-soft);border-radius:18px;padding:18px}
+    .feature p{margin-bottom:0;color:var(--text)}
+    .forest-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px}
+    .forest-pill{border-radius:16px;background:linear-gradient(135deg,#f7fbf6,#edf5eb);border:2px solid var(--line);padding:12px 10px;text-align:center;font-size:16px;color:#405842;font-weight:700}
+    #reader{width:100%;max-width:560px;margin:0 auto;overflow:hidden;border-radius:18px;border:2px solid var(--line);background:var(--card-soft);min-height:40px}
+    button,a.btn{width:100%;display:block;box-sizing:border-box;border-radius:16px;padding:18px 16px;font-size:19px;font-weight:700;letter-spacing:.6px;margin-top:14px;text-decoration:none;border:0;text-align:center}
+    button.primary,a.btn.primary{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;box-shadow:0 8px 18px rgba(63,110,73,.18)}
+    button.secondary,a.btn.secondary{background:linear-gradient(180deg,#efe4c7 0%,#e3d2ab 100%);color:#4c3d28;border:2px solid #bfa57b;box-shadow:0 8px 16px rgba(110,87,46,.10),inset 0 1px 0 rgba(255,248,232,.75)}
+    #stopBtn{display:none}.grid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:8px}
+    @media (max-width:700px){body{padding:16px 12px 28px}.hero{padding:24px 18px 20px;border-radius:20px}.hero h1{font-size:30px}.hero p,p{font-size:17px}h2{font-size:25px}button,a.btn{font-size:18px;padding:16px 14px}.forest-row{grid-template-columns:repeat(2,1fr)}}
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="hero">
       <h1>QR 探索掃描站</h1>
-      <p>走進森林植物探索路徑，掃描植物牌或任務點，系統會帶你前往植物介紹與探索內容。</p>
-      <div class="hero-ornaments">
-        <span>🌿</span>
-        <span>🍃</span>
-        <span>🌱</span>
-        <span>🌼</span>
-      </div>
+      <p>走進方舟植物展覽探索路徑，掃描植物牌或任務點，系統會帶你前往植物介紹與探索內容。</p>
+      <div class="hero-ornaments"><span>🌿</span><span>🍃</span><span>🌱</span><span>🌼</span></div>
     </div>
-
     <div class="card">
       <div class="section-title">Scanner</div>
       <h2>開始掃描探索標記</h2>
       <p class="lead" id="status">按下下方按鈕後，系統會優先開啟後置鏡頭。</p>
-
       <button id="startBtn" class="primary">啟動後置鏡頭</button>
       <button id="stopBtn" class="secondary">停止掃描</button>
-
       <div id="reader" style="margin-top:18px;"></div>
-
-      <div class="feature" style="margin-top:16px;">
-        <p>若無法開啟鏡頭，請改用 Safari 或 Chrome，並確認網站已允許相機權限。</p>
-      </div>
-
-      <div class="forest-row">
-        <div class="forest-pill">🌲 森林入口</div>
-        <div class="forest-pill">🍀 植物蒐集</div>
-        <div class="forest-pill">🪴 導覽任務</div>
-        <div class="forest-pill">🏅 達人認證</div>
-      </div>
+      <div class="feature" style="margin-top:16px;"><p>若無法開啟鏡頭，請改用 Safari 或 Chrome，並確認網站已允許相機權限。</p></div>
+      <div class="forest-row"><div class="forest-pill">🌿 植物蒐集</div><div class="forest-pill">🪴 導覽任務</div><div class="forest-pill">🏅 達人認證</div><div class="forest-pill">📚 展覽瀏覽</div></div>
     </div>
-
     <div class="card">
       <div class="section-title">Navigation</div>
       <h2>探索捷徑</h2>
@@ -306,254 +61,35 @@
         <a id="homeBtn" class="btn secondary" href="#" target="_top">返回展區首頁</a>
         <a id="queryBtn" class="btn secondary" href="#" target="_top">查看探索進度</a>
         <a id="rewardBtn" class="btn secondary" href="#" target="_top">查看探索獎勵</a>
-        <a id="collectionBtn" class="btn secondary" href="https://sites.google.com/view/nat-bot-gard-nchu/%E9%A6%96%E9%A0%81/%E7%9B%AE%E5%89%8D%E9%A4%A8%E8%97%8F" target="_top">瀏覽目前館藏</a>
+        <a class="btn secondary" href="https://sites.google.com/view/nat-bot-gard-nchu/%E9%A6%96%E9%A0%81/%E7%9B%AE%E5%89%8D%E9%A4%A8%E8%97%8F" target="_top">瀏覽目前館藏</a>
       </div>
     </div>
   </div>
-
   <script>
-    let html5QrCode = null;
-    let scannerRunning = false;
-
-    const APP_URL = "https://script.google.com/macros/s/AKfycbyoFlYdQfjyJUu0onsq2DOI5wZJmRcNI2maSEbU7b5uKiSQmajfFRJGYL8OisrhhNUYKg/exec";
-    const SCANNER_URL = "https://huisunnbgap2026-pixel.github.io/plant-qr-scanner/index.html";
-
-    const statusEl = document.getElementById("status");
-    const startBtn = document.getElementById("startBtn");
-    const stopBtn = document.getElementById("stopBtn");
-
-    const scanAgainBtn = document.getElementById("scanAgainBtn");
-    const homeBtn = document.getElementById("homeBtn");
-    const queryBtn = document.getElementById("queryBtn");
-    const rewardBtn = document.getElementById("rewardBtn");
-
-    function normalizePhone(phone) {
-      let p = String(phone || "").replace(/\D/g, "").trim();
-      if (p.length === 9 && p.startsWith("9")) p = "0" + p;
-      return p;
-    }
-
-    function buildUrl(base, params) {
-      const u = new URL(base);
-      Object.keys(params).forEach(function(key) {
-        if (params[key] !== undefined && params[key] !== null && params[key] !== "") {
-          u.searchParams.set(key, params[key]);
-        }
-      });
-      return u.toString();
-    }
-
-    function getUrlPhone() {
-      const params = new URLSearchParams(window.location.search);
-      return normalizePhone(params.get("phone") || "");
-    }
-
-    function getCurrentPhone() {
-      const urlPhone = getUrlPhone();
-      if (urlPhone) return urlPhone;
-      return normalizePhone(localStorage.getItem("savedPhone") || "");
-    }
-
-    function syncPhoneFromUrl() {
-      const urlPhone = getUrlPhone();
-      if (urlPhone) {
-        localStorage.setItem("savedPhone", urlPhone);
-      }
-    }
-
-    function openTarget(url) {
-      try {
-        window.location.replace(url);
-      } catch (e) {
-        window.location.href = url;
-      }
-    }
-
-    function normalizePageUrl(url) {
-      const raw = String(url || "").trim();
-      if (!raw) return "";
-      try {
-        const u = new URL(raw);
-        return u.toString();
-      } catch (e) {
-        return raw;
-      }
-    }
-
-    async function fetchJsonWithTimeout(url, timeoutMs) {
-      const controller = new AbortController();
-      const timer = setTimeout(function() {
-        controller.abort();
-      }, timeoutMs);
-
-      try {
-        const res = await fetch(url, {
-          method: "GET",
-          signal: controller.signal,
-          cache: "no-store"
-        });
-        return await res.json();
-      } finally {
-        clearTimeout(timer);
-      }
-    }
-
-    function setNavLinks() {
-      const phone = getCurrentPhone();
-      const homeUrl = buildUrl(APP_URL, { mode: "home", phone: phone });
-      const scanUrl = buildUrl(SCANNER_URL, {
-        phone: phone,
-        home: homeUrl
-      });
-
-      scanAgainBtn.href = scanUrl;
-      homeBtn.href = homeUrl;
-      queryBtn.href = buildUrl(APP_URL, { mode: "query", phone: phone });
-      rewardBtn.href = buildUrl(APP_URL, { mode: "rewards", phone: phone });
-    }
-
-    async function handlePlantGoViaApi(urlObj, phone) {
-      const plantId = (urlObj.searchParams.get("plant") || "").trim();
-      if (!plantId) {
-        openTarget(urlObj.toString());
-        return;
-      }
-
-      const fallbackUrl = buildUrl(APP_URL, {
-        mode: "plant_go",
-        plant: plantId,
-        phone: phone
-      });
-
-      const apiUrl = buildUrl(APP_URL, {
-        mode: "plant_go_api",
-        plant: plantId,
-        phone: phone,
-        _: Date.now().toString()
-      });
-
-      statusEl.textContent = "已掃描成功，正在記錄植物探索…";
-
-      let data;
-      try {
-        data = await fetchJsonWithTimeout(apiUrl, 2500);
-      } catch (err) {
-        statusEl.textContent = "記錄逾時，改用備援模式開啟植物頁…";
-        openTarget(fallbackUrl);
-        return;
-      }
-
-      const pageUrl = normalizePageUrl(data && data.pageUrl);
-
-      if (!pageUrl) {
-        statusEl.textContent = "找不到植物頁網址，改用備援模式…";
-        openTarget(fallbackUrl);
-        return;
-      }
-
-      statusEl.textContent = "探索紀錄完成，正在前往植物介紹頁…";
-      openTarget(pageUrl);
-    }
-
-    async function onScanSuccess(decodedText) {
-      if (scannerRunning && html5QrCode) {
-        html5QrCode.stop().catch(() => {});
-        scannerRunning = false;
-      }
-
-      const phone = getCurrentPhone();
-      if (!phone) {
-        statusEl.textContent = "找不到手機號碼，請先回首頁登入。";
-        return;
-      }
-
-      try {
-        const url = new URL(decodedText);
-        const isAppsScriptTarget =
-          url.origin === "https://script.google.com" &&
-          url.pathname.indexOf("/macros/s/") !== -1;
-
-        if (!isAppsScriptTarget) {
-          statusEl.textContent = "已掃描成功，正在開啟內容…";
-          openTarget(decodedText);
-          return;
-        }
-
-        const mode = (url.searchParams.get("mode") || "").trim().toLowerCase();
-
-        if (mode === "plant_go") {
-          await handlePlantGoViaApi(url, phone);
-          return;
-        }
-
-        if ((mode === "stamp" || mode === "home" || mode === "query" || mode === "rewards") &&
-            !normalizePhone(url.searchParams.get("phone") || "")) {
-          url.searchParams.set("phone", phone);
-        }
-
-        statusEl.textContent = "已掃描成功，正在開啟內容…";
-        openTarget(url.toString());
-      } catch (e) {
-        statusEl.textContent = "已掃描成功，正在開啟內容…";
-        openTarget(decodedText);
-      }
-    }
-
-    async function startScanner() {
-      if (scannerRunning) return;
-
-      statusEl.textContent = "正在啟動後置鏡頭…";
-      html5QrCode = new Html5Qrcode("reader");
-
-      try {
-        await html5QrCode.start(
-          { facingMode: { exact: "environment" } },
-          { fps: 10, qrbox: { width: 250, height: 250 } },
-          onScanSuccess
-        );
-
-        scannerRunning = true;
-        startBtn.style.display = "none";
-        stopBtn.style.display = "block";
-        statusEl.textContent = "後置鏡頭已啟動，請將 QR code 對準框內。";
-        return;
-      } catch (err1) {
-        try {
-          await html5QrCode.start(
-            { facingMode: "environment" },
-            { fps: 10, qrbox: { width: 250, height: 250 } },
-            onScanSuccess
-          );
-
-          scannerRunning = true;
-          startBtn.style.display = "none";
-          stopBtn.style.display = "block";
-          statusEl.textContent = "鏡頭已啟動，請將 QR code 對準框內。";
-          return;
-        } catch (err2) {
-          statusEl.textContent = "無法開啟後置鏡頭，請確認相機權限是否允許，或改用 Safari / Chrome。";
-        }
-      }
-    }
-
-    async function stopScanner() {
-      if (!html5QrCode || !scannerRunning) return;
-
-      try {
-        await html5QrCode.stop();
-      } catch (e) {}
-
-      scannerRunning = false;
-      stopBtn.style.display = "none";
-      startBtn.style.display = "block";
-      statusEl.textContent = "已停止掃描。";
-    }
-
-    syncPhoneFromUrl();
-    setNavLinks();
-
-    startBtn.addEventListener("click", startScanner);
-    stopBtn.addEventListener("click", stopScanner);
+    let html5QrCode=null, scannerRunning=false;
+    const APP_URL="https://script.google.com/macros/s/AKfycbyoFlYdQfjyJUu0onsq2DOI5wZJmRcNI2maSEbU7b5uKiSQmajfFRJGYL8OisrhhNUYKg/exec";
+    const SCANNER_URL="https://huisunnbgap2026-pixel.github.io/plant-qr-scanner/index.html";
+    const statusEl=document.getElementById("status");
+    const startBtn=document.getElementById("startBtn");
+    const stopBtn=document.getElementById("stopBtn");
+    const scanAgainBtn=document.getElementById("scanAgainBtn");
+    const homeBtn=document.getElementById("homeBtn");
+    const queryBtn=document.getElementById("queryBtn");
+    const rewardBtn=document.getElementById("rewardBtn");
+    function normalizePhone(phone){let p=String(phone||"").replace(/\D/g,"").trim();if(p.length===9&&p.startsWith("9"))p="0"+p;return p;}
+    function buildUrl(base,params){const u=new URL(base);Object.keys(params).forEach(function(k){if(params[k]!==undefined&&params[k]!==null&&params[k]!=="")u.searchParams.set(k,params[k]);});return u.toString();}
+    function getUrlPhone(){const params=new URLSearchParams(window.location.search);return normalizePhone(params.get("phone")||"");}
+    function getCurrentPhone(){return getUrlPhone()||normalizePhone(localStorage.getItem("savedPhone")||"");}
+    function syncPhoneFromUrl(){const p=getUrlPhone();if(p)localStorage.setItem("savedPhone",p);}
+    function openTarget(url){try{window.location.replace(url);}catch(e){window.location.href=url;}}
+    function normalizePageUrl(url){const raw=String(url||"").trim();if(!raw)return"";try{return new URL(raw).toString();}catch(e){return raw;}}
+    async function fetchJsonWithTimeout(url,timeoutMs){const controller=new AbortController();const timer=setTimeout(function(){controller.abort();},timeoutMs);try{const res=await fetch(url,{method:"GET",signal:controller.signal,cache:"no-store"});return await res.json();}finally{clearTimeout(timer);}}
+    function setNavLinks(){const phone=getCurrentPhone();const homeUrl=buildUrl(APP_URL,{mode:"home",phone:phone});const scanUrl=buildUrl(SCANNER_URL,{phone:phone,home:homeUrl});scanAgainBtn.href=scanUrl;homeBtn.href=homeUrl;queryBtn.href=buildUrl(APP_URL,{mode:"query",phone:phone});rewardBtn.href=buildUrl(APP_URL,{mode:"rewards",phone:phone});}
+    async function handlePlantGoViaApi(urlObj,phone){const plantId=(urlObj.searchParams.get("plant")||"").trim();if(!plantId){openTarget(urlObj.toString());return;}const fallbackUrl=buildUrl(APP_URL,{mode:"plant_go",plant:plantId,phone:phone});const apiUrl=buildUrl(APP_URL,{mode:"plant_go_api",plant:plantId,phone:phone,_:Date.now().toString()});statusEl.textContent="已掃描成功，正在記錄植物探索…";let data;try{data=await fetchJsonWithTimeout(apiUrl,2500);}catch(err){statusEl.textContent="記錄逾時，改用備援模式開啟植物頁…";openTarget(fallbackUrl);return;}const pageUrl=normalizePageUrl(data&&data.pageUrl);if(!pageUrl){statusEl.textContent="找不到植物頁網址，改用備援模式…";openTarget(fallbackUrl);return;}statusEl.textContent="探索紀錄完成，正在前往植物介紹頁…";openTarget(pageUrl);}
+    async function onScanSuccess(decodedText){if(scannerRunning&&html5QrCode){html5QrCode.stop().catch(()=>{});scannerRunning=false;}const phone=getCurrentPhone();if(!phone){statusEl.textContent="找不到手機號碼，請先回首頁登入。";return;}try{const url=new URL(decodedText);const isAppsScriptTarget=url.origin==="https://script.google.com"&&url.pathname.indexOf("/macros/s/")!==-1;if(!isAppsScriptTarget){statusEl.textContent="已掃描成功，正在開啟內容…";openTarget(decodedText);return;}const mode=(url.searchParams.get("mode")||"").trim().toLowerCase();if(mode==="plant_go"){await handlePlantGoViaApi(url,phone);return;}if((mode==="stamp"||mode==="home"||mode==="query"||mode==="rewards")&&!normalizePhone(url.searchParams.get("phone")||""))url.searchParams.set("phone",phone);statusEl.textContent="已掃描成功，正在開啟內容…";openTarget(url.toString());}catch(e){statusEl.textContent="已掃描成功，正在開啟內容…";openTarget(decodedText);}}
+    async function startScanner(){if(scannerRunning)return;statusEl.textContent="正在啟動後置鏡頭…";html5QrCode=new Html5Qrcode("reader");try{await html5QrCode.start({facingMode:{exact:"environment"}},{fps:10,qrbox:{width:250,height:250}},onScanSuccess);scannerRunning=true;startBtn.style.display="none";stopBtn.style.display="block";statusEl.textContent="後置鏡頭已啟動，請將 QR code 對準框內。";}catch(err1){try{await html5QrCode.start({facingMode:"environment"},{fps:10,qrbox:{width:250,height:250}},onScanSuccess);scannerRunning=true;startBtn.style.display="none";stopBtn.style.display="block";statusEl.textContent="鏡頭已啟動，請將 QR code 對準框內。";}catch(err2){statusEl.textContent="無法開啟後置鏡頭，請確認相機權限是否允許，或改用 Safari / Chrome。";}}}
+    async function stopScanner(){if(!html5QrCode||!scannerRunning)return;try{await html5QrCode.stop();}catch(e){}scannerRunning=false;stopBtn.style.display="none";startBtn.style.display="block";statusEl.textContent="已停止掃描。";}
+    syncPhoneFromUrl();setNavLinks();startBtn.addEventListener("click",startScanner);stopBtn.addEventListener("click",stopScanner);
   </script>
 </body>
 </html>
