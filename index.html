@@ -106,7 +106,6 @@
       if (!u) return "";
 
       try { u = decodeURIComponent(u); } catch (e) {}
-
       u = u.replace(/\s+/g, "");
 
       if (/^sites\.google\.com\//i.test(u)) {
@@ -191,7 +190,7 @@
       pendingTimer = setTimeout(function() {
         cleanupPending();
         go(pageUrl);
-      }, 2200);
+      }, 1800);
     }
 
     function startWithPhone(phone) {
