@@ -163,7 +163,7 @@
       const callbackName = "plantMarkDone_" + Date.now() + "_" + Math.floor(Math.random() * 1000000);
       pendingCallbackName = callbackName;
 
-      window[callbackName] = function(data) {
+      window[callbackName] = function() {
         cleanupPending();
         go(pageUrl);
       };
