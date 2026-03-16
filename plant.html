@@ -66,11 +66,7 @@
       color:#27352a;
       border:2px solid #d6e3d3;
     }
-    #manualBox{
-      display:none;
-      margin-top:16px;
-    }
-    #actionBox{
+    #manualBox,#actionBox{
       display:none;
       margin-top:16px;
     }
@@ -122,29 +118,18 @@
     function normalizePageUrl(url) {
       let u = String(url || "").trim();
       if (!u) return "";
-
       try { u = decodeURIComponent(u); } catch (e) {}
-
       u = u.replace(/\s+/g, "");
-
-      if (/^sites\.google\.com\//i.test(u)) {
-        u = "https://" + u;
-      }
-      if (/^\/view\//i.test(u)) {
-        u = "https://sites.google.com" + u;
-      }
-
+      if (/^sites\.google\.com\//i.test(u)) u = "https://" + u;
+      if (/^\/view\//i.test(u)) u = "https://sites.google.com" + u;
       if (!/^https?:\/\//i.test(u)) return "";
       return u;
     }
 
     function go(url) {
       if (!url) return;
-      try {
-        window.top.location.replace(url);
-      } catch (e) {
-        window.location.replace(url);
-      }
+      try { window.top.location.replace(url); }
+      catch (e) { window.location.replace(url); }
     }
 
     const plantId = getParam("plant");
@@ -162,6 +147,7 @@
     let pendingScript = null;
     let pendingCallbackName = null;
     let pendingTimer = null;
+    let finished = false;
 
     function cleanupPending() {
       if (pendingTimer) {
@@ -186,8 +172,19 @@
 
     function showActions(phone) {
       actionBox.style.display = "block";
-      goBtn.href = pageUrl;
+      goBtn.href = pageUrl || "#";
       homeBtn.href = buildUrl(APP_URL, { mode: "home", phone: phone });
+    }
+
+    function finishAndGo(phone, text) {
+      if (finished) return;
+      finished = true;
+      cleanupPending();
+      statusEl.textContent = text || "正在前往植物介紹頁…";
+      showActions(phone);
+      setTimeout(function() {
+        go(pageUrl);
+      }, 250);
     }
 
     function startJsonpRecord(phone) {
@@ -195,12 +192,11 @@
       pendingCallbackName = callbackName;
 
       window[callbackName] = function(data) {
-        cleanupPending();
-        statusEl.textContent = "探索紀錄完成，正在前往植物介紹頁…";
-        showActions(phone);
-        setTimeout(function() {
-          go(pageUrl);
-        }, 200);
+        if (data && data.success === false) {
+          finishAndGo(phone, data.message || "已記錄探索，正在前往植物介紹頁…");
+          return;
+        }
+        finishAndGo(phone, "探索紀錄完成，正在前往植物介紹頁…");
       };
 
       const jsonpUrl = buildUrl(APP_URL, {
@@ -216,24 +212,14 @@
       script.src = jsonpUrl;
 
       script.onerror = function() {
-        cleanupPending();
-        statusEl.textContent = "記錄完成，正在前往植物介紹頁…";
-        showActions(phone);
-        setTimeout(function() {
-          go(pageUrl);
-        }, 200);
+        finishAndGo(phone, "已送出探索紀錄，正在前往植物介紹頁…");
       };
 
       document.body.appendChild(script);
 
       pendingTimer = setTimeout(function() {
-        cleanupPending();
-        statusEl.textContent = "正在前往植物介紹頁…";
-        showActions(phone);
-        setTimeout(function() {
-          go(pageUrl);
-        }, 200);
-      }, 1800);
+        finishAndGo(phone, "正在前往植物介紹頁…");
+      }, 2200);
     }
 
     function startWithPhone(phone) {
