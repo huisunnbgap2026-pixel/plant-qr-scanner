@@ -84,10 +84,24 @@
       color:#405842;
       font-weight:700;
     }
+    .manual{
+      display:none;
+      margin-top:16px;
+    }
+    input{
+      width:100%;
+      box-sizing:border-box;
+      border-radius:16px;
+      padding:16px 14px;
+      font-size:18px;
+      border:2px solid #d6e3d3;
+      background:#fffefb;
+      margin-top:10px;
+    }
     .actions{
       display:grid;
       gap:12px;
-      margin-top:16px;
+      margin-top:18px;
     }
     a.btn,button.btn{
       width:100%;
@@ -110,20 +124,6 @@
       background:#eef5ea;
       color:#27352a;
       border:2px solid #d6e3d3;
-    }
-    .manual{
-      display:none;
-      margin-top:16px;
-    }
-    input{
-      width:100%;
-      box-sizing:border-box;
-      border-radius:16px;
-      padding:16px 14px;
-      font-size:18px;
-      border:2px solid #d6e3d3;
-      background:#fffefb;
-      margin-top:10px;
     }
   </style>
 </head>
@@ -150,13 +150,18 @@
         </div>
 
         <div class="actions">
-          <a class="btn secondary" id="homeBtn" href="#">返回展區首頁</a>
+          <a class="btn primary" id="queryBtn" href="#">查看我的進度</a>
+          <a class="btn secondary" id="rewardBtn" href="#">查看可兌換獎勵</a>
+          <a class="btn secondary" id="homeBtn" href="#">回首頁</a>
+          <a class="btn secondary" id="logoutBtn" href="#">切換使用者</a>
         </div>
       </div>
     </div>
   </div>
 
   <script>
+    const APP_URL = "https://script.google.com/macros/s/AKfycbyoFlYdQfjyJUu0onsq2DOI5wZJmRcNI2maSEbU7b5uKiSQmajfFRJGYL8OisrhhNUYKg/exec";
+
     function normalizePhone(phone) {
       let p = String(phone || "").replace(/\D/g, "").trim();
       if (p.length === 9 && p.startsWith("9")) p = "0" + p;
@@ -176,26 +181,42 @@
       }
     }
 
+    function buildUrl(base, params) {
+      const u = new URL(base);
+      Object.keys(params).forEach(function(key) {
+        if (params[key] !== undefined && params[key] !== null && params[key] !== "") {
+          u.searchParams.set(key, params[key]);
+        }
+      });
+      return u.toString();
+    }
+
     const homeParam = safeUrl(getParam("home"));
     const phoneParam = normalizePhone(getParam("phone"));
     const statusEl = document.getElementById("status");
     const manualBox = document.getElementById("manualBox");
     const phoneInput = document.getElementById("phoneInput");
     const savePhoneBtn = document.getElementById("savePhoneBtn");
+    const queryBtn = document.getElementById("queryBtn");
+    const rewardBtn = document.getElementById("rewardBtn");
     const homeBtn = document.getElementById("homeBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
 
     let html5QrCode = null;
     let alreadyJumped = false;
 
-    if (homeParam) {
-      homeBtn.href = homeParam;
-    } else {
-      homeBtn.style.display = "none";
-    }
-
     function getSavedPhone() {
       if (phoneParam) return phoneParam;
       return normalizePhone(localStorage.getItem("savedPhone") || "");
+    }
+
+    function refreshActionLinks() {
+      const phone = getSavedPhone();
+
+      queryBtn.href = buildUrl(APP_URL, { mode: "query", phone: phone });
+      rewardBtn.href = buildUrl(APP_URL, { mode: "rewards", phone: phone });
+      homeBtn.href = buildUrl(APP_URL, { mode: "home", phone: phone });
+      logoutBtn.href = buildUrl(APP_URL, { mode: "logout" });
     }
 
     function attachPhoneToUrl(rawUrl, phone) {
@@ -212,6 +233,8 @@
 
     async function startScanner() {
       const phone = getSavedPhone();
+      refreshActionLinks();
+
       if (!phone) {
         statusEl.textContent = "請先輸入手機號碼。";
         manualBox.style.display = "block";
@@ -259,9 +282,17 @@
       }
       localStorage.setItem("savedPhone", phone);
       alreadyJumped = false;
+      refreshActionLinks();
       startScanner();
     });
 
+    logoutBtn.addEventListener("click", function(e) {
+      e.preventDefault();
+      try { localStorage.removeItem("savedPhone"); } catch (e2) {}
+      window.location.href = buildUrl(APP_URL, { mode: "logout" });
+    });
+
+    refreshActionLinks();
     startScanner();
   </script>
 </body>
