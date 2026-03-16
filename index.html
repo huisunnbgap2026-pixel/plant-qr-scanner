@@ -4,11 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>方舟植物展覽</title>
-  <meta http-equiv="refresh" content="0; url=./scanner.html">
+  <meta name="robots" content="noindex,nofollow">
   <style>
     html,body{
       margin:0;
       padding:0;
+      min-height:100vh;
       background:#edf5ec;
       font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif;
       color:#27352a;
@@ -36,23 +37,88 @@
       color:#27352a;
     }
     p{
-      margin:0;
+      margin:0 0 14px;
       font-size:16px;
       line-height:1.8;
       color:#627063;
+    }
+    a.btn{
+      width:100%;
+      box-sizing:border-box;
+      border-radius:14px;
+      padding:14px 12px;
+      font-size:17px;
+      margin-top:12px;
+      text-decoration:none;
+      display:block;
+      text-align:center;
+      background:linear-gradient(135deg,#55795c,#3f5d45);
+      color:#fff;
+      font-weight:700;
+    }
+    img{
+      width:min(72vw,220px);
+      max-width:220px;
+      height:auto;
+      display:block;
+      margin:0 auto 14px;
     }
   </style>
 </head>
 <body>
   <div class="page">
     <div class="box">
-      <h1>正在前往 QR 探索掃描站</h1>
-      <p>若沒有自動跳轉，請<a href="./scanner.html">點這裡</a>。</p>
+      <img src="./logo.png" alt="方舟植物展覽 logo">
+      <h1>方舟植物展覽</h1>
+      <p id="status">正在前往展覽首頁…</p>
+      <a class="btn" id="goBtn" href="#">手動前往首頁</a>
     </div>
   </div>
 
   <script>
-    window.location.replace('./scanner.html');
+    const APP_URL = "https://script.google.com/macros/s/AKfycbyoFlYdQfjyJUu0onsq2DOI5wZJmRcNI2maSEbU7b5uKiSQmajfFRJGYL8OisrhhNUYKg/exec";
+
+    function normalizePhone(phone) {
+      let p = String(phone || "").replace(/\D/g, "").trim();
+      if (p.length === 9 && p.startsWith("9")) p = "0" + p;
+      return p;
+    }
+
+    function getParam(name) {
+      const url = new URL(window.location.href);
+      return url.searchParams.get(name) || "";
+    }
+
+    function buildUrl(base, params) {
+      const u = new URL(base);
+      Object.keys(params).forEach(function (key) {
+        if (params[key] !== undefined && params[key] !== null && params[key] !== "") {
+          u.searchParams.set(key, params[key]);
+        }
+      });
+      return u.toString();
+    }
+
+    const statusEl = document.getElementById("status");
+    const goBtn = document.getElementById("goBtn");
+
+    const phoneFromUrl = normalizePhone(getParam("phone"));
+    const savedPhone = normalizePhone(localStorage.getItem("savedPhone") || "");
+    const finalPhone = phoneFromUrl || savedPhone;
+
+    const target = buildUrl(APP_URL, finalPhone ? { mode: "home", phone: finalPhone } : { mode: "home" });
+
+    goBtn.href = target;
+
+    if (finalPhone) {
+      try { localStorage.setItem("savedPhone", finalPhone); } catch (e) {}
+    }
+
+    statusEl.textContent = "正在前往展覽首頁…";
+
+    setTimeout(function () {
+      window.location.replace(target);
+    }, 250);
   </script>
 </body>
 </html>
