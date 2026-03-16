@@ -212,7 +212,6 @@
 
     function refreshActionLinks() {
       const phone = getSavedPhone();
-
       queryBtn.href = buildUrl(APP_URL, { mode: "query", phone: phone });
       rewardBtn.href = buildUrl(APP_URL, { mode: "rewards", phone: phone });
       homeBtn.href = buildUrl(APP_URL, { mode: "home", phone: phone });
