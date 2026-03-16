@@ -3,13 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>植物探索導覽站</title>
+  <title>方舟植物展覽</title>
+  <meta http-equiv="refresh" content="0; url=./scanner.html">
   <style>
     html,body{
       margin:0;
       padding:0;
       background:#edf5ec;
       font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif;
+      color:#27352a;
     }
     .page{
       min-height:100vh;
@@ -34,213 +36,23 @@
       color:#27352a;
     }
     p{
-      margin:0 0 14px;
+      margin:0;
       font-size:16px;
       line-height:1.8;
       color:#627063;
-    }
-    input,button{
-      width:100%;
-      box-sizing:border-box;
-      border-radius:14px;
-      padding:14px 12px;
-      font-size:17px;
-      margin-top:12px;
-    }
-    input{
-      border:2px solid #d6e3d3;
-      background:#fff;
-    }
-    button{
-      border:0;
-      background:linear-gradient(135deg,#55795c,#3f5d45);
-      color:#fff;
-      font-weight:700;
-    }
-    #manualBox{
-      display:none;
-      margin-top:16px;
     }
   </style>
 </head>
 <body>
   <div class="page">
     <div class="box">
-      <h1>植物探索中</h1>
-      <p id="status">正在處理植物探索紀錄…</p>
-
-      <div id="manualBox">
-        <p>請先輸入手機號碼，再前往植物介紹頁。</p>
-        <input id="phoneInput" type="text" placeholder="例如：0912345678" inputmode="numeric">
-        <button id="savePhoneBtn" type="button">繼續</button>
-      </div>
+      <h1>正在前往 QR 探索掃描站</h1>
+      <p>若沒有自動跳轉，請<a href="./scanner.html">點這裡</a>。</p>
     </div>
   </div>
 
   <script>
-    const APP_URL = "https://script.google.com/macros/s/AKfycbyoFlYdQfjyJUu0onsq2DOI5wZJmRcNI2maSEbU7b5uKiSQmajfFRJGYL8OisrhhNUYKg/exec";
-
-    function normalizePhone(phone) {
-      let p = String(phone || "").replace(/\D/g, "").trim();
-      if (p.length === 9 && p.startsWith("9")) p = "0" + p;
-      return p;
-    }
-
-    function getParam(name) {
-      const url = new URL(window.location.href);
-      return url.searchParams.get(name) || "";
-    }
-
-    function buildUrl(base, params) {
-      const u = new URL(base);
-      Object.keys(params).forEach(function(key) {
-        if (params[key] !== undefined && params[key] !== null && params[key] !== "") {
-          u.searchParams.set(key, params[key]);
-        }
-      });
-      return u.toString();
-    }
-
-    function normalizePageUrl(url) {
-      let u = String(url || "").trim();
-      if (!u) return "";
-
-      try { u = decodeURIComponent(u); } catch (e) {}
-      u = u.replace(/\s+/g, "");
-
-      if (/^sites\.google\.com\//i.test(u)) {
-        u = "https://" + u;
-      }
-      if (/^\/view\//i.test(u)) {
-        u = "https://sites.google.com" + u;
-      }
-
-      if (!/^https?:\/\//i.test(u)) return "";
-      return u;
-    }
-
-    function go(url) {
-      if (!url) return;
-      try { window.top.location.replace(url); }
-      catch (e) { window.location.replace(url); }
-    }
-
-    const plantId = getParam("plant");
-    const pageUrl = normalizePageUrl(getParam("page"));
-    const phoneFromUrl = normalizePhone(getParam("phone"));
-
-    const statusEl = document.getElementById("status");
-    const manualBox = document.getElementById("manualBox");
-    const phoneInput = document.getElementById("phoneInput");
-    const savePhoneBtn = document.getElementById("savePhoneBtn");
-
-    let pendingScript = null;
-    let pendingCallbackName = null;
-    let pendingTimer = null;
-
-    function cleanupPending() {
-      if (pendingTimer) {
-        clearTimeout(pendingTimer);
-        pendingTimer = null;
-      }
-      if (pendingScript && pendingScript.parentNode) {
-        pendingScript.parentNode.removeChild(pendingScript);
-      }
-      pendingScript = null;
-      if (pendingCallbackName && window[pendingCallbackName]) {
-        try { delete window[pendingCallbackName]; }
-        catch (e) { window[pendingCallbackName] = undefined; }
-      }
-      pendingCallbackName = null;
-    }
-
-    function getCurrentPhone() {
-      if (phoneFromUrl) return phoneFromUrl;
-      return normalizePhone(localStorage.getItem("savedPhone") || "");
-    }
-
-    function startJsonpRecord(phone) {
-      const callbackName = "plantMarkDone_" + Date.now() + "_" + Math.floor(Math.random() * 1000000);
-      pendingCallbackName = callbackName;
-
-      window[callbackName] = function() {
-        cleanupPending();
-        go(pageUrl);
-      };
-
-      const jsonpUrl = buildUrl(APP_URL, {
-        mode: "plant_mark_jsonp",
-        plant: plantId,
-        phone: phone,
-        callback: callbackName,
-        _: Date.now().toString()
-      });
-
-      const script = document.createElement("script");
-      pendingScript = script;
-      script.src = jsonpUrl;
-
-      script.onerror = function() {
-        cleanupPending();
-        go(pageUrl);
-      };
-
-      document.body.appendChild(script);
-
-      pendingTimer = setTimeout(function() {
-        cleanupPending();
-        go(pageUrl);
-      }, 1800);
-    }
-
-    function startWithPhone(phone) {
-      const normalizedPhone = normalizePhone(phone);
-
-      if (!normalizedPhone) {
-        statusEl.textContent = "請先輸入正確手機號碼。";
-        manualBox.style.display = "block";
-        return;
-      }
-
-      if (!plantId) {
-        statusEl.textContent = "缺少 plant 參數，請重新掃描 QR code。";
-        return;
-      }
-
-      if (!pageUrl) {
-        statusEl.textContent = "植物頁網址無效，請檢查 QR code。";
-        return;
-      }
-
-      localStorage.setItem("savedPhone", normalizedPhone);
-      statusEl.textContent = "正在前往植物介紹頁…";
-      startJsonpRecord(normalizedPhone);
-    }
-
-    savePhoneBtn.addEventListener("click", function() {
-      startWithPhone(phoneInput.value);
-    });
-
-    (function init() {
-      if (!plantId) {
-        statusEl.textContent = "缺少 plant 參數，請重新掃描 QR code。";
-        return;
-      }
-
-      if (!pageUrl) {
-        statusEl.textContent = "植物頁網址無效，請檢查 QR code。";
-        return;
-      }
-
-      const phone = getCurrentPhone();
-      if (!phone) {
-        statusEl.textContent = "請先輸入手機號碼。";
-        manualBox.style.display = "block";
-        return;
-      }
-
-      startWithPhone(phone);
-    })();
+    window.location.replace('./scanner.html');
   </script>
 </body>
 </html>
