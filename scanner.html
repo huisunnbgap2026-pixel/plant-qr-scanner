@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR 探索掃描站</title>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <style>
+    html,body{
+      margin:0;
+      padding:0;
+      background:#edf5ec;
+      font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif;
+      color:#27352a;
+    }
+    .page{
+      min-height:100vh;
+      padding:24px 16px 32px;
+      box-sizing:border-box;
+    }
+    .wrap{
+      max-width:720px;
+      margin:0 auto;
+    }
+    .hero{
+      margin-bottom:18px;
+      padding:28px 22px 24px;
+      border-radius:26px;
+      background:linear-gradient(145deg, rgba(89,124,94,.96), rgba(123,157,116,.94));
+      color:#fff;
+      box-shadow:0 8px 20px rgba(63,93,66,.08);
+      border:2px solid rgba(255,255,255,.18);
+    }
+    .hero h1{
+      margin:0 0 10px;
+      font-size:32px;
+      font-weight:900;
+    }
+    .hero p{
+      margin:0;
+      line-height:1.8;
+      color:rgba(255,255,255,.96);
+    }
+    .card{
+      background:#fffef9;
+      border:2px solid #d6e3d3;
+      border-radius:22px;
+      padding:20px;
+      box-shadow:0 8px 20px rgba(63,93,66,.08);
+      margin-bottom:16px;
+    }
+    .section-title{
+      font-size:13px;
+      letter-spacing:2px;
+      text-transform:uppercase;
+      color:#71826f;
+      margin-bottom:8px;
+      font-weight:800;
+    }
+    h2{
+      margin:0 0 12px;
+      font-size:28px;
+      font-weight:800;
+      color:#2b3b2f;
+    }
+    p{
+      margin:0 0 12px;
+      line-height:1.8;
+      color:#627063;
+      font-size:17px;
+    }
+    #reader{
+      width:100%;
+      border-radius:16px;
+      overflow:hidden;
+      background:#f4f8f2;
+    }
+    .status{
+      margin-top:14px;
+      padding:14px 16px;
+      border-radius:14px;
+      background:#f8fbf6;
+      border:2px solid #d6e3d3;
+      color:#405842;
+      font-weight:700;
+    }
+    .actions{
+      display:grid;
+      gap:12px;
+      margin-top:16px;
+    }
+    a.btn,button.btn{
+      width:100%;
+      box-sizing:border-box;
+      border-radius:16px;
+      padding:16px 14px;
+      font-size:18px;
+      font-weight:800;
+      text-decoration:none;
+      border:0;
+      text-align:center;
+      display:block;
+      cursor:pointer;
+    }
+    a.btn.primary,button.btn.primary{
+      background:linear-gradient(135deg,#55795c,#3f5d45);
+      color:#fff;
+    }
+    a.btn.secondary{
+      background:#eef5ea;
+      color:#27352a;
+      border:2px solid #d6e3d3;
+    }
+    .manual{
+      display:none;
+      margin-top:16px;
+    }
+    input{
+      width:100%;
+      box-sizing:border-box;
+      border-radius:16px;
+      padding:16px 14px;
+      font-size:18px;
+      border:2px solid #d6e3d3;
+      background:#fffefb;
+      margin-top:10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="wrap">
+      <div class="hero">
+        <h1>QR 探索掃描站</h1>
+        <p>請將鏡頭對準植物 QR code，系統會自動前往植物介紹頁。</p>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Scanner</div>
+        <h2>開始掃描</h2>
+        <p>若是第一次使用，請允許相機權限。</p>
+
+        <div id="reader"></div>
+        <div class="status" id="status">正在啟動相機…</div>
+
+        <div class="manual" id="manualBox">
+          <p>找不到手機號碼，請先輸入。</p>
+          <input id="phoneInput" type="text" placeholder="例如：0912345678" inputmode="numeric">
+          <button class="btn primary" id="savePhoneBtn" type="button">儲存後開始掃描</button>
+        </div>
+
+        <div class="actions">
+          <a class="btn secondary" id="homeBtn" href="#">返回展區首頁</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function normalizePhone(phone) {
+      let p = String(phone || "").replace(/\D/g, "").trim();
+      if (p.length === 9 && p.startsWith("9")) p = "0" + p;
+      return p;
+    }
+
+    function getParam(name) {
+      const url = new URL(window.location.href);
+      return url.searchParams.get(name) || "";
+    }
+
+    function safeUrl(url) {
+      try {
+        return new URL(url).toString();
+      } catch (e) {
+        return "";
+      }
+    }
+
+    const homeParam = safeUrl(getParam("home"));
+    const phoneParam = normalizePhone(getParam("phone"));
+    const statusEl = document.getElementById("status");
+    const manualBox = document.getElementById("manualBox");
+    const phoneInput = document.getElementById("phoneInput");
+    const savePhoneBtn = document.getElementById("savePhoneBtn");
+    const homeBtn = document.getElementById("homeBtn");
+
+    let html5QrCode = null;
+    let alreadyJumped = false;
+
+    if (homeParam) {
+      homeBtn.href = homeParam;
+    } else {
+      homeBtn.style.display = "none";
+    }
+
+    function getSavedPhone() {
+      if (phoneParam) return phoneParam;
+      return normalizePhone(localStorage.getItem("savedPhone") || "");
+    }
+
+    function attachPhoneToUrl(rawUrl, phone) {
+      try {
+        const u = new URL(rawUrl);
+        if (phone && !u.searchParams.get("phone")) {
+          u.searchParams.set("phone", phone);
+        }
+        return u.toString();
+      } catch (e) {
+        return rawUrl;
+      }
+    }
+
+    async function startScanner() {
+      const phone = getSavedPhone();
+      if (!phone) {
+        statusEl.textContent = "請先輸入手機號碼。";
+        manualBox.style.display = "block";
+        return;
+      }
+
+      localStorage.setItem("savedPhone", phone);
+      manualBox.style.display = "none";
+      statusEl.textContent = "請對準植物 QR code…";
+
+      if (html5QrCode) {
+        try { await html5QrCode.stop(); } catch (e) {}
+        try { await html5QrCode.clear(); } catch (e) {}
+      }
+
+      html5QrCode = new Html5Qrcode("reader");
+
+      try {
+        await html5QrCode.start(
+          { facingMode: "environment" },
+          {
+            fps: 10,
+            qrbox: { width: 240, height: 240 }
+          },
+          function(decodedText) {
+            if (alreadyJumped) return;
+            alreadyJumped = true;
+            statusEl.textContent = "已掃描成功，正在前往植物頁…";
+
+            const target = attachPhoneToUrl(decodedText, phone);
+            window.location.href = target;
+          },
+          function() {}
+        );
+      } catch (err) {
+        statusEl.textContent = "相機啟動失敗，請檢查權限或改用 Safari 開啟。";
+      }
+    }
+
+    savePhoneBtn.addEventListener("click", function() {
+      const phone = normalizePhone(phoneInput.value);
+      if (!phone) {
+        statusEl.textContent = "請輸入正確手機號碼。";
+        return;
+      }
+      localStorage.setItem("savedPhone", phone);
+      alreadyJumped = false;
+      startScanner();
+    });
+
+    startScanner();
+  </script>
+</body>
+</html>
