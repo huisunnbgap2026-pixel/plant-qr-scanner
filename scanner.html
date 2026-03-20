@@ -71,10 +71,10 @@
     }
     #reader{
       width:100%;
+      min-height:280px;
       border-radius:16px;
       overflow:hidden;
       background:#f4f8f2;
-      min-height:280px;
     }
     .status{
       margin-top:14px;
@@ -123,7 +123,7 @@
       background:linear-gradient(135deg,#55795c,#3f5d45);
       color:#fff;
     }
-    a.btn.secondary{
+    a.btn.secondary,button.btn.secondary{
       background:#eef5ea;
       color:#27352a;
       border:2px solid #d6e3d3;
@@ -141,10 +141,15 @@
       <div class="card">
         <div class="section-title">Scanner</div>
         <h2>開始掃描</h2>
-        <p>若是第一次使用，請允許相機權限。</p>
+        <p>請先點「啟動掃描」，再允許相機權限。</p>
 
         <div id="reader"></div>
-        <div class="status" id="status">正在啟動相機…</div>
+        <div class="status" id="status">尚未啟動相機。</div>
+
+        <div class="actions" style="margin-top:14px;">
+          <button class="btn primary" id="startBtn" type="button">啟動掃描</button>
+          <button class="btn secondary" id="stopBtn" type="button">停止掃描</button>
+        </div>
 
         <div class="manual" id="manualBox">
           <p>找不到手機號碼，請先輸入。</p>
@@ -194,6 +199,18 @@
       return u.toString();
     }
 
+    function attachPhoneToUrl(rawUrl, phone) {
+      try {
+        const u = new URL(rawUrl);
+        if (phone && !u.searchParams.get("phone")) {
+          u.searchParams.set("phone", phone);
+        }
+        return u.toString();
+      } catch (e) {
+        return rawUrl;
+      }
+    }
+
     const homeParam = safeUrl(getParam("home"));
     const phoneParam = normalizePhone(getParam("phone"));
     const statusEl = document.getElementById("status");
@@ -204,6 +221,8 @@
     const rewardBtn = document.getElementById("rewardBtn");
     const homeBtn = document.getElementById("homeBtn");
     const logoutBtn = document.getElementById("logoutBtn");
+    const startBtn = document.getElementById("startBtn");
+    const stopBtn = document.getElementById("stopBtn");
 
     let html5QrCode = null;
     let alreadyJumped = false;
@@ -224,18 +243,6 @@
       logoutBtn.href = buildUrl(APP_URL, { mode: "logout" });
     }
 
-    function attachPhoneToUrl(rawUrl, phone) {
-      try {
-        const u = new URL(rawUrl);
-        if (phone && !u.searchParams.get("phone")) {
-          u.searchParams.set("phone", phone);
-        }
-        return u.toString();
-      } catch (e) {
-        return rawUrl;
-      }
-    }
-
     async function stopScanner() {
       if (!html5QrCode || isStoppingScanner) return;
       isStoppingScanner = true;
@@ -253,6 +260,7 @@
       html5QrCode = null;
       hasScannerStarted = false;
       isStoppingScanner = false;
+      statusEl.textContent = "已停止掃描。";
     }
 
     async function goToTarget(rawUrl) {
@@ -287,7 +295,7 @@
 
       localStorage.setItem("savedPhone", phone);
       manualBox.style.display = "none";
-      statusEl.textContent = "請對準植物 QR code…";
+      statusEl.textContent = "正在啟動相機…";
 
       await stopScanner();
 
@@ -310,7 +318,8 @@
         hasScannerStarted = true;
         statusEl.textContent = "請對準植物 QR code…";
       } catch (err) {
-        statusEl.textContent = "相機啟動失敗，請檢查權限或改用 Safari 開啟。";
+        const msg = err && err.message ? err.message : String(err || "unknown error");
+        statusEl.textContent = "相機啟動失敗：" + msg;
       }
 
       isStartingScanner = false;
@@ -328,6 +337,15 @@
       startScanner();
     });
 
+    startBtn.addEventListener("click", function() {
+      alreadyJumped = false;
+      startScanner();
+    });
+
+    stopBtn.addEventListener("click", function() {
+      stopScanner();
+    });
+
     logoutBtn.addEventListener("click", async function(e) {
       e.preventDefault();
       try { localStorage.removeItem("savedPhone"); } catch (e2) {}
@@ -339,14 +357,16 @@
       stopScanner();
     });
 
-    window.addEventListener("pageshow", function() {
-      alreadyJumped = false;
-      refreshActionLinks();
-      startScanner();
-    });
-
     refreshActionLinks();
-    startScanner();
+
+    // 不自動啟動，改成手動按鈕
+    const initPhone = getSavedPhone();
+    if (!initPhone) {
+      manualBox.style.display = "block";
+      statusEl.textContent = "請先輸入手機號碼，再按啟動掃描。";
+    } else {
+      statusEl.textContent = "請按「啟動掃描」開始。";
+    }
   </script>
 </body>
 </html>
