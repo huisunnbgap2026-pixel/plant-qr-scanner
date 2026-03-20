@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>QR 探索掃描站</title>
   <script src="https://unpkg.com/html5-qrcode"></script>
   <style>
@@ -74,6 +74,7 @@
       border-radius:16px;
       overflow:hidden;
       background:#f4f8f2;
+      min-height:280px;
     }
     .status{
       margin-top:14px;
@@ -83,6 +84,8 @@
       border:2px solid #d6e3d3;
       color:#405842;
       font-weight:700;
+      line-height:1.7;
+      word-break:break-word;
     }
     .manual{
       display:none;
@@ -204,6 +207,9 @@
 
     let html5QrCode = null;
     let alreadyJumped = false;
+    let isStartingScanner = false;
+    let isStoppingScanner = false;
+    let hasScannerStarted = false;
 
     function getSavedPhone() {
       if (phoneParam) return phoneParam;
@@ -214,7 +220,7 @@
       const phone = getSavedPhone();
       queryBtn.href = buildUrl(APP_URL, { mode: "query", phone: phone });
       rewardBtn.href = buildUrl(APP_URL, { mode: "rewards", phone: phone });
-      homeBtn.href = buildUrl(APP_URL, { mode: "home", phone: phone });
+      homeBtn.href = homeParam || buildUrl(APP_URL, { mode: "home", phone: phone });
       logoutBtn.href = buildUrl(APP_URL, { mode: "logout" });
     }
 
@@ -230,13 +236,52 @@
       }
     }
 
+    async function stopScanner() {
+      if (!html5QrCode || isStoppingScanner) return;
+      isStoppingScanner = true;
+
+      try {
+        if (hasScannerStarted) {
+          await html5QrCode.stop();
+        }
+      } catch (e) {}
+
+      try {
+        await html5QrCode.clear();
+      } catch (e) {}
+
+      html5QrCode = null;
+      hasScannerStarted = false;
+      isStoppingScanner = false;
+    }
+
+    async function goToTarget(rawUrl) {
+      if (alreadyJumped) return;
+      alreadyJumped = true;
+
+      const phone = getSavedPhone();
+      const target = attachPhoneToUrl(rawUrl, phone);
+
+      statusEl.textContent = "已掃描成功，正在前往植物頁…";
+
+      await stopScanner();
+
+      setTimeout(function () {
+        window.location.replace(target);
+      }, 350);
+    }
+
     async function startScanner() {
+      if (isStartingScanner) return;
+      isStartingScanner = true;
+
       const phone = getSavedPhone();
       refreshActionLinks();
 
       if (!phone) {
         statusEl.textContent = "請先輸入手機號碼。";
         manualBox.style.display = "block";
+        isStartingScanner = false;
         return;
       }
 
@@ -244,33 +289,31 @@
       manualBox.style.display = "none";
       statusEl.textContent = "請對準植物 QR code…";
 
-      if (html5QrCode) {
-        try { await html5QrCode.stop(); } catch (e) {}
-        try { await html5QrCode.clear(); } catch (e) {}
-      }
+      await stopScanner();
 
       html5QrCode = new Html5Qrcode("reader");
 
       try {
         await html5QrCode.start(
-          { facingMode: "environment" },
+          { facingMode: { ideal: "environment" } },
           {
             fps: 10,
-            qrbox: { width: 240, height: 240 }
+            qrbox: { width: 240, height: 240 },
+            aspectRatio: 1.333334
           },
-          function(decodedText) {
-            if (alreadyJumped) return;
-            alreadyJumped = true;
-            statusEl.textContent = "已掃描成功，正在前往植物頁…";
-
-            const target = attachPhoneToUrl(decodedText, phone);
-            window.location.href = target;
+          async function(decodedText) {
+            await goToTarget(decodedText);
           },
           function() {}
         );
+
+        hasScannerStarted = true;
+        statusEl.textContent = "請對準植物 QR code…";
       } catch (err) {
         statusEl.textContent = "相機啟動失敗，請檢查權限或改用 Safari 開啟。";
       }
+
+      isStartingScanner = false;
     }
 
     savePhoneBtn.addEventListener("click", function() {
@@ -285,10 +328,21 @@
       startScanner();
     });
 
-    logoutBtn.addEventListener("click", function(e) {
+    logoutBtn.addEventListener("click", async function(e) {
       e.preventDefault();
       try { localStorage.removeItem("savedPhone"); } catch (e2) {}
+      await stopScanner();
       window.location.href = buildUrl(APP_URL, { mode: "logout" });
+    });
+
+    window.addEventListener("pagehide", function() {
+      stopScanner();
+    });
+
+    window.addEventListener("pageshow", function() {
+      alreadyJumped = false;
+      refreshActionLinks();
+      startScanner();
     });
 
     refreshActionLinks();
