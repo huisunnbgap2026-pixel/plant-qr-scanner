@@ -156,7 +156,7 @@
       <div class="card">
         <div class="section-title">Scanner</div>
         <h2>開始掃描</h2>
-        <p>此頁不會記住上一位參觀者的手機號碼，每位參觀者都需重新輸入。</p>
+        <p>每位參觀者只需輸入一次手機號碼。此頁不會沿用上一位使用者的電話。</p>
 
         <div class="manual" id="manualBox">
           <p>請先輸入手機號碼。</p>
@@ -190,6 +190,7 @@
 
   <script>
     const APP_URL = "https://script.google.com/macros/s/AKfycbyoFlYdQfjyJUu0onsq2DOI5wZJmRcNI2maSEbU7b5uKiSQmajfFRJGYL8OisrhhNUYKg/exec";
+    const COLLECTION_URL = "https://sites.google.com/view/nat-bot-gard-nchu/%E9%A6%96%E9%A0%81/%E7%9B%AE%E5%89%8D%E9%A4%A8%E8%97%8F";
 
     function normalizePhone(phone) {
       return String(phone || "").replace(/\D/g, "").trim();
@@ -229,18 +230,64 @@
         .trim();
     }
 
-    function attachPhoneToUrl(rawUrl, phone) {
+    function parsePlantQrUrl(rawUrl) {
       try {
         const cleaned = cleanDecodedText(rawUrl);
         const u = new URL(cleaned);
+        const mode = u.searchParams.get("mode");
+        const plant = u.searchParams.get("plant");
 
-        // 一律覆蓋成當前使用者手機，不沿用 QR 內舊值
-        u.searchParams.set("phone", phone);
+        if (mode !== "plant_go" || !plant) return null;
 
-        return u.toString();
+        return { plant: plant };
       } catch (e) {
-        return "";
+        return null;
       }
+    }
+
+    function jsonpMarkPlantAndGetRedirect(plant, phone) {
+      return new Promise(function(resolve, reject) {
+        const callbackName = "__plantCallback_" + Date.now() + "_" + Math.floor(Math.random() * 100000);
+        const url = new URL(APP_URL);
+        url.searchParams.set("mode", "plant_mark_jsonp");
+        url.searchParams.set("plant", plant);
+        url.searchParams.set("phone", phone);
+        url.searchParams.set("callback", callbackName);
+
+        const script = document.createElement("script");
+        let done = false;
+
+        function cleanup() {
+          try { delete window[callbackName]; } catch (e) {}
+          if (script.parentNode) script.parentNode.removeChild(script);
+        }
+
+        const timer = setTimeout(function() {
+          if (done) return;
+          done = true;
+          cleanup();
+          reject(new Error("jsonp timeout"));
+        }, 10000);
+
+        window[callbackName] = function(data) {
+          if (done) return;
+          done = true;
+          clearTimeout(timer);
+          cleanup();
+          resolve(data || {});
+        };
+
+        script.onerror = function() {
+          if (done) return;
+          done = true;
+          clearTimeout(timer);
+          cleanup();
+          reject(new Error("jsonp load error"));
+        };
+
+        script.src = url.toString();
+        document.body.appendChild(script);
+      });
     }
 
     const homeParam = safeUrl(getParam("home"));
@@ -334,24 +381,32 @@
       if (!isValidMobile(phone)) {
         await stopScanner(true);
         statusEl.textContent = "目前手機號碼無效，請重新輸入 09xxxxxxxx。";
-        manualBox.style.display = "block";
         return;
       }
 
-      const finalUrl = attachPhoneToUrl(rawUrl, phone);
-
+      const parsed = parsePlantQrUrl(rawUrl);
       await stopScanner(true);
 
-      if (!finalUrl) {
-        statusEl.textContent = "掃描成功，但 QR 內容不是有效網址。";
+      if (!parsed) {
+        statusEl.textContent = "這不是植物 QR code，請重新掃描。";
         return;
       }
 
-      pendingTargetUrl = finalUrl;
-      statusEl.textContent = "已掃描成功，請點按鈕前往植物頁。";
-      resultText.textContent = "已掃描成功，將使用目前輸入的手機號碼記點。";
-      resultUrl.textContent = finalUrl;
-      resultBox.style.display = "block";
+      try {
+        statusEl.textContent = "掃描成功，正在記錄點數…";
+
+        const resp = await jsonpMarkPlantAndGetRedirect(parsed.plant, phone);
+        const target = resp.redirectUrl || COLLECTION_URL;
+
+        pendingTargetUrl = target;
+        resultText.textContent = (resp.message || "已完成記點") + "，請點按鈕前往植物頁。";
+        resultUrl.textContent = target;
+        resultBox.style.display = "block";
+        statusEl.textContent = "已完成記點，請點按鈕前往植物頁。";
+      } catch (err) {
+        const msg = err && err.message ? err.message : String(err || "unknown error");
+        statusEl.textContent = "記點失敗：" + msg;
+      }
     }
 
     async function startScanner() {
@@ -364,12 +419,9 @@
 
       if (!isValidMobile(phone)) {
         statusEl.textContent = "請先輸入正確手機號碼，格式需為 09xxxxxxxx。";
-        manualBox.style.display = "block";
         isStartingScanner = false;
         return;
       }
-
-      manualBox.style.display = "block";
 
       try {
         statusEl.textContent = "正在請求相機權限…";
@@ -440,7 +492,6 @@
       phoneInput.value = "";
       resetResultBox();
       statusEl.textContent = "已清除手機號碼，請重新輸入。";
-      manualBox.style.display = "block";
       refreshActionLinks();
     });
 
@@ -449,8 +500,6 @@
     });
 
     refreshActionLinks();
-    manualBox.style.display = "block";
-    statusEl.textContent = "請先輸入正確手機號碼，再按啟動掃描。";
   </script>
 </body>
 </html>
