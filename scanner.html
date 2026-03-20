@@ -88,7 +88,7 @@
       word-break:break-word;
     }
     .manual{
-      display:none;
+      display:block;
       margin-top:16px;
     }
     .result-box{
@@ -150,26 +150,26 @@
     <div class="wrap">
       <div class="hero">
         <h1>QR 探索掃描站</h1>
-        <p>請將鏡頭對準植物 QR code，掃描成功後再點按鈕前往植物介紹頁。</p>
+        <p>請先輸入手機號碼，再點「啟動掃描」。掃描成功後，再點按鈕前往植物介紹頁。</p>
       </div>
 
       <div class="card">
         <div class="section-title">Scanner</div>
         <h2>開始掃描</h2>
-        <p>請先點「啟動掃描」，再允許相機權限。</p>
+        <p>此頁不會記住上一位參觀者的手機號碼，每位參觀者都需重新輸入。</p>
+
+        <div class="manual" id="manualBox">
+          <p>請先輸入手機號碼。</p>
+          <input id="phoneInput" type="text" placeholder="例如：0912345678" inputmode="numeric">
+          <button class="btn primary" id="savePhoneBtn" type="button">套用手機號碼</button>
+        </div>
 
         <div id="reader"></div>
-        <div class="status" id="status">尚未啟動相機。</div>
+        <div class="status" id="status">請先輸入正確手機號碼，再按啟動掃描。</div>
 
         <div class="actions" style="margin-top:14px;">
           <button class="btn primary" id="startBtn" type="button">啟動掃描</button>
           <button class="btn secondary" id="stopBtn" type="button">停止掃描</button>
-        </div>
-
-        <div class="manual" id="manualBox">
-          <p>找不到手機號碼，請先輸入。</p>
-          <input id="phoneInput" type="text" placeholder="例如：0912345678" inputmode="numeric">
-          <button class="btn primary" id="savePhoneBtn" type="button">套用手機號碼</button>
         </div>
 
         <div class="result-box" id="resultBox">
@@ -182,7 +182,7 @@
           <a class="btn primary" id="queryBtn" href="#">查看我的進度</a>
           <a class="btn secondary" id="rewardBtn" href="#">查看可兌換獎勵</a>
           <a class="btn secondary" id="homeBtn" href="#">回首頁</a>
-          <a class="btn secondary" id="logoutBtn" href="#">切換使用者</a>
+          <a class="btn secondary" id="logoutBtn" href="#">清除目前手機號碼</a>
         </div>
       </div>
     </div>
@@ -192,9 +192,11 @@
     const APP_URL = "https://script.google.com/macros/s/AKfycbyoFlYdQfjyJUu0onsq2DOI5wZJmRcNI2maSEbU7b5uKiSQmajfFRJGYL8OisrhhNUYKg/exec";
 
     function normalizePhone(phone) {
-      let p = String(phone || "").replace(/\D/g, "").trim();
-      if (p.length === 9 && p.startsWith("9")) p = "0" + p;
-      return p;
+      return String(phone || "").replace(/\D/g, "").trim();
+    }
+
+    function isValidMobile(phone) {
+      return /^09\d{8}$/.test(String(phone || "").trim());
     }
 
     function getParam(name) {
@@ -232,9 +234,8 @@
         const cleaned = cleanDecodedText(rawUrl);
         const u = new URL(cleaned);
 
-        if (phone) {
-          u.searchParams.set("phone", phone);
-        }
+        // 一律覆蓋成當前使用者手機，不沿用 QR 內舊值
+        u.searchParams.set("phone", phone);
 
         return u.toString();
       } catch (e) {
@@ -243,7 +244,6 @@
     }
 
     const homeParam = safeUrl(getParam("home"));
-    const phoneParam = normalizePhone(getParam("phone"));
 
     const statusEl = document.getElementById("status");
     const manualBox = document.getElementById("manualBox");
@@ -265,7 +265,7 @@
     let isStoppingScanner = false;
     let hasScannerStarted = false;
     let currentCameraId = "";
-    let currentPhone = phoneParam || "";
+    let currentPhone = "";
     let pendingTargetUrl = "";
 
     function getCurrentPhone() {
@@ -282,7 +282,7 @@
       queryBtn.href = buildUrl(APP_URL, { mode: "query", phone: phone });
       rewardBtn.href = buildUrl(APP_URL, { mode: "rewards", phone: phone });
       homeBtn.href = homeParam || buildUrl(APP_URL, { mode: "home", phone: phone });
-      logoutBtn.href = buildUrl(APP_URL, { mode: "home" });
+      logoutBtn.href = "#";
     }
 
     function resetResultBox() {
@@ -330,6 +330,14 @@
 
     async function handleScanResult(rawUrl) {
       const phone = getCurrentPhone();
+
+      if (!isValidMobile(phone)) {
+        await stopScanner(true);
+        statusEl.textContent = "目前手機號碼無效，請重新輸入 09xxxxxxxx。";
+        manualBox.style.display = "block";
+        return;
+      }
+
       const finalUrl = attachPhoneToUrl(rawUrl, phone);
 
       await stopScanner(true);
@@ -354,14 +362,14 @@
       refreshActionLinks();
       resetResultBox();
 
-      if (!phone) {
-        statusEl.textContent = "請先輸入手機號碼。";
+      if (!isValidMobile(phone)) {
+        statusEl.textContent = "請先輸入正確手機號碼，格式需為 09xxxxxxxx。";
         manualBox.style.display = "block";
         isStartingScanner = false;
         return;
       }
 
-      manualBox.style.display = "none";
+      manualBox.style.display = "block";
 
       try {
         statusEl.textContent = "正在請求相機權限…";
@@ -397,12 +405,13 @@
 
     savePhoneBtn.addEventListener("click", function() {
       const phone = normalizePhone(phoneInput.value);
-      if (!phone) {
-        statusEl.textContent = "請輸入正確手機號碼。";
+
+      if (!isValidMobile(phone)) {
+        statusEl.textContent = "請輸入正確手機號碼，格式需為 09xxxxxxxx。";
         return;
       }
+
       setCurrentPhone(phone);
-      manualBox.style.display = "none";
       statusEl.textContent = "已套用手機號碼，請按啟動掃描。";
       resetResultBox();
     });
@@ -428,8 +437,11 @@
       e.preventDefault();
       await stopScanner(true);
       currentPhone = "";
+      phoneInput.value = "";
       resetResultBox();
-      window.location.href = buildUrl(APP_URL, { mode: "home" });
+      statusEl.textContent = "已清除手機號碼，請重新輸入。";
+      manualBox.style.display = "block";
+      refreshActionLinks();
     });
 
     window.addEventListener("pagehide", function() {
@@ -437,13 +449,8 @@
     });
 
     refreshActionLinks();
-
-    if (!getCurrentPhone()) {
-      manualBox.style.display = "block";
-      statusEl.textContent = "請先輸入手機號碼，再按啟動掃描。";
-    } else {
-      statusEl.textContent = "請按「啟動掃描」開始。";
-    }
+    manualBox.style.display = "block";
+    statusEl.textContent = "請先輸入正確手機號碼，再按啟動掃描。";
   </script>
 </body>
 </html>
