@@ -174,7 +174,7 @@
 
         <div class="result-box" id="resultBox">
           <p id="resultText">已掃描成功。</p>
-          <a class="btn primary" id="goBtn" href="#">前往植物頁</a>
+          <button class="btn primary" id="goBtn" type="button">前往植物頁</button>
           <div class="result-url" id="resultUrl"></div>
         </div>
 
@@ -232,7 +232,6 @@
         const cleaned = cleanDecodedText(rawUrl);
         const u = new URL(cleaned);
 
-        // 一律覆蓋成目前使用者，不沿用 QR 裡原本的 phone
         if (phone) {
           u.searchParams.set("phone", phone);
         }
@@ -267,6 +266,7 @@
     let hasScannerStarted = false;
     let currentCameraId = "";
     let currentPhone = phoneParam || "";
+    let pendingTargetUrl = "";
 
     function getCurrentPhone() {
       return normalizePhone(currentPhone);
@@ -286,8 +286,8 @@
     }
 
     function resetResultBox() {
+      pendingTargetUrl = "";
       resultBox.style.display = "none";
-      goBtn.href = "#";
       resultUrl.textContent = "";
     }
 
@@ -339,9 +339,9 @@
         return;
       }
 
+      pendingTargetUrl = finalUrl;
       statusEl.textContent = "已掃描成功，請點按鈕前往植物頁。";
       resultText.textContent = "已掃描成功，將使用目前輸入的手機號碼記點。";
-      goBtn.href = finalUrl;
       resultUrl.textContent = finalUrl;
       resultBox.style.display = "block";
     }
@@ -413,6 +413,15 @@
 
     stopBtn.addEventListener("click", function() {
       stopScanner(false);
+    });
+
+    goBtn.addEventListener("click", function() {
+      if (!pendingTargetUrl) {
+        statusEl.textContent = "目前沒有可前往的植物頁網址。";
+        return;
+      }
+      statusEl.textContent = "正在前往植物頁…";
+      window.location.assign(pendingTargetUrl);
     });
 
     logoutBtn.addEventListener("click", async function(e) {
