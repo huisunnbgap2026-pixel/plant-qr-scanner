@@ -91,6 +91,21 @@
       display:none;
       margin-top:16px;
     }
+    .result-box{
+      display:none;
+      margin-top:16px;
+      padding:16px;
+      border-radius:16px;
+      background:#f8fbf6;
+      border:2px solid #d6e3d3;
+    }
+    .result-url{
+      margin-top:10px;
+      font-size:13px;
+      line-height:1.7;
+      color:#627063;
+      word-break:break-all;
+    }
     input{
       width:100%;
       box-sizing:border-box;
@@ -135,7 +150,7 @@
     <div class="wrap">
       <div class="hero">
         <h1>QR 探索掃描站</h1>
-        <p>請將鏡頭對準植物 QR code，系統會自動前往植物介紹頁。</p>
+        <p>請將鏡頭對準植物 QR code，掃描成功後再點按鈕前往植物介紹頁。</p>
       </div>
 
       <div class="card">
@@ -155,6 +170,12 @@
           <p>找不到手機號碼，請先輸入。</p>
           <input id="phoneInput" type="text" placeholder="例如：0912345678" inputmode="numeric">
           <button class="btn primary" id="savePhoneBtn" type="button">套用手機號碼</button>
+        </div>
+
+        <div class="result-box" id="resultBox">
+          <p id="resultText">已掃描成功。</p>
+          <a class="btn primary" id="goBtn" href="#">前往植物頁</a>
+          <div class="result-url" id="resultUrl"></div>
         </div>
 
         <div class="actions">
@@ -199,15 +220,26 @@
       return u.toString();
     }
 
+    function cleanDecodedText(raw) {
+      return String(raw || "")
+        .replace(/[\u200B-\u200D\uFEFF]/g, "")
+        .replace(/\u00A0/g, " ")
+        .trim();
+    }
+
     function attachPhoneToUrl(rawUrl, phone) {
       try {
-        const u = new URL(rawUrl);
-        if (phone && !u.searchParams.get("phone")) {
+        const cleaned = cleanDecodedText(rawUrl);
+        const u = new URL(cleaned);
+
+        // 一律覆蓋成目前使用者，不沿用 QR 裡原本的 phone
+        if (phone) {
           u.searchParams.set("phone", phone);
         }
+
         return u.toString();
       } catch (e) {
-        return rawUrl;
+        return "";
       }
     }
 
@@ -224,9 +256,12 @@
     const logoutBtn = document.getElementById("logoutBtn");
     const startBtn = document.getElementById("startBtn");
     const stopBtn = document.getElementById("stopBtn");
+    const resultBox = document.getElementById("resultBox");
+    const resultText = document.getElementById("resultText");
+    const goBtn = document.getElementById("goBtn");
+    const resultUrl = document.getElementById("resultUrl");
 
     let html5QrCode = null;
-    let alreadyJumped = false;
     let isStartingScanner = false;
     let isStoppingScanner = false;
     let hasScannerStarted = false;
@@ -248,6 +283,12 @@
       rewardBtn.href = buildUrl(APP_URL, { mode: "rewards", phone: phone });
       homeBtn.href = homeParam || buildUrl(APP_URL, { mode: "home", phone: phone });
       logoutBtn.href = buildUrl(APP_URL, { mode: "home" });
+    }
+
+    function resetResultBox() {
+      resultBox.style.display = "none";
+      goBtn.href = "#";
+      resultUrl.textContent = "";
     }
 
     async function stopScanner(silent) {
@@ -287,20 +328,22 @@
       return (rearCamera || cameras[0]).id;
     }
 
-    async function goToTarget(rawUrl) {
-      if (alreadyJumped) return;
-      alreadyJumped = true;
-
+    async function handleScanResult(rawUrl) {
       const phone = getCurrentPhone();
-      const target = attachPhoneToUrl(rawUrl, phone);
-
-      statusEl.textContent = "已掃描成功，正在前往植物頁…";
+      const finalUrl = attachPhoneToUrl(rawUrl, phone);
 
       await stopScanner(true);
 
-      setTimeout(function () {
-        window.location.assign(target);
-      }, 350);
+      if (!finalUrl) {
+        statusEl.textContent = "掃描成功，但 QR 內容不是有效網址。";
+        return;
+      }
+
+      statusEl.textContent = "已掃描成功，請點按鈕前往植物頁。";
+      resultText.textContent = "已掃描成功，將使用目前輸入的手機號碼記點。";
+      goBtn.href = finalUrl;
+      resultUrl.textContent = finalUrl;
+      resultBox.style.display = "block";
     }
 
     async function startScanner() {
@@ -309,6 +352,7 @@
 
       const phone = getCurrentPhone();
       refreshActionLinks();
+      resetResultBox();
 
       if (!phone) {
         statusEl.textContent = "請先輸入手機號碼。";
@@ -336,7 +380,7 @@
             aspectRatio: 1.333334
           },
           async function(decodedText) {
-            await goToTarget(decodedText);
+            await handleScanResult(decodedText);
           },
           function() {}
         );
@@ -358,13 +402,12 @@
         return;
       }
       setCurrentPhone(phone);
-      alreadyJumped = false;
       manualBox.style.display = "none";
       statusEl.textContent = "已套用手機號碼，請按啟動掃描。";
+      resetResultBox();
     });
 
     startBtn.addEventListener("click", function() {
-      alreadyJumped = false;
       startScanner();
     });
 
@@ -376,6 +419,7 @@
       e.preventDefault();
       await stopScanner(true);
       currentPhone = "";
+      resetResultBox();
       window.location.href = buildUrl(APP_URL, { mode: "home" });
     });
 
