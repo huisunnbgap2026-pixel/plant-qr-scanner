@@ -154,7 +154,7 @@
         <div class="manual" id="manualBox">
           <p>找不到手機號碼，請先輸入。</p>
           <input id="phoneInput" type="text" placeholder="例如：0912345678" inputmode="numeric">
-          <button class="btn primary" id="savePhoneBtn" type="button">儲存後開始掃描</button>
+          <button class="btn primary" id="savePhoneBtn" type="button">套用手機號碼</button>
         </div>
 
         <div class="actions">
@@ -213,6 +213,7 @@
 
     const homeParam = safeUrl(getParam("home"));
     const phoneParam = normalizePhone(getParam("phone"));
+
     const statusEl = document.getElementById("status");
     const manualBox = document.getElementById("manualBox");
     const phoneInput = document.getElementById("phoneInput");
@@ -230,18 +231,23 @@
     let isStoppingScanner = false;
     let hasScannerStarted = false;
     let currentCameraId = "";
+    let currentPhone = phoneParam || "";
 
-    function getSavedPhone() {
-      if (phoneParam) return phoneParam;
-      return normalizePhone(localStorage.getItem("savedPhone") || "");
+    function getCurrentPhone() {
+      return normalizePhone(currentPhone);
+    }
+
+    function setCurrentPhone(phone) {
+      currentPhone = normalizePhone(phone);
+      refreshActionLinks();
     }
 
     function refreshActionLinks() {
-      const phone = getSavedPhone();
+      const phone = getCurrentPhone();
       queryBtn.href = buildUrl(APP_URL, { mode: "query", phone: phone });
       rewardBtn.href = buildUrl(APP_URL, { mode: "rewards", phone: phone });
       homeBtn.href = homeParam || buildUrl(APP_URL, { mode: "home", phone: phone });
-      logoutBtn.href = buildUrl(APP_URL, { mode: "logout" });
+      logoutBtn.href = buildUrl(APP_URL, { mode: "home" });
     }
 
     async function stopScanner(silent) {
@@ -285,7 +291,7 @@
       if (alreadyJumped) return;
       alreadyJumped = true;
 
-      const phone = getSavedPhone();
+      const phone = getCurrentPhone();
       const target = attachPhoneToUrl(rawUrl, phone);
 
       statusEl.textContent = "已掃描成功，正在前往植物頁…";
@@ -293,7 +299,7 @@
       await stopScanner(true);
 
       setTimeout(function () {
-        window.location.replace(target);
+        window.location.assign(target);
       }, 350);
     }
 
@@ -301,7 +307,7 @@
       if (isStartingScanner) return;
       isStartingScanner = true;
 
-      const phone = getSavedPhone();
+      const phone = getCurrentPhone();
       refreshActionLinks();
 
       if (!phone) {
@@ -311,7 +317,6 @@
         return;
       }
 
-      localStorage.setItem("savedPhone", phone);
       manualBox.style.display = "none";
 
       try {
@@ -352,10 +357,10 @@
         statusEl.textContent = "請輸入正確手機號碼。";
         return;
       }
-      localStorage.setItem("savedPhone", phone);
+      setCurrentPhone(phone);
       alreadyJumped = false;
-      refreshActionLinks();
-      startScanner();
+      manualBox.style.display = "none";
+      statusEl.textContent = "已套用手機號碼，請按啟動掃描。";
     });
 
     startBtn.addEventListener("click", function() {
@@ -369,9 +374,9 @@
 
     logoutBtn.addEventListener("click", async function(e) {
       e.preventDefault();
-      try { localStorage.removeItem("savedPhone"); } catch (e2) {}
       await stopScanner(true);
-      window.location.href = buildUrl(APP_URL, { mode: "logout" });
+      currentPhone = "";
+      window.location.href = buildUrl(APP_URL, { mode: "home" });
     });
 
     window.addEventListener("pagehide", function() {
@@ -380,8 +385,7 @@
 
     refreshActionLinks();
 
-    const initPhone = getSavedPhone();
-    if (!initPhone) {
+    if (!getCurrentPhone()) {
       manualBox.style.display = "block";
       statusEl.textContent = "請先輸入手機號碼，再按啟動掃描。";
     } else {
