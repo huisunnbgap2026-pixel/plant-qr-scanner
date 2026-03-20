@@ -229,6 +229,7 @@
     let isStartingScanner = false;
     let isStoppingScanner = false;
     let hasScannerStarted = false;
+    let currentCameraId = "";
 
     function getSavedPhone() {
       if (phoneParam) return phoneParam;
@@ -243,7 +244,7 @@
       logoutBtn.href = buildUrl(APP_URL, { mode: "logout" });
     }
 
-    async function stopScanner() {
+    async function stopScanner(silent) {
       if (!html5QrCode || isStoppingScanner) return;
       isStoppingScanner = true;
 
@@ -260,7 +261,24 @@
       html5QrCode = null;
       hasScannerStarted = false;
       isStoppingScanner = false;
-      statusEl.textContent = "已停止掃描。";
+
+      if (!silent) {
+        statusEl.textContent = "已停止掃描。";
+      }
+    }
+
+    async function chooseCameraId_() {
+      const cameras = await Html5Qrcode.getCameras();
+
+      if (!cameras || !cameras.length) {
+        throw new Error("找不到可用相機");
+      }
+
+      const rearCamera = cameras.find(function (camera) {
+        return /back|rear|environment|後|背面/i.test(camera.label || "");
+      });
+
+      return (rearCamera || cameras[0]).id;
     }
 
     async function goToTarget(rawUrl) {
@@ -272,58 +290,61 @@
 
       statusEl.textContent = "已掃描成功，正在前往植物頁…";
 
-      await stopScanner();
+      await stopScanner(true);
 
       setTimeout(function () {
         window.location.replace(target);
       }, 350);
     }
 
-   async function startScanner() {
-  if (isStartingScanner) return;
-  isStartingScanner = true;
+    async function startScanner() {
+      if (isStartingScanner) return;
+      isStartingScanner = true;
 
-  const phone = getSavedPhone();
-  refreshActionLinks();
+      const phone = getSavedPhone();
+      refreshActionLinks();
 
-  if (!phone) {
-    statusEl.textContent = "請先輸入手機號碼。";
-    manualBox.style.display = "block";
-    isStartingScanner = false;
-    return;
-  }
+      if (!phone) {
+        statusEl.textContent = "請先輸入手機號碼。";
+        manualBox.style.display = "block";
+        isStartingScanner = false;
+        return;
+      }
 
-  localStorage.setItem("savedPhone", phone);
-  manualBox.style.display = "none";
-  statusEl.textContent = "正在啟動相機…";
+      localStorage.setItem("savedPhone", phone);
+      manualBox.style.display = "none";
 
-  await stopScanner();
+      try {
+        statusEl.textContent = "正在請求相機權限…";
+        currentCameraId = await chooseCameraId_();
 
-  html5QrCode = new Html5Qrcode("reader");
+        await stopScanner(true);
 
-  try {
-    await html5QrCode.start(
-      { facingMode: "environment" },
-      {
-        fps: 10,
-        qrbox: { width: 240, height: 240 },
-        aspectRatio: 1.333334
-      },
-      async function(decodedText) {
-        await goToTarget(decodedText);
-      },
-      function() {}
-    );
+        html5QrCode = new Html5Qrcode("reader");
+        statusEl.textContent = "正在啟動相機…";
 
-    hasScannerStarted = true;
-    statusEl.textContent = "請對準植物 QR code…";
-  } catch (err) {
-    const msg = err && err.message ? err.message : String(err || "unknown error");
-    statusEl.textContent = "相機啟動失敗：" + msg;
-  }
+        await html5QrCode.start(
+          currentCameraId,
+          {
+            fps: 10,
+            qrbox: { width: 240, height: 240 },
+            aspectRatio: 1.333334
+          },
+          async function(decodedText) {
+            await goToTarget(decodedText);
+          },
+          function() {}
+        );
 
-  isStartingScanner = false;
-}
+        hasScannerStarted = true;
+        statusEl.textContent = "請對準植物 QR code…";
+      } catch (err) {
+        const msg = err && err.message ? err.message : String(err || "unknown error");
+        statusEl.textContent = "相機啟動失敗：" + msg;
+      }
+
+      isStartingScanner = false;
+    }
 
     savePhoneBtn.addEventListener("click", function() {
       const phone = normalizePhone(phoneInput.value);
@@ -343,23 +364,22 @@
     });
 
     stopBtn.addEventListener("click", function() {
-      stopScanner();
+      stopScanner(false);
     });
 
     logoutBtn.addEventListener("click", async function(e) {
       e.preventDefault();
       try { localStorage.removeItem("savedPhone"); } catch (e2) {}
-      await stopScanner();
+      await stopScanner(true);
       window.location.href = buildUrl(APP_URL, { mode: "logout" });
     });
 
     window.addEventListener("pagehide", function() {
-      stopScanner();
+      stopScanner(true);
     });
 
     refreshActionLinks();
 
-    // 不自動啟動，改成手動按鈕
     const initPhone = getSavedPhone();
     if (!initPhone) {
       manualBox.style.display = "block";
