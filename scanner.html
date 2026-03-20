@@ -279,51 +279,51 @@
       }, 350);
     }
 
-    async function startScanner() {
-      if (isStartingScanner) return;
-      isStartingScanner = true;
+   async function startScanner() {
+  if (isStartingScanner) return;
+  isStartingScanner = true;
 
-      const phone = getSavedPhone();
-      refreshActionLinks();
+  const phone = getSavedPhone();
+  refreshActionLinks();
 
-      if (!phone) {
-        statusEl.textContent = "請先輸入手機號碼。";
-        manualBox.style.display = "block";
-        isStartingScanner = false;
-        return;
-      }
+  if (!phone) {
+    statusEl.textContent = "請先輸入手機號碼。";
+    manualBox.style.display = "block";
+    isStartingScanner = false;
+    return;
+  }
 
-      localStorage.setItem("savedPhone", phone);
-      manualBox.style.display = "none";
-      statusEl.textContent = "正在啟動相機…";
+  localStorage.setItem("savedPhone", phone);
+  manualBox.style.display = "none";
+  statusEl.textContent = "正在啟動相機…";
 
-      await stopScanner();
+  await stopScanner();
 
-      html5QrCode = new Html5Qrcode("reader");
+  html5QrCode = new Html5Qrcode("reader");
 
-      try {
-        await html5QrCode.start(
-          { facingMode:  "environment",
-          {
-            fps: 10,
-            qrbox: { width: 240, height: 240 },
-            aspectRatio: 1.333334
-          },
-          async function(decodedText) {
-            await goToTarget(decodedText);
-          },
-          function() {}
-        );
+  try {
+    await html5QrCode.start(
+      { facingMode: "environment" },
+      {
+        fps: 10,
+        qrbox: { width: 240, height: 240 },
+        aspectRatio: 1.333334
+      },
+      async function(decodedText) {
+        await goToTarget(decodedText);
+      },
+      function() {}
+    );
 
-        hasScannerStarted = true;
-        statusEl.textContent = "請對準植物 QR code…";
-      } catch (err) {
-        const msg = err && err.message ? err.message : String(err || "unknown error");
-        statusEl.textContent = "相機啟動失敗：" + msg;
-      }
+    hasScannerStarted = true;
+    statusEl.textContent = "請對準植物 QR code…";
+  } catch (err) {
+    const msg = err && err.message ? err.message : String(err || "unknown error");
+    statusEl.textContent = "相機啟動失敗：" + msg;
+  }
 
-      isStartingScanner = false;
-    }
+  isStartingScanner = false;
+}
 
     savePhoneBtn.addEventListener("click", function() {
       const phone = normalizePhone(phoneInput.value);
