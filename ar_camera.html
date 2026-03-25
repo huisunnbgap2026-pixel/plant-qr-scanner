@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>方舟植物展覽｜專屬紀念拍立得</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --primary: #2c4c3b; --accent: #d4a373; }
+    html, body { margin: 0; padding: 0; width: 100vw; height: 100vh; background: #000; font-family: "Noto Sans TC", sans-serif; overflow: hidden; }
+    #camera-feed { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
+    
+    /* 拍立得/紀念圖章設計 */
+    #overlay-graphic {
+      position: absolute; bottom: 18%; right: 5%; width: 40%; max-width: 200px; z-index: 2; pointer-events: none; 
+      border: 6px solid #fff; border-radius: 4px; box-shadow: 2px 8px 15px rgba(0,0,0,0.4); transform: rotate(-6deg);
+    }
+    .controls { position: absolute; bottom: 0; left: 0; width: 100%; padding: 30px 20px; box-sizing: border-box; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); z-index: 10; display: flex; justify-content: space-around; align-items: center; }
+    .btn { background: #fff; color: var(--primary); border: none; border-radius: 30px; padding: 15px 30px; font-size: 20px; font-weight: 700; box-shadow: 0 5px 15px rgba(0,0,0,0.3); cursor: pointer; transition: transform 0.2s; }
+    .btn:active { transform: scale(0.95); }
+    .btn-capture { background: var(--accent); color: white; width: 80px; height: 80px; border-radius: 50%; padding: 0; border: 4px solid #fff; box-shadow: 0 0 20px rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; font-size: 30px; }
+    #result-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 20; display: none; flex-direction: column; justify-content: center; align-items: center; }
+    #result-image { width: 90%; max-height: 70vh; object-fit: contain; border-radius: 15px; border: 3px solid #fff; margin-bottom: 20px; }
+    .hint { color: white; font-size: 18px; margin-bottom: 20px; font-weight: bold; text-align: center; line-height: 1.5; }
+    #canvas { display: none; }
+    .btn-home { position: absolute; top: 20px; left: 20px; z-index: 10; background: rgba(255,255,255,0.3); color: white; border: none; padding: 10px 15px; border-radius: 10px; font-size: 16px; backdrop-filter: blur(5px); }
+  </style>
+</head>
+<body>
+
+  <button class="btn-home" onclick="window.location.href='index.html'">🏠 回首頁</button>
+  <video id="camera-feed" autoplay playsinline></video>
+  
+  <!-- 這裡的 src 會被 JavaScript 自動替換 -->
+  <img id="overlay-graphic" src="./ar_1.png" alt="專屬紀念圖案" crossorigin="anonymous">
+
+  <div class="controls" id="controls">
+    <button class="btn-capture" id="captureBtn">📸</button>
+  </div>
+
+  <div id="result-screen">
+    <div class="hint">✨ 拍照成功！<br>👇 請「長按圖片」即可儲存到手機 👇</div>
+    <img id="result-image" src="" alt="合成結果">
+    <div style="display: flex; gap: 15px; margin-top: 10px;">
+      <button class="btn" id="retakeBtn" style="font-size: 16px;">重新拍一張</button>
+      <button class="btn" style="background:var(--primary); color:white; font-size: 16px;" onclick="window.location.href='index.html'">完成探索</button>
+    </div>
+  </div>
+
+  <canvas id="canvas"></canvas>
+
+  <script>
+    // --- 🪄 神奇的代碼：自動抓取網址參數來換圖 ---
+    const urlParams = new URLSearchParams(window.location.search);
+    const picNumber = urlParams.get('pic') || '1'; // 如果沒給數字，預設顯示第 1 張
+    const overlay = document.getElementById('overlay-graphic');
+    overlay.src = `./ar_${picNumber}.png`; // 自動組合檔名：ar_1.png, ar_2.png...
+
+    const video = document.getElementById('camera-feed');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const captureBtn = document.getElementById('captureBtn');
+    const resultScreen = document.getElementById('result-screen');
+    const resultImage = document.getElementById('result-image');
+    const retakeBtn = document.getElementById('retakeBtn');
+
+    async function startCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        video.srcObject = stream;
+      } catch (err) { alert("無法開啟相機，請確認是否已給予瀏覽器相機權限喔！"); }
+    }
+
+    captureBtn.addEventListener('click', () => {
+      canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      const overlayWidth = canvas.width * 0.40; 
+      const overlayHeight = overlayWidth * (overlay.naturalHeight / overlay.naturalWidth);
+      const x = canvas.width - overlayWidth - (canvas.width * 0.05); 
+      const y = canvas.height - overlayHeight - (canvas.height * 0.18); 
+
+      ctx.save();
+      ctx.translate(x + overlayWidth / 2, y + overlayHeight / 2);
+      ctx.rotate(-6 * Math.PI / 180);
+
+      const borderWidth = canvas.width * 0.015; 
+      ctx.fillStyle = "#ffffff";
+      ctx.shadowColor = "rgba(0,0,0,0.4)";
+      ctx.shadowBlur = 20; ctx.shadowOffsetY = 10;
+      ctx.fillRect(-overlayWidth / 2 - borderWidth, -overlayHeight / 2 - borderWidth, overlayWidth + borderWidth * 2, overlayHeight + borderWidth * 2);
+
+      ctx.shadowColor = "transparent";
+      ctx.drawImage(overlay, -overlayWidth / 2, -overlayHeight / 2, overlayWidth, overlayHeight);
+      ctx.restore();
+
+      const dataUrl = canvas.toDataURL('image/png');
+      resultImage.src = dataUrl;
+      
+      document.getElementById('controls').style.display = 'none';
+      overlay.style.display = 'none';
+      resultScreen.style.display = 'flex';
+    });
+
+    retakeBtn.addEventListener('click', () => {
+      document.getElementById('controls').style.display = 'flex';
+      overlay.style.display = 'block';
+      resultScreen.style.display = 'none';
+    });
+
+    window.onload = startCamera;
+  </script>
+</body>
+</html>
