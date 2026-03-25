@@ -7,105 +7,172 @@
     <style>
         :root {
             --primary: #2c4c3b;
-            --bg: #f4f7f4;
+            --primary-light: #4a7c59;
+            --bg: #f7fbf7;
             --text: #333;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'PingFang TC', 'Noto Sans TC', sans-serif; }
         body { background: var(--bg); color: var(--text); overflow-x: hidden; }
 
-        /* 1. 開場動畫 (Splash Screen) */
+        /* =========================================
+           1. 開場動畫 (Splash Screen - 聯名 A x B x C)
+           ========================================= */
         #splash-screen {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: var(--primary); z-index: 9999;
+            background: #ffffff; /* 白底讓 Logo 更清晰 */
+            z-index: 9999;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            color: white; transition: opacity 0.8s ease;
+            transition: opacity 0.8s ease, transform 0.8s ease;
         }
-        .leaf-logo { font-size: 80px; animation: float 2s ease-in-out infinite; }
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-20px); }
-        }
-        .fade-out { opacity: 0; pointer-events: none; }
 
-        /* 共用容器 */
+        .collab-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        /* 控制三張 Logo 的大小比例 */
+        .collab-logo {
+            width: 28%; /* 讓三個 Logo 在手機上能並排 */
+            height: auto;
+            object-fit: contain;
+        }
+
+        /* 乘號 (X) 的設計 */
+        .cross-mark {
+            font-size: 20px;
+            color: #999;
+            font-weight: 300;
+        }
+
+        /* 動畫初始狀態：透明且稍微往左偏移 */
+        .anim-item {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+
+        /* 由左至右依次進場的動畫設定 */
+        @keyframes slideFadeIn {
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .item-1 { animation: slideFadeIn 0.6s ease forwards 0.2s; } /* 單位A */
+        .item-2 { animation: slideFadeIn 0.4s ease forwards 0.8s; } /* X */
+        .item-3 { animation: slideFadeIn 0.6s ease forwards 1.2s; } /* 單位B */
+        .item-4 { animation: slideFadeIn 0.4s ease forwards 1.8s; } /* X */
+        .item-5 { animation: slideFadeIn 0.6s ease forwards 2.2s; } /* 單位C */
+        .item-6 { animation: slideFadeIn 0.8s ease forwards 3.0s; } /* 標題字 */
+
+        .fade-out { opacity: 0; pointer-events: none; transform: scale(1.05); }
+
+        /* =========================================
+           2. 共用容器與介面
+           ========================================= */
         .container { max-width: 500px; margin: 0 auto; padding: 20px; min-height: 100vh; display: none; flex-direction: column; justify-content: center; }
-        .active-container { display: flex; }
+        .active-container { display: flex; animation: fadeIn 0.8s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* 2. 登入畫面 (長輩友善大字體) */
+        /* 登入畫面 (長輩友善大字體) */
         h1 { font-size: 28px; color: var(--primary); text-align: center; margin-bottom: 10px; }
         p.subtitle { text-align: center; font-size: 18px; color: #666; margin-bottom: 30px; }
+        
         input[type="tel"] {
-            width: 100%; padding: 18px; font-size: 22px; text-align: center;
-            border: 2px solid #ccc; border-radius: 12px; margin-bottom: 20px;
+            width: 100%; padding: 18px; font-size: 24px; text-align: center; letter-spacing: 2px;
+            border: 2px solid #ccc; border-radius: 12px; margin-bottom: 20px; transition: border 0.3s;
         }
+        input[type="tel"]:focus { border-color: var(--primary-light); outline: none; }
+
         .btn {
             width: 100%; padding: 18px; font-size: 20px; font-weight: bold;
             background: var(--primary); color: white; border: none; border-radius: 12px;
-            cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            cursor: pointer; box-shadow: 0 4px 10px rgba(44, 76, 59, 0.2); transition: all 0.2s;
         }
-        .btn:active { transform: scale(0.98); }
+        .btn:active { transform: scale(0.98); background: var(--primary-light); }
 
-        /* 3. 登入後的主畫面 */
+        /* 登入後的主畫面 */
         .dashboard-card {
             background: white; border-radius: 16px; padding: 30px 20px;
             text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.05); margin-bottom: 20px;
         }
-        .user-phone { font-size: 16px; color: #888; margin-bottom: 15px; }
-        .instruction { background: #e8f0e8; padding: 20px; border-radius: 12px; margin-bottom: 20px; font-size: 18px; line-height: 1.6;}
+        .user-phone { font-size: 18px; color: var(--primary); font-weight: bold; margin-bottom: 15px; }
+        
+        .instruction { background: #e8f0e8; padding: 20px; border-radius: 12px; margin-bottom: 25px; font-size: 18px; line-height: 1.6; color: #444;}
         
         .action-grid { display: grid; gap: 15px; }
-        .btn-outline {
-            background: white; color: var(--primary); border: 2px solid var(--primary);
-        }
+        .btn-outline { background: white; color: var(--primary); border: 2px solid var(--primary); }
     </style>
 </head>
 <body>
 
-    <!-- 開場動畫區 -->
+    <!-- 1. 開場動畫區 (A x B x C) -->
     <div id="splash-screen">
-        <div class="leaf-logo">🌿</div>
-        <h2 style="margin-top: 20px; letter-spacing: 2px;">方舟植物展覽</h2>
-        <p style="margin-top: 10px; opacity: 0.8;">即將進入探索...</p>
+        <div class="collab-container">
+            <!-- 單位 A -->
+            <img src="請換成國家植物園Logo的網址.png" alt="國家植物園方舟計畫" class="collab-logo anim-item item-1">
+            
+            <!-- 乘號 -->
+            <span class="cross-mark anim-item item-2">✖</span>
+            
+            <!-- 單位 B -->
+            <img src="請換成中興大學Logo的網址.png" alt="國立中興大學" class="collab-logo anim-item item-3">
+            
+            <!-- 乘號 -->
+            <span class="cross-mark anim-item item-4">✖</span>
+            
+            <!-- 單位 C -->
+            <img src="請換成惠蓀林場Logo的網址.png" alt="惠蓀林場" class="collab-logo anim-item item-5">
+        </div>
+
+        <h2 class="anim-item item-6" style="margin-top: 40px; letter-spacing: 4px; color: var(--primary);">方舟植物展覽</h2>
+        <p class="anim-item item-6" style="margin-top: 10px; color: #888; font-size: 14px;">即將進入探索...</p>
     </div>
 
-    <!-- 登入區 -->
+    <!-- 2. 登入區 (輸入手機號碼) -->
     <div id="login-container" class="container">
         <h1>歡迎來到方舟植物展</h1>
-        <p class="subtitle">請輸入手機號碼<br><small>（系統將自動為您保留集點紀錄）</small></p>
-        <input type="tel" id="phoneInput" placeholder="例如：0912345678" maxlength="10">
+        <p class="subtitle">請輸入手機號碼<br><small>（系統將自動保留您的集點紀錄）</small></p>
+        <input type="tel" id="phoneInput" placeholder="0912345678" maxlength="10">
         <button class="btn" onclick="saveLogin()">開始探索 🚀</button>
     </div>
 
-    <!-- 首頁區 -->
+    <!-- 3. 首頁區 (登入後選單) -->
     <div id="home-container" class="container">
         <div class="dashboard-card">
-            <h1>我的探險日誌</h1>
-            <p class="user-phone">登入帳號：<span id="display-phone"></span> <a href="#" onclick="logout()" style="color:#aaa; text-decoration:underline; font-size:14px; margin-left:10px;">切換</a></p>
+            <h1 style="margin-bottom: 5px;">我的探險日誌</h1>
+            <div class="user-phone">📱 <span id="display-phone"></span></div>
+            <a href="#" onclick="logout()" style="color:#999; text-decoration:underline; font-size:16px;">這不是我的號碼？點此登出</a>
         </div>
 
         <div class="instruction">
-            <strong>📸 如何集點？</strong><br>
-            請直接打開您的 <b>LINE 掃碼器</b> 或 <b>手機相機</b>，掃描展場中植物旁邊的 QR Code，點數就會自動加進來喔！
+            <strong>📸 遇到植物怎麼集點？</strong><br>
+            不需要下載APP！請直接打開您的 <b>LINE 掃碼器</b> 或 <b>手機內建相機</b>，掃描展場植物旁邊的 QR Code 就可以了！
         </div>
 
         <div class="action-grid">
-            <!-- 這些按鈕會帶上 phone 參數，導向你的 GAS 後端 -->
             <button class="btn" onclick="goToGAS('query')">🏆 查看我的點數與紀錄</button>
-            <button class="btn btn-outline" onclick="goToGAS('rewards')">🎁 前往兌換獎品</button>
+            <button class="btn btn-outline" onclick="goToGAS('rewards')">🎁 前往兌換展場禮物</button>
             <button class="btn btn-outline" onclick="window.open('https://sites.google.com/view/nat-bot-gard-nchu/', '_blank')">📖 觀看線上植物館藏</button>
         </div>
     </div>
 
     <script>
-        // 你的 Google Apps Script 部署網址（請替換成你實際的 Web App URL）
+        // ⚠️ 請務必將這裡換成你真實的 Google Apps Script 網址 ⚠️
         const GAS_URL = "https://script.google.com/macros/s/AKfycby_你的GAS_ID/exec";
 
-        // 1. 處理開場動畫與登入狀態檢查
+        // 開場動畫與登入狀態檢查
         window.onload = () => {
+            // 動畫總共跑 3秒 + 停留 2秒 = 5000 毫秒後消失
             setTimeout(() => {
                 document.getElementById('splash-screen').classList.add('fade-out');
-                checkLoginStatus();
-            }, 2000); // 動畫顯示 2 秒
+                // 等淡出特效(0.8s)結束後，正式隱藏
+                setTimeout(() => {
+                    document.getElementById('splash-screen').style.display = 'none';
+                    checkLoginStatus();
+                }, 800);
+            }, 5000); 
         };
 
         function checkLoginStatus() {
@@ -120,23 +187,25 @@
             }
         }
 
-        // 2. 儲存手機號碼（長輩不用每次重新輸入）
         function saveLogin() {
             const phone = document.getElementById('phoneInput').value.trim();
-            if (phone.length >= 9) {
+            // 簡易驗證是否為 09 開頭且長度為 10 碼
+            if (phone.length === 10 && phone.startsWith('09')) {
                 localStorage.setItem('ark_exhibition_phone', phone);
                 checkLoginStatus();
             } else {
-                alert('請輸入完整的手機號碼喔！');
+                alert('請輸入正確的手機號碼喔！\n（例如：0912345678）');
             }
         }
 
         function logout() {
-            localStorage.removeItem('ark_exhibition_phone');
-            checkLoginStatus();
+            if(confirm('確定要登出這個號碼嗎？')) {
+                localStorage.removeItem('ark_exhibition_phone');
+                document.getElementById('phoneInput').value = '';
+                checkLoginStatus();
+            }
         }
 
-        // 3. 導向 GAS 後端頁面（帶入手機號碼參數）
         function goToGAS(mode) {
             const phone = localStorage.getItem('ark_exhibition_phone');
             window.location.href = `${GAS_URL}?mode=${mode}&phone=${phone}`;
