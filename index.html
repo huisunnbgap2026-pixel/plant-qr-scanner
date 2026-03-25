@@ -1,361 +1,170 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>方舟植物展覽｜綠意循跡</title>
-    <!-- 引入 Google 字體 -->
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>方舟植物展覽｜綠意探索</title>
+  <meta name="robots" content="noindex,nofollow">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-dark: #2c4c3b;
+      --primary-light: #729075;
+      --bg-color: #f7f9f7;
+      --accent: #d4a373;
+    }
+    html, body {
+      margin: 0; padding: 0; min-height: 100vh;
+      background: var(--bg-color);
+      font-family: "Noto Sans TC", sans-serif;
+      color: var(--primary-dark);
+      overflow-x: hidden;
+    }
+
+    /* 開場動畫 (A x B x C) */
+    #splash-screen {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: #ffffff; z-index: 9999;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    .collab-container {
+      display: flex; align-items: center; justify-content: center; gap: 15px;
+      width: 90%; max-width: 500px; margin-bottom: 30px;
+    }
+    .collab-logo { width: 28%; height: auto; object-fit: contain; }
+    .cross-mark { font-size: 20px; color: #bbb; font-weight: 300; }
     
-    <style>
-        :root {
-            --primary-dark: #2c4c3b; /* 深植綠 */
-            --primary-light: #729075; /* 淺灰綠 */
-            --bg-color: #f7f9f7; /* 展場白底 */
-            --text-main: #333333;
-            --text-light: #666666;
-            --accent: #d4a373; /* 大地點綴色 */
-        }
+    .anim-item { opacity: 0; transform: translateX(-20px); }
+    @keyframes slideFadeIn { to { opacity: 1; transform: translateX(0); } }
+    .item-1 { animation: slideFadeIn 0.6s ease forwards 0.2s; }
+    .item-2 { animation: slideFadeIn 0.4s ease forwards 0.8s; }
+    .item-3 { animation: slideFadeIn 0.6s ease forwards 1.2s; }
+    .item-4 { animation: slideFadeIn 0.4s ease forwards 1.8s; }
+    .item-5 { animation: slideFadeIn 0.6s ease forwards 2.2s; }
+    .item-6 { animation: slideFadeIn 0.8s ease forwards 3.0s; }
+    .splash-fade-out { opacity: 0; pointer-events: none; transform: scale(1.02); }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Noto Sans TC', sans-serif; }
-        body { background-color: var(--bg-color); color: var(--text-main); line-height: 1.6; overflow-x: hidden; }
+    /* 登入卡片 */
+    .page {
+      min-height: 100vh; display: none; /* 預設隱藏，播完動畫才顯示 */
+      align-items: center; justify-content: center; padding: 24px; box-sizing: border-box;
+      opacity: 0; transition: opacity 0.5s ease;
+    }
+    .page.active { display: flex; opacity: 1; }
 
-        /* =========================================
-           1. 開場動畫 (A x B x C)
-           ========================================= */
-        #splash-screen {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: #ffffff; z-index: 9999;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            transition: opacity 0.8s ease, transform 0.8s ease;
-        }
+    .glass-card {
+      width: min(92vw, 460px);
+      background: rgba(255, 255, 255, 0.98);
+      border-radius: 20px; padding: 40px 30px; text-align: center;
+      box-shadow: 0 15px 40px rgba(44, 76, 59, 0.08);
+      border-top: 5px solid var(--primary-light);
+    }
+    h1 { margin: 0 0 10px; font-size: 26px; color: var(--primary-dark); }
+    p { margin: 0 0 25px; font-size: 16px; line-height: 1.6; color: #666; }
+    
+    input[type="tel"] {
+      width: 100%; box-sizing: border-box; padding: 18px; font-size: 22px; text-align: center; letter-spacing: 2px;
+      border: 2px solid #ddd; border-radius: 16px; margin-bottom: 20px; color: var(--primary-dark); font-weight: bold;
+      transition: all 0.3s;
+    }
+    input[type="tel"]:focus { border-color: var(--primary-light); outline: none; }
 
-        .collab-container {
-            display: flex; align-items: center; justify-content: center; gap: 15px;
-            width: 90%; max-width: 600px; margin-bottom: 30px;
-        }
-
-        .collab-logo { width: 26%; height: auto; object-fit: contain; }
-        .cross-mark { font-size: 24px; color: #bbb; font-weight: 300; }
-
-        .anim-item { opacity: 0; transform: translateX(-20px); }
-        @keyframes slideFadeIn { to { opacity: 1; transform: translateX(0); } }
-        
-        .item-1 { animation: slideFadeIn 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards 0.2s; }
-        .item-2 { animation: slideFadeIn 0.4s ease forwards 0.8s; }
-        .item-3 { animation: slideFadeIn 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards 1.2s; }
-        .item-4 { animation: slideFadeIn 0.4s ease forwards 1.8s; }
-        .item-5 { animation: slideFadeIn 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards 2.2s; }
-        .item-6 { animation: slideFadeIn 0.8s ease forwards 3.0s; }
-
-        .splash-fade-out { opacity: 0; pointer-events: none; transform: scale(1.02); }
-
-        /* =========================================
-           2. 主視覺導入區 (Hero Section)
-           ========================================= */
-        .hero {
-            height: 38vh; min-height: 280px;
-            display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;
-            background: linear-gradient(rgba(44, 76, 59, 0.7), rgba(44, 76, 59, 0.8)), 
-                        url('https://images.unsplash.com/photo-1463320726281-696a485928c7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80') center/cover;
-            color: white; padding: 20px; position: relative;
-        }
-        .hero h1 { font-size: 2.2rem; font-weight: 500; letter-spacing: 4px; margin-bottom: 10px; }
-        .hero p { font-size: 1rem; font-weight: 300; max-width: 500px; color: #e8f0e8; }
-
-        /* =========================================
-           3. 視圖切換與卡片設計 (Login & Dashboard)
-           ========================================= */
-        .view-container {
-            max-width: 800px; margin: -50px auto 40px auto; padding: 0 20px;
-            position: relative; z-index: 10; display: none; opacity: 0; transition: opacity 0.5s ease;
-        }
-        .view-container.active { display: block; opacity: 1; }
-
-        .glass-card {
-            background: rgba(255, 255, 255, 0.98); border-radius: 16px; padding: 40px 30px;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.08); border-top: 5px solid var(--primary-light);
-            text-align: center;
-        }
-
-        /* 登入區特製 */
-        .glass-card h2 { color: var(--primary-dark); font-size: 1.8rem; margin-bottom: 10px; }
-        .glass-card p.sub { color: var(--text-light); margin-bottom: 25px; font-size: 1.1rem; }
-        
-        input[type="tel"] {
-            width: 100%; max-width: 350px; padding: 18px; font-size: 22px; text-align: center; letter-spacing: 2px;
-            border: 2px solid #ddd; border-radius: 30px; margin-bottom: 20px; transition: all 0.3s;
-            color: var(--primary-dark); font-weight: bold;
-        }
-        input[type="tel"]:focus { border-color: var(--primary-light); outline: none; box-shadow: 0 0 10px rgba(114, 144, 117, 0.2); }
-
-        .btn {
-            display: inline-block; width: 100%; max-width: 350px; padding: 16px;
-            font-size: 1.1rem; font-weight: 500; text-decoration: none;
-            background: var(--primary-light); color: white; border: none; border-radius: 30px;
-            cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(114, 144, 117, 0.3);
-            margin-bottom: 15px;
-        }
-        .btn:hover, .btn:active { background: var(--primary-dark); transform: translateY(-2px); }
-        .btn-outline { background: white; color: var(--primary-dark); border: 2px solid var(--primary-light); box-shadow: none; }
-        .btn-outline:hover, .btn-outline:active { background: #f0f5f0; }
-
-        /* 儀表板特製 */
-        .dashboard-header { display: flex; flex-direction: column; align-items: center; margin-bottom: 30px; }
-        .user-badge {
-            background: #e8f0e8; color: var(--primary-dark); padding: 8px 20px; border-radius: 20px;
-            font-size: 1.1rem; font-weight: bold; margin-bottom: 10px; display: inline-flex; align-items: center; gap: 8px;
-        }
-        .instruction-box {
-            background: #fafcfb; border: 1px dashed var(--primary-light); border-radius: 12px; padding: 20px;
-            margin-bottom: 30px; text-align: left; color: #555; font-size: 1.05rem;
-        }
-
-        /* =========================================
-           4. 展覽導覽區 (Card Grid)
-           ========================================= */
-        .exhibition-section { padding: 40px 20px 80px; max-width: 1000px; margin: 0 auto; }
-        .section-title { text-align: center; font-size: 1.8rem; color: var(--primary-dark); margin-bottom: 40px; font-weight: 500; }
-        .section-title::after { content: ''; display: block; width: 40px; height: 3px; background-color: var(--accent); margin: 15px auto 0; }
-
-        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; }
-        .info-card {
-            background: white; border-radius: 12px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.03);
-            border-top: 3px solid var(--primary-light); transition: transform 0.3s ease; text-align: left;
-        }
-        .info-card:hover { transform: translateY(-5px); }
-        .info-card h3 { color: var(--primary-dark); margin-bottom: 15px; font-size: 1.3rem; }
-        .info-card ul { list-style: none; margin-bottom: 20px; color: var(--text-light); }
-        .info-card ul li { margin-bottom: 10px; position: relative; padding-left: 24px; }
-        .info-card ul li::before { content: '🌿'; position: absolute; left: 0; font-size: 0.9rem; }
-        .btn-small { padding: 8px 20px; font-size: 0.95rem; width: auto; margin-bottom: 0; }
-
-        /* =========================================
-           5. 彈出提示視窗 (Modal)
-           ========================================= */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(3px);
-            display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: all 0.3s ease; z-index: 1000;
-        }
-        .modal-overlay.active { opacity: 1; visibility: visible; }
-        .modal-content {
-            background: white; padding: 40px 30px; border-radius: 16px; max-width: 400px; width: 90%;
-            text-align: center; position: relative; transform: translateY(20px); transition: transform 0.3s ease;
-        }
-        .modal-overlay.active .modal-content { transform: translateY(0); }
-        .close-btn { position: absolute; top: 15px; right: 20px; font-size: 1.8rem; color: #aaa; cursor: pointer; background: none; border: none; }
-        #modal-title { color: var(--primary-dark); margin-bottom: 15px; font-size: 1.4rem; }
-        #modal-body { color: var(--text-light); line-height: 1.6; }
-
-        /* 動畫滑入效果 (適用於下方卡片) */
-        .reveal { opacity: 0; transform: translateY(40px); transition: all 0.8s cubic-bezier(0.5, 0, 0, 1); }
-        .reveal.active { opacity: 1; transform: translateY(0); }
-    </style>
+    .btn {
+      width: 100%; box-sizing: border-box; border-radius: 16px; padding: 16px 12px;
+      font-size: 18px; font-weight: 700; text-decoration: none; display: block; text-align: center;
+      background: var(--primary-light); color: #fff; cursor: pointer; border: none; transition: all 0.3s;
+    }
+    .btn:hover, .btn:active { background: var(--primary-dark); transform: translateY(-2px); }
+  </style>
 </head>
 <body>
 
-    <!-- 1. 開場動畫 (A x B x C) -->
-    <div id="splash-screen">
-        <div class="collab-container">
-            <!-- 單位 A -->
-            <img src="https://github.com/huisunnbgap2026-pixel/plant-qr-scanner/blob/main/logo_ark.png" alt="國家植物園方舟計畫" class="collab-logo anim-item item-1">
-            <span class="cross-mark anim-item item-2">✖</span>
-            <!-- 單位 B -->
-            <img src="https://github.com/huisunnbgap2026-pixel/plant-qr-scanner/blob/main/logo_nchu.png alt="國立中興大學" class="collab-logo anim-item item-3">
-            <span class="cross-mark anim-item item-4">✖</span>
-            <!-- 單位 C -->
-            <img src=""https://github.com/huisunnbgap2026-pixel/plant-qr-scanner/blob/main/logo_huisun.png" alt="惠蓀林場" class="collab-logo anim-item item-5">
-        </div>
-        <h2 class="anim-item item-6" style="margin-top: 20px; letter-spacing: 4px; color: var(--primary-dark);">方舟植物展覽</h2>
-        <p class="anim-item item-6" style="margin-top: 10px; color: #888; font-size: 14px; letter-spacing: 1px;">啟動綠意探索...</p>
+  <!-- 聯名開場動畫 -->
+  <div id="splash-screen">
+    <div class="collab-container">
+      <img src="./logo_ark.png" alt="方舟計畫" class="collab-logo anim-item item-1">
+      <span class="cross-mark anim-item item-2">✖</span>
+      <img src="./logo_nchu.png" alt="中興大學" class="collab-logo anim-item item-3">
+      <span class="cross-mark anim-item item-4">✖</span>
+      <img src="./logo_huisun.png" alt="惠蓀林場" class="collab-logo anim-item item-5">
     </div>
+    <h2 class="anim-item item-6" style="margin-top:20px; letter-spacing:4px;">方舟植物展覽</h2>
+    <p class="anim-item item-6" id="splash-status" style="color:#888; font-size:15px; margin-top:10px;">啟動綠意探索...</p>
+  </div>
 
-    <!-- 2. 主視覺導入 -->
-    <header class="hero">
-        <h1>植物展覽｜綠意循跡</h1>
-        <p>放慢腳步，感受葉脈的呼吸。<br>在這裡，我們不只觀賞植物，更是重新建立與大自然的對話。</p>
-    </header>
-
-    <!-- 3. 登入視圖 (Login) -->
-    <div id="login-view" class="view-container">
-        <div class="glass-card">
-            <h2>領取專屬集點卡</h2>
-            <p class="sub">請輸入手機號碼，系統將自動為您保留紀錄</p>
-            <input type="tel" id="phoneInput" placeholder="例如：0912345678" maxlength="10">
-            <br>
-            <button class="btn" onclick="saveLogin()">開始探索 🌿</button>
-        </div>
+  <!-- 登入卡片區 -->
+  <div class="page" id="login-page">
+    <div class="glass-card">
+      <h1>領取專屬集點卡</h1>
+      <p>請輸入手機號碼，系統將自動為您保留展場的集點紀錄。</p>
+      <input id="phoneInput" type="tel" placeholder="例如：0912345678" maxlength="10">
+      <button class="btn" id="savePhoneBtn">開始探索 🌿</button>
     </div>
+  </div>
 
-    <!-- 4. 儀表板視圖 (Dashboard) -->
-    <div id="home-view" class="view-container">
-        <div class="glass-card">
-            <div class="dashboard-header">
-                <div class="user-badge">
-                    <span>📱 探險家：</span>
-                    <span id="display-phone"></span>
-                </div>
-                <a href="#" onclick="logout()" style="color:#aaa; text-decoration:underline; font-size:14px; margin-top:5px;">切換帳號</a>
-            </div>
+  <script>
+    const APP_URL = "https://script.google.com/macros/s/AKfycbyoFlYdQfjyJUu0onsq2DOI5wZJmRcNI2maSEbU7b5uKiSQmajfFRJGYL8OisrhhNUYKg/exec";
 
-            <div class="instruction-box">
-                <strong style="color: var(--primary-dark); font-size: 1.15rem;">📸 如何集點？</strong><br>
-                不需下載 APP！在展場遇到植物時，請直接使用您的 <b>LINE 掃碼器</b> 或 <b>相機</b> 掃描植物旁邊的 QR Code，點數就會自動存入您的帳號！
-            </div>
+    function normalizePhone(phone) {
+      let p = String(phone || "").replace(/\D/g, "").trim();
+      if (p.length === 9 && p.startsWith("9")) p = "0" + p;
+      return p;
+    }
 
-            <!-- GAS 導向按鈕區 -->
-            <button class="btn" onclick="goToGAS('query')">🏆 查看我的點數與紀錄</button>
-            <button class="btn btn-outline" onclick="goToGAS('rewards')">🎁 前往兌換展場禮物</button>
-            <button class="btn btn-outline" onclick="window.open('https://sites.google.com/view/nat-bot-gard-nchu/', '_blank')">📖 觀看線上植物館藏</button>
-        </div>
-    </div>
+    function getParam(name) {
+      const url = new URL(window.location.href);
+      return url.searchParams.get(name) || "";
+    }
 
-    <!-- 5. 核心內容導覽區 (保留高質感卡片) -->
-    <section class="exhibition-section">
-        <h2 class="section-title reveal">三大展區導覽</h2>
-        <div class="card-grid">
-            <div class="info-card reveal">
-                <h3>A區：生命的起源</h3>
-                <ul>
-                    <li>認識室內植物的原生地</li>
-                    <li>光線對葉片斑紋的影響</li>
-                    <li>如何挑選適合新手的植栽</li>
-                </ul>
-                <button class="btn btn-small" onclick="openModal('【A區 重點提醒】', '新手挑選植物時，請先評估「家中的採光環境」。光線不足時，推薦選擇耐陰的觀葉植物，如虎尾蘭、黃金葛喔！')">💡 點擊看重點</button>
-            </div>
-            <div class="info-card reveal">
-                <h3>B區：日常的照護</h3>
-                <ul>
-                    <li>澆水的黃金法則</li>
-                    <li>介質的調配與換盆時機</li>
-                    <li>植物病蟲害的溫和防護</li>
-                </ul>
-                <button class="btn btn-small" onclick="openModal('【B區 重點提醒】', '「土乾再澆，澆則澆透」是植物存活的關鍵。把手指插入土中兩個指節深，感覺乾燥後再給水，植物才不容易爛根。')">💡 點擊看重點</button>
-            </div>
-            <div class="info-card reveal">
-                <h3>C區：與植共生</h3>
-                <ul>
-                    <li>植物與空間的美學配置</li>
-                    <li>寵物友善植物清單</li>
-                    <li>透過植栽療癒焦慮日常</li>
-                </ul>
-                <button class="btn btn-small" onclick="openModal('【C區 重點提醒】', '家中有毛孩請注意！部分觀葉植物（如龜背芋）對貓狗有微毒，請放置於高處，或選擇安全的植物如鹿角蕨、波士頓蕨。')">💡 點擊看重點</button>
-            </div>
-        </div>
-    </section>
-
-    <!-- 彈出視窗 -->
-    <div class="modal-overlay" id="myModal">
-        <div class="modal-content">
-            <button class="close-btn" onclick="closeModal()">&times;</button>
-            <h3 id="modal-title">標題</h3>
-            <p id="modal-body">內容</p>
-            <button class="btn btn-small" style="margin-top: 15px;" onclick="closeModal()">我知道了</button>
-        </div>
-    </div>
-
-    <!-- JavaScript 邏輯區 -->
-    <script>
-        // ⚠️⚠️⚠️ 請在這裡填寫你真實的 Google Apps Script (GAS) 部署網址 ⚠️⚠️⚠️
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbyoFlYdQfjyJUu0onsq2DOI5wZJmRcNI2maSEbU7b5uKiSQmajfFRJGYL8OisrhhNUYKg/exec";
-
-        // --- 1. 開場動畫與登入狀態檢查 ---
-        window.onload = () => {
-            // 動畫停留約 4.5 秒後淡出
-            setTimeout(() => {
-                const splash = document.getElementById('splash-screen');
-                splash.classList.add('splash-fade-out');
-                
-                // 等待淡出特效結束(0.8s)後隱藏元素，並顯示主畫面
-                setTimeout(() => {
-                    splash.style.display = 'none';
-                    checkLoginStatus();
-                }, 800);
-            }, 4500); 
-        };
-
-        // 檢查 LocalStorage 是否已有手機號碼
-        function checkLoginStatus() {
-            const phone = localStorage.getItem('ark_exhibition_phone');
-            const loginView = document.getElementById('login-view');
-            const homeView = document.getElementById('home-view');
-
-            if (phone) {
-                // 已登入 -> 顯示儀表板
-                document.getElementById('display-phone').innerText = phone;
-                loginView.classList.remove('active');
-                setTimeout(() => homeView.classList.add('active'), 50); // 微小延遲讓 transition 發揮作用
-            } else {
-                // 未登入 -> 顯示輸入框
-                homeView.classList.remove('active');
-                setTimeout(() => loginView.classList.add('active'), 50);
-            }
+    function buildUrl(base, params) {
+      const u = new URL(base);
+      Object.keys(params).forEach(function (key) {
+        if (params[key] !== undefined && params[key] !== null && params[key] !== "") {
+          u.searchParams.set(key, params[key]);
         }
+      });
+      return u.toString();
+    }
 
-        // --- 2. 登入與登出邏輯 ---
-        function saveLogin() {
-            const phone = document.getElementById('phoneInput').value.trim();
-            // 簡易驗證是否為 09 開頭且長度為 10 碼
-            if (phone.length === 10 && phone.startsWith('09')) {
-                localStorage.setItem('ark_exhibition_phone', phone);
-                // 淡出登入框，淡入儀表板
-                document.getElementById('login-view').classList.remove('active');
-                setTimeout(() => {
-                    checkLoginStatus();
-                }, 400); // 等待淡出動畫
-            } else {
-                alert('請輸入正確的手機號碼喔！\n（例如：0912345678）');
-            }
-        }
+    const phoneFromUrl = normalizePhone(getParam("phone"));
+    const savedPhone = normalizePhone(localStorage.getItem("savedPhone") || "");
+    const finalPhone = phoneFromUrl || savedPhone;
 
-        function logout() {
-            if(confirm('確定要登出這個號碼嗎？')) {
-                localStorage.removeItem('ark_exhibition_phone');
-                document.getElementById('phoneInput').value = '';
-                // 淡出儀表板，淡入登入框
-                document.getElementById('home-view').classList.remove('active');
-                setTimeout(() => {
-                    checkLoginStatus();
-                }, 400);
-            }
-        }
+    window.onload = () => {
+      // 判斷是否已登入
+      if (finalPhone) {
+        try { localStorage.setItem("savedPhone", finalPhone); } catch (e) {}
+        document.getElementById('splash-status').innerText = "歡迎回來，正在前往展場首頁...";
+        const target = buildUrl(APP_URL, { mode: "home", phone: finalPhone });
+        
+        // 播完動畫 (3.5秒) 後直接跳轉至後端首頁
+        setTimeout(() => { window.location.replace(target); }, 3500);
+      } else {
+        // 未登入：播完動畫後顯示登入卡片
+        setTimeout(() => {
+          const splash = document.getElementById('splash-screen');
+          splash.classList.add('splash-fade-out');
+          setTimeout(() => {
+            splash.style.display = 'none';
+            document.getElementById('login-page').classList.add('active');
+          }, 800);
+        }, 3500);
+      }
+    };
 
-        // --- 3. 導向 GAS 後端頁面 ---
-        function goToGAS(mode) {
-            const phone = localStorage.getItem('ark_exhibition_phone');
-            // 頁面跳轉至 GAS，並帶上 mode 與 phone 參數
-            window.location.href = `${GAS_URL}?mode=${mode}&phone=${phone}`;
-        }
-
-        // --- 4. 區塊滑入動畫 (Scroll Reveal) ---
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('active');
-                }
-            });
-        }, { threshold: 0.15 });
-        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-
-        // --- 5. 彈出視窗邏輯 (Modal) ---
-        const modal = document.getElementById('myModal');
-        const modalTitle = document.getElementById('modal-title');
-        const modalBody = document.getElementById('modal-body');
-
-        function openModal(title, text) {
-            modalTitle.innerText = title;
-            modalBody.innerText = text;
-            modal.classList.add('active');
-        }
-
-        function closeModal() {
-            modal.classList.remove('active');
-        }
-
-        // 點擊視窗外部也可關閉
-        modal.addEventListener('click', (e) => {
-            if(e.target === modal) closeModal();
-        });
-    </script>
+    // 手動輸入手機號碼邏輯
+    document.getElementById('savePhoneBtn').addEventListener('click', () => {
+      const inputPhone = normalizePhone(document.getElementById('phoneInput').value);
+      if (inputPhone.length === 10 && inputPhone.startsWith("09")) {
+        try { localStorage.setItem("savedPhone", inputPhone); } catch (e) {}
+        document.getElementById('savePhoneBtn').innerText = "跳轉中...";
+        const target = buildUrl(APP_URL, { mode: "home", phone: inputPhone });
+        setTimeout(() => { window.location.replace(target); }, 500);
+      } else {
+        alert("請輸入正確的手機號碼喔！\n（例如：0912345678）");
+      }
+    });
+  </script>
 </body>
 </html>
