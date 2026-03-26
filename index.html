@@ -3,103 +3,99 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>方舟植物展覽｜綠意探索</title>
-  <meta name="robots" content="noindex,nofollow">
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <title>方舟植物展覽</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --primary-dark: #2c4c3b;
-      --primary-light: #729075;
-      --bg-color: #f7f9f7;
-      --accent: #d4a373;
-    }
+    :root { --primary-dark: #1e362d; --primary-light: #4a7c59; }
     html, body {
       margin: 0; padding: 0; min-height: 100vh;
-      background: var(--bg-color);
       font-family: "Noto Sans TC", sans-serif;
-      color: var(--primary-dark);
-      overflow-x: hidden;
+      /* 升級：全螢幕高質感植物背景 */
+      background: url('https://images.unsplash.com/photo-1463320726281-696a485928c7?q=80&w=1920&auto=format&fit=crop') center/cover fixed;
+      color: var(--primary-dark); overflow: hidden;
     }
 
-    /* 開場動畫 (A x B x C) */
+    /* 毛玻璃共用特效 */
+    .glass-card {
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+      border-radius: 24px; padding: 40px 30px; text-align: center;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.5);
+    }
+
+    /* 開場動畫 */
     #splash-screen {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-      background: #ffffff; z-index: 9999;
+      background: rgba(0,0,0,0.4); backdrop-filter: blur(8px); z-index: 9999;
       display: flex; flex-direction: column; justify-content: center; align-items: center;
-      transition: opacity 0.8s ease, transform 0.8s ease;
+      transition: opacity 0.8s ease;
     }
-    .collab-container {
-      display: flex; align-items: center; justify-content: center; gap: 15px;
-      width: 90%; max-width: 500px; margin-bottom: 30px;
+    .splash-card {
+      background: rgba(255, 255, 255, 0.9); padding: 40px; border-radius: 30px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
     }
-    .collab-logo { width: 28%; height: auto; object-fit: contain; }
-    .cross-mark { font-size: 20px; color: #bbb; font-weight: 300; }
+    .collab-container { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 25px; }
+    .collab-logo { width: 80px; height: auto; object-fit: contain; }
+    .cross-mark { font-size: 20px; color: #888; }
+    .anim-item { opacity: 0; transform: translateY(20px); animation: fadeUp 0.8s forwards; }
+    @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
     
-    .anim-item { opacity: 0; transform: translateX(-20px); }
-    @keyframes slideFadeIn { to { opacity: 1; transform: translateX(0); } }
-    .item-1 { animation: slideFadeIn 0.6s ease forwards 0.2s; }
-    .item-2 { animation: slideFadeIn 0.4s ease forwards 0.8s; }
-    .item-3 { animation: slideFadeIn 0.6s ease forwards 1.2s; }
-    .item-4 { animation: slideFadeIn 0.4s ease forwards 1.8s; }
-    .item-5 { animation: slideFadeIn 0.6s ease forwards 2.2s; }
-    .item-6 { animation: slideFadeIn 0.8s ease forwards 3.0s; }
-    .splash-fade-out { opacity: 0; pointer-events: none; transform: scale(1.02); }
+    .item-1 { animation-delay: 0.2s; }
+    .item-2 { animation-delay: 0.8s; }
+    .item-3 { animation-delay: 1.2s; }
+    .item-4 { animation-delay: 1.8s; }
+    .item-5 { animation-delay: 2.2s; }
+    .item-6 { animation-delay: 3.0s; }
 
-    /* 登入卡片 */
-    .page {
-      min-height: 100vh; display: none; /* 預設隱藏，播完動畫才顯示 */
-      align-items: center; justify-content: center; padding: 24px; box-sizing: border-box;
-      opacity: 0; transition: opacity 0.5s ease;
+    /* 獨立登入頁 */
+    .fullscreen-page {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box;
+      opacity: 0; visibility: hidden; transition: opacity 0.6s ease;
     }
-    .page.active { display: flex; opacity: 1; }
-
-    .glass-card {
-      width: min(92vw, 460px);
-      background: rgba(255, 255, 255, 0.98);
-      border-radius: 20px; padding: 40px 30px; text-align: center;
-      box-shadow: 0 15px 40px rgba(44, 76, 59, 0.08);
-      border-top: 5px solid var(--primary-light);
-    }
-    h1 { margin: 0 0 10px; font-size: 26px; color: var(--primary-dark); }
-    p { margin: 0 0 25px; font-size: 16px; line-height: 1.6; color: #666; }
+    .fullscreen-page.active { opacity: 1; visibility: visible; }
+    
+    h1 { margin: 0 0 10px; font-size: 28px; font-weight: 900; color: var(--primary-dark); letter-spacing: 1px; }
+    p { margin: 0 0 25px; font-size: 16px; line-height: 1.6; color: #444; font-weight: 500;}
     
     input[type="tel"] {
       width: 100%; box-sizing: border-box; padding: 18px; font-size: 22px; text-align: center; letter-spacing: 2px;
-      border: 2px solid #ddd; border-radius: 16px; margin-bottom: 20px; color: var(--primary-dark); font-weight: bold;
-      transition: all 0.3s;
+      border: 2px solid rgba(74, 124, 89, 0.3); border-radius: 16px; margin-bottom: 20px; 
+      background: rgba(255,255,255,0.9); color: var(--primary-dark); font-weight: bold; outline: none; transition: 0.3s;
     }
-    input[type="tel"]:focus { border-color: var(--primary-light); outline: none; }
+    input[type="tel"]:focus { border-color: var(--primary-light); box-shadow: 0 0 15px rgba(74,124,89,0.3); }
 
     .btn {
-      width: 100%; box-sizing: border-box; border-radius: 16px; padding: 16px 12px;
-      font-size: 18px; font-weight: 700; text-decoration: none; display: block; text-align: center;
-      background: var(--primary-light); color: #fff; cursor: pointer; border: none; transition: all 0.3s;
+      width: 100%; box-sizing: border-box; border-radius: 16px; padding: 18px 12px;
+      font-size: 20px; font-weight: 900; text-decoration: none; display: block; text-align: center;
+      background: linear-gradient(135deg, var(--primary-light), var(--primary-dark)); color: #fff; cursor: pointer; border: none; box-shadow: 0 8px 20px rgba(0,0,0,0.2); transition: 0.3s;
     }
-    .btn:hover, .btn:active { background: var(--primary-dark); transform: translateY(-2px); }
+    .btn:active { transform: scale(0.96); }
   </style>
 </head>
 <body>
 
-  <!-- 聯名開場動畫 -->
+  <!-- 開場動畫 (背景已換成真實植物透視) -->
   <div id="splash-screen">
-    <div class="collab-container">
-      <img src="./logo_ark.png" alt="方舟計畫" class="collab-logo anim-item item-1">
-      <span class="cross-mark anim-item item-2">✖</span>
-      <img src="./logo_nchu.png" alt="中興大學" class="collab-logo anim-item item-3">
-      <span class="cross-mark anim-item item-4">✖</span>
-      <img src="./logo_huisun.png" alt="惠蓀林場" class="collab-logo anim-item item-5">
+    <div class="splash-card anim-item item-1">
+      <div class="collab-container">
+        <img src="./logo_ark.png" class="collab-logo anim-item item-1" onerror="this.style.display='none'">
+        <span class="cross-mark anim-item item-2">✖</span>
+        <img src="./logo_nchu.png" class="collab-logo anim-item item-3" onerror="this.style.display='none'">
+        <span class="cross-mark anim-item item-4">✖</span>
+        <img src="./logo_huisun.png" class="collab-logo anim-item item-5" onerror="this.style.display='none'">
+      </div>
+      <h2 class="anim-item item-6" style="margin:0; letter-spacing:2px; font-weight:900; color:var(--primary-dark);">歡迎參觀方舟計畫展覽</h2>
     </div>
-    <h2 class="anim-item item-6" style="margin-top:20px; letter-spacing:4px;">方舟植物展覽</h2>
-    <p class="anim-item item-6" id="splash-status" style="color:#888; font-size:15px; margin-top:10px;">啟動綠意探索...</p>
   </div>
 
-  <!-- 登入卡片區 -->
-  <div class="page" id="login-page">
-    <div class="glass-card">
-      <h1>領取專屬集點卡</h1>
-      <p>請輸入手機號碼，系統將自動為您保留展場的集點紀錄。</p>
+  <!-- 獨立的輸入電話頁面 -->
+  <div class="fullscreen-page" id="login-page">
+    <div class="glass-card" style="width: 100%; max-width: 420px;">
+      <h1>🌿 專屬探索通行證</h1>
+      <p>請輸入手機號碼，開啟您的植物集點之旅。</p>
       <input id="phoneInput" type="tel" placeholder="例如：0912345678" maxlength="10">
-      <button class="btn" id="savePhoneBtn">開始探索 🌿</button>
+      <button class="btn" id="savePhoneBtn">進入展覽</button>
     </div>
   </div>
 
@@ -111,58 +107,41 @@
       if (p.length === 9 && p.startsWith("9")) p = "0" + p;
       return p;
     }
-
-    function getParam(name) {
-      const url = new URL(window.location.href);
-      return url.searchParams.get(name) || "";
-    }
-
     function buildUrl(base, params) {
       const u = new URL(base);
-      Object.keys(params).forEach(function (key) {
-        if (params[key] !== undefined && params[key] !== null && params[key] !== "") {
-          u.searchParams.set(key, params[key]);
-        }
-      });
+      Object.keys(params).forEach(key => { if (params[key]) u.searchParams.set(key, params[key]); });
       return u.toString();
     }
 
-    const phoneFromUrl = normalizePhone(getParam("phone"));
     const savedPhone = normalizePhone(localStorage.getItem("savedPhone") || "");
-    const finalPhone = phoneFromUrl || savedPhone;
 
     window.onload = () => {
-      // 判斷是否已登入
-      if (finalPhone) {
-        try { localStorage.setItem("savedPhone", finalPhone); } catch (e) {}
-        document.getElementById('splash-status').innerText = "歡迎回來，正在前往展場首頁...";
-        const target = buildUrl(APP_URL, { mode: "home", phone: finalPhone });
-        
-        // 播完動畫 (3.5秒) 後直接跳轉至後端首頁
-        setTimeout(() => { window.location.replace(target); }, 3500);
-      } else {
-        // 未登入：播完動畫後顯示登入卡片
+      // 動畫播放 4 秒後消失
+      setTimeout(() => {
+        const splash = document.getElementById('splash-screen');
+        splash.style.opacity = '0';
         setTimeout(() => {
-          const splash = document.getElementById('splash-screen');
-          splash.classList.add('splash-fade-out');
-          setTimeout(() => {
-            splash.style.display = 'none';
+          splash.style.display = 'none';
+          
+          if (savedPhone) {
+            // 已登入過：直接跳轉後端
+            window.location.replace(buildUrl(APP_URL, { mode: "home", phone: savedPhone }));
+          } else {
+            // 未登入：單獨顯示輸入電話的頁面
             document.getElementById('login-page').classList.add('active');
-          }, 800);
-        }, 3500);
-      }
+          }
+        }, 800);
+      }, 4000);
     };
 
-    // 手動輸入手機號碼邏輯
     document.getElementById('savePhoneBtn').addEventListener('click', () => {
       const inputPhone = normalizePhone(document.getElementById('phoneInput').value);
       if (inputPhone.length === 10 && inputPhone.startsWith("09")) {
-        try { localStorage.setItem("savedPhone", inputPhone); } catch (e) {}
-        document.getElementById('savePhoneBtn').innerText = "跳轉中...";
-        const target = buildUrl(APP_URL, { mode: "home", phone: inputPhone });
-        setTimeout(() => { window.location.replace(target); }, 500);
+        localStorage.setItem("savedPhone", inputPhone);
+        document.getElementById('savePhoneBtn').innerText = "啟動中...";
+        setTimeout(() => { window.location.replace(buildUrl(APP_URL, { mode: "home", phone: inputPhone })); }, 500);
       } else {
-        alert("請輸入正確的手機號碼喔！\n（例如：0912345678）");
+        alert("格式錯誤，請輸入正確的 09 開頭手機號碼！");
       }
     });
   </script>
