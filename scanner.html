@@ -186,24 +186,41 @@
       return (rearCamera || cameras[0]).id;
     }
 
-    async function handleScanResult(rawUrl) {
+   async function handleScanResult(rawUrl) {
       const phone = getCurrentPhone();
-      if (!isValidMobile(phone)) { await stopScanner(true); statusEl.textContent = "目前手機號碼無效，請重新輸入 09xxxxxxxx。"; return; }
-      const parsed = parsePlantQrUrl(rawUrl);
+      if (!isValidMobile(phone)) { await stopScanner(true); statusEl.textContent = "目前手機號碼無效，請重新輸入。"; return; }
+      
       await stopScanner(true);
-      if (!parsed) { statusEl.textContent = "這似乎不是植物的 QR code，請重新對準。"; return; }
+      
       try {
-        statusEl.textContent = "✅ 掃描成功！正在記錄點數…";
-        const resp = await jsonpMarkPlantAndGetRedirect(parsed.plant, phone);
-        const target = resp.redirectUrl || COLLECTION_URL;
-        pendingTargetUrl = target;
-        resultText.textContent = (resp.message || "已完成記點");
-        resultUrl.textContent = target;
-        resultBox.style.display = "block";
-        statusEl.textContent = "紀錄完成！請點擊上方按鈕觀看介紹。";
+        const urlObj = new URL(cleanDecodedText(rawUrl));
+        const mode = urlObj.searchParams.get("mode");
+        
+        // 情況 A：掃描到植物
+        if (mode === "plant_go" && urlObj.searchParams.get("plant")) {
+          statusEl.textContent = "✅ 掃描成功！正在記錄植物點數…";
+          const parsedPlant = urlObj.searchParams.get("plant");
+          const resp = await jsonpMarkPlantAndGetRedirect(parsedPlant, phone);
+          const target = resp.redirectUrl || COLLECTION_URL;
+          pendingTargetUrl = target;
+          resultText.textContent = (resp.message || "已完成記點");
+          resultUrl.textContent = target;
+          resultBox.style.display = "block";
+          statusEl.textContent = "紀錄完成！請點擊上方按鈕觀看介紹。";
+        } 
+        // 情況 B：掃描到非植物的探索點 (例如 CHECKIN, ZONE_GUIDE)
+        else if (mode === "stamp" && urlObj.searchParams.get("spot")) {
+          statusEl.textContent = "✅ 掃描成功！正在跳轉紀錄頁面…";
+          // 加上使用者的電話參數，直接跳轉給 GAS 處理
+          urlObj.searchParams.set("phone", phone);
+          window.location.assign(urlObj.toString());
+        } 
+        // 情況 C：無效的 QR Code
+        else {
+          statusEl.textContent = "這似乎不是展覽專用的 QR code，請重新對準。";
+        }
       } catch (err) {
-        const msg = err && err.message ? err.message : String(err || "unknown error");
-        statusEl.textContent = "記點失敗：" + msg;
+        statusEl.textContent = "無效的條碼格式：" + rawUrl;
       }
     }
 
