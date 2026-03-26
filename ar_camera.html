@@ -8,54 +8,82 @@
   <style>
     :root { --primary: #2c4c3b; --accent: #d4a373; }
     html, body { margin: 0; padding: 0; width: 100vw; height: 100vh; background: #000; font-family: "Noto Sans TC", sans-serif; overflow: hidden; }
-    #camera-feed { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
     
-    /* 拍立得/紀念圖章設計 */
-    #overlay-graphic {
-      position: absolute; bottom: 18%; right: 5%; width: 40%; max-width: 200px; z-index: 2; pointer-events: none; 
-      border: 6px solid #fff; border-radius: 4px; box-shadow: 2px 8px 15px rgba(0,0,0,0.4); transform: rotate(-6deg);
+    /* 滿版相機與相框 */
+    #camera-feed { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
+    #overlay-graphic { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 2; pointer-events: none; }
+    
+    /* 相框選擇列 (上方) */
+    .frame-selector {
+      position: absolute; top: 70px; left: 0; width: 100%; z-index: 10;
+      display: flex; overflow-x: auto; gap: 15px; padding: 10px 20px; box-sizing: border-box;
+      /* 隱藏卷軸 */
+      scrollbar-width: none; -ms-overflow-style: none;
     }
-    .controls { position: absolute; bottom: 0; left: 0; width: 100%; padding: 30px 20px; box-sizing: border-box; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); z-index: 10; display: flex; justify-content: space-around; align-items: center; }
-    .btn { background: #fff; color: var(--primary); border: none; border-radius: 30px; padding: 15px 30px; font-size: 20px; font-weight: 700; box-shadow: 0 5px 15px rgba(0,0,0,0.3); cursor: pointer; transition: transform 0.2s; }
-    .btn:active { transform: scale(0.95); }
-    .btn-capture { background: var(--accent); color: white; width: 80px; height: 80px; border-radius: 50%; padding: 0; border: 4px solid #fff; box-shadow: 0 0 20px rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; font-size: 30px; }
-    #result-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 20; display: none; flex-direction: column; justify-content: center; align-items: center; }
-    #result-image { width: 90%; max-height: 70vh; object-fit: contain; border-radius: 15px; border: 3px solid #fff; margin-bottom: 20px; }
-    .hint { color: white; font-size: 18px; margin-bottom: 20px; font-weight: bold; text-align: center; line-height: 1.5; }
+    .frame-selector::-webkit-scrollbar { display: none; }
+    .frame-thumb {
+      width: 70px; height: 70px; flex-shrink: 0; object-fit: cover; border-radius: 12px;
+      border: 3px solid rgba(255,255,255,0.5); background: rgba(0,0,0,0.3); backdrop-filter: blur(5px);
+      transition: 0.2s; cursor: pointer;
+    }
+    .frame-thumb.active { border-color: var(--accent); transform: scale(1.1); box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+
+    /* 控制列與按鈕 */
+    .controls { position: absolute; bottom: 0; left: 0; width: 100%; padding: 30px 20px 50px; box-sizing: border-box; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); z-index: 10; display: flex; justify-content: center; align-items: center; }
+    .btn-capture { background: var(--accent); color: white; width: 80px; height: 80px; border-radius: 50%; padding: 0; border: 4px solid #fff; box-shadow: 0 0 20px rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; font-size: 35px; cursor: pointer; transition: 0.2s; }
+    .btn-capture:active { transform: scale(0.9); }
+    
+    .btn-home { position: absolute; top: 20px; left: 20px; z-index: 15; background: rgba(0,0,0,0.5); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 10px 15px; border-radius: 12px; font-size: 16px; backdrop-filter: blur(5px); cursor: pointer; text-decoration: none;}
+    
+    /* 拍照結果畫面 (滿版) */
+    #result-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 20; display: none; flex-direction: column; justify-content: center; align-items: center; }
+    #result-image { width: 100%; height: 100%; object-fit: cover; }
+    
+    /* 結果頁的浮動操作區 */
+    .result-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; padding: 40px 20px; box-sizing: border-box; pointer-events: none; }
+    .hint { background: rgba(0,0,0,0.6); color: white; padding: 12px 20px; border-radius: 30px; font-size: 18px; font-weight: bold; text-align: center; margin: 0 auto; pointer-events: auto; backdrop-filter: blur(5px); }
+    .result-actions { display: flex; gap: 15px; justify-content: center; pointer-events: auto; }
+    .btn { background: #fff; color: var(--primary); border: none; border-radius: 20px; padding: 16px 24px; font-size: 18px; font-weight: 700; box-shadow: 0 5px 15px rgba(0,0,0,0.3); cursor: pointer; }
+    
     #canvas { display: none; }
-    .btn-home { position: absolute; top: 20px; left: 20px; z-index: 10; background: rgba(255,255,255,0.3); color: white; border: none; padding: 10px 15px; border-radius: 10px; font-size: 16px; backdrop-filter: blur(5px); }
   </style>
 </head>
 <body>
 
-  <button class="btn-home" onclick="window.location.href='index.html'">🏠 回首頁</button>
-  <video id="camera-feed" autoplay playsinline></video>
+  <a class="btn-home" href="index.html">🏠 回首頁</a>
   
-  <!-- 這裡的 src 會被 JavaScript 自動替換 -->
-  <img id="overlay-graphic" src="./ar_1.png" alt="專屬紀念圖案" crossorigin="anonymous">
+  <video id="camera-feed" autoplay playsinline></video>
+  <img id="overlay-graphic" src="./ar_1.png" crossorigin="anonymous">
+
+  <!-- 相框選擇列 (你可以在這裡新增更多的 img，只要確保檔名正確即可) -->
+  <div class="frame-selector" id="frameSelector">
+    <img class="frame-thumb active" src="./ar_1.png" onclick="changeFrame(1, this)">
+    <img class="frame-thumb" src="./ar_2.png" onclick="changeFrame(2, this)" onerror="this.style.display='none'">
+    <img class="frame-thumb" src="./ar_3.png" onclick="changeFrame(3, this)" onerror="this.style.display='none'">
+    <img class="frame-thumb" src="./ar_4.png" onclick="changeFrame(4, this)" onerror="this.style.display='none'">
+  </div>
 
   <div class="controls" id="controls">
     <button class="btn-capture" id="captureBtn">📸</button>
   </div>
 
+  <!-- 拍照結果畫面 -->
   <div id="result-screen">
-    <div class="hint">✨ 拍照成功！<br>👇 請「長按圖片」即可儲存到手機 👇</div>
     <img id="result-image" src="" alt="合成結果">
-    <div style="display: flex; gap: 15px; margin-top: 10px;">
-      <button class="btn" id="retakeBtn" style="font-size: 16px;">重新拍一張</button>
-      <button class="btn" style="background:var(--primary); color:white; font-size: 16px;" onclick="window.location.href='index.html'">完成探索</button>
+    
+    <div class="result-overlay">
+      <div class="hint">✨ 拍照成功！長按圖片即可儲存 ✨</div>
+      <div class="result-actions">
+        <button class="btn" id="retakeBtn">🔄 重拍</button>
+        <button class="btn" style="background:var(--primary); color:white;" onclick="window.location.href='index.html'">🏠 完成</button>
+      </div>
     </div>
   </div>
 
   <canvas id="canvas"></canvas>
 
   <script>
-    // --- 🪄 神奇的代碼：自動抓取網址參數來換圖 ---
-    const urlParams = new URLSearchParams(window.location.search);
-    const picNumber = urlParams.get('pic') || '1'; // 如果沒給數字，預設顯示第 1 張
     const overlay = document.getElementById('overlay-graphic');
-    overlay.src = `./ar_${picNumber}.png`; // 自動組合檔名：ar_1.png, ar_2.png...
-
     const video = document.getElementById('camera-feed');
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
@@ -63,47 +91,50 @@
     const resultScreen = document.getElementById('result-screen');
     const resultImage = document.getElementById('result-image');
     const retakeBtn = document.getElementById('retakeBtn');
+    const controls = document.getElementById('controls');
+    const frameSelector = document.getElementById('frameSelector');
+
+    // 切換相框的函數
+    function changeFrame(num, element) {
+      overlay.src = `./ar_${num}.png`;
+      document.querySelectorAll('.frame-thumb').forEach(el => el.classList.remove('active'));
+      element.classList.add('active');
+    }
 
     async function startCamera() {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
         video.srcObject = stream;
-      } catch (err) { alert("無法開啟相機，請確認是否已給予瀏覽器相機權限喔！"); }
+      } catch (err) { 
+        alert("無法開啟相機，請確認是否已給予瀏覽器相機權限喔！"); 
+      }
     }
 
     captureBtn.addEventListener('click', () => {
-      canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+      // 確保 canvas 大小與相機輸出解析度一致
+      canvas.width = video.videoWidth; 
+      canvas.height = video.videoHeight;
+      
+      // 1. 畫上相機畫面
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-      const overlayWidth = canvas.width * 0.40; 
-      const overlayHeight = overlayWidth * (overlay.naturalHeight / overlay.naturalWidth);
-      const x = canvas.width - overlayWidth - (canvas.width * 0.05); 
-      const y = canvas.height - overlayHeight - (canvas.height * 0.18); 
+      // 2. 畫上滿版相框 (讓相框填滿整個畫面)
+      ctx.drawImage(overlay, 0, 0, canvas.width, canvas.height);
 
-      ctx.save();
-      ctx.translate(x + overlayWidth / 2, y + overlayHeight / 2);
-      ctx.rotate(-6 * Math.PI / 180);
-
-      const borderWidth = canvas.width * 0.015; 
-      ctx.fillStyle = "#ffffff";
-      ctx.shadowColor = "rgba(0,0,0,0.4)";
-      ctx.shadowBlur = 20; ctx.shadowOffsetY = 10;
-      ctx.fillRect(-overlayWidth / 2 - borderWidth, -overlayHeight / 2 - borderWidth, overlayWidth + borderWidth * 2, overlayHeight + borderWidth * 2);
-
-      ctx.shadowColor = "transparent";
-      ctx.drawImage(overlay, -overlayWidth / 2, -overlayHeight / 2, overlayWidth, overlayHeight);
-      ctx.restore();
-
+      // 輸出圖片
       const dataUrl = canvas.toDataURL('image/png');
       resultImage.src = dataUrl;
       
-      document.getElementById('controls').style.display = 'none';
+      // 切換介面
+      controls.style.display = 'none';
+      frameSelector.style.display = 'none';
       overlay.style.display = 'none';
       resultScreen.style.display = 'flex';
     });
 
     retakeBtn.addEventListener('click', () => {
-      document.getElementById('controls').style.display = 'flex';
+      controls.style.display = 'flex';
+      frameSelector.style.display = 'flex';
       overlay.style.display = 'block';
       resultScreen.style.display = 'none';
     });
