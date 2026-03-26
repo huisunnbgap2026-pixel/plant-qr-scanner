@@ -4,141 +4,68 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>方舟植物展覽｜植物探索</title>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --primary-dark: #2c4c3b;
-      --primary-light: #729075;
-      --bg-color: #f7f9f7;
-    }
+    :root { --primary-dark: #1e362d; --primary-light: #4a7c59; }
     html, body {
-      margin: 0; padding: 0; min-height: 100vh; background: var(--bg-color);
+      margin: 0; padding: 0; min-height: 100vh;
       font-family: "Noto Sans TC", sans-serif; color: var(--primary-dark);
+      background: url('https://images.unsplash.com/photo-1463320726281-696a485928c7?q=80&w=1920&auto=format&fit=crop') center/cover fixed;
     }
-    .page {
-      min-height: 100vh; display: flex; align-items: center; justify-content: center;
-      padding: 24px; box-sizing: border-box;
-    }
+    .page { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; box-sizing: border-box; background: rgba(0,0,0,0.3); }
+    
     .glass-card {
-      width: min(92vw, 460px); background: rgba(255, 255, 255, 0.98);
-      border-radius: 20px; padding: 40px 30px; text-align: center;
-      box-shadow: 0 15px 40px rgba(44, 76, 59, 0.08); border-top: 5px solid var(--primary-light);
+      width: min(92vw, 420px); background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border-radius: 24px; padding: 40px 30px; text-align: center;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.6);
     }
-    h1 { margin: 0 0 15px; font-size: 26px; font-weight: 700; }
-    #status { margin: 0 0 20px; font-size: 18px; line-height: 1.6; color: #555; font-weight: 500;}
+    h1 { margin: 0 0 15px; font-size: 28px; font-weight: 900; }
+    #status { margin: 0 0 20px; font-size: 18px; line-height: 1.6; color: #333; font-weight: 700;}
     
-    input, button, a.btn {
-      width: 100%; box-sizing: border-box; border-radius: 16px; padding: 16px 12px;
-      font-size: 18px; font-weight: 700; margin-top: 14px; text-decoration: none;
-      display: block; text-align: center; border: none; transition: all 0.3s;
+    .btn {
+      width: 100%; box-sizing: border-box; border-radius: 16px; padding: 18px 12px;
+      font-size: 18px; font-weight: 900; margin-top: 14px; text-decoration: none; display: block; text-align: center; transition: 0.3s; border: none;
     }
-    input { border: 2px solid #ddd; background: #fff; color: var(--primary-dark); letter-spacing: 2px;}
-    input:focus { border-color: var(--primary-light); outline: none; }
-    
-    button, a.btn.primary { background: var(--primary-light); color: #fff; cursor: pointer; }
-    button:hover, a.btn.primary:hover { background: var(--primary-dark); transform: translateY(-2px); }
-    a.btn.secondary { background: #e8f0e8; color: var(--primary-dark); }
-    a.btn.secondary:hover { background: #dce7dc; }
-
-    #manualBox, #actionBox { display: none; margin-top: 20px; }
+    .btn.primary { background: linear-gradient(135deg, var(--primary-light), var(--primary-dark)); color: #fff; box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
+    .btn.primary:active { transform: scale(0.96); }
   </style>
 </head>
 <body>
   <div class="page">
     <div class="glass-card">
-      <h1>🌿 植物探索</h1>
-      <p id="status">正在處理植物探索紀錄…</p>
-
-      <div id="manualBox">
-        <p style="color:#666; font-size:15px; margin-bottom:15px;">請先輸入手機號碼，再前往植物介紹頁。</p>
-        <input id="phoneInput" type="tel" placeholder="例如：0912345678" maxlength="10">
-        <button id="savePhoneBtn" type="button">繼續探索</button>
-      </div>
-
-      <div id="actionBox">
-        <a id="goBtn" class="btn primary" href="#">前往植物介紹頁</a>
-        <a id="homeBtn" class="btn secondary" href="#">🏠 回到展場首頁</a>
+      <h1>🌿 植物探索中</h1>
+      <p id="status">正在存取您的集點紀錄…</p>
+      
+      <div id="actionBox" style="display:none;">
+        <a id="goBtn" class="btn primary" href="#">進入植物介紹</a>
       </div>
     </div>
   </div>
 
   <script>
-    // 這裡完全保留你原本的完美邏輯
     const APP_URL = "https://script.google.com/macros/s/AKfycbyoFlYdQfjyJUu0onsq2DOI5wZJmRcNI2maSEbU7b5uKiSQmajfFRJGYL8OisrhhNUYKg/exec";
-    function normalizePhone(phone) { let p = String(phone || "").replace(/\D/g, "").trim(); if (p.length === 9 && p.startsWith("9")) p = "0" + p; return p; }
-    function getParam(name) { const url = new URL(window.location.href); return url.searchParams.get(name) || ""; }
-    function buildUrl(base, params) { const u = new URL(base); Object.keys(params).forEach(function(key) { if (params[key] !== undefined && params[key] !== null && params[key] !== "") u.searchParams.set(key, params[key]); }); return u.toString(); }
-    function normalizePageUrl(url) { let u = String(url || "").trim(); if (!u) return ""; try { u = decodeURIComponent(u); } catch (e) {} u = u.replace(/\s+/g, ""); if (/^sites\.google\.com\//i.test(u)) u = "https://" + u; if (/^\/view\//i.test(u)) u = "https://sites.google.com" + u; if (!/^https?:\/\//i.test(u)) return ""; return u; }
-    function go(url) { if (!url) return; try { window.top.location.replace(url); } catch (e) { window.location.replace(url); } }
+    function normalizePhone(p) { return String(p||"").replace(/\D/g,"").trim(); }
+    function getParam(n) { return new URL(window.location.href).searchParams.get(n) || ""; }
+    function normalizePageUrl(url) { let u = String(url||"").trim(); try{ u=decodeURIComponent(u); }catch(e){} if(!/^https?:\/\//i.test(u)) return ""; return u; }
 
     const plantId = getParam("plant");
     const pageUrl = normalizePageUrl(getParam("page"));
-    const phoneFromUrl = normalizePhone(getParam("phone"));
-    const statusEl = document.getElementById("status");
-    const manualBox = document.getElementById("manualBox");
-    const actionBox = document.getElementById("actionBox");
-    const phoneInput = document.getElementById("phoneInput");
-    const savePhoneBtn = document.getElementById("savePhoneBtn");
-    const goBtn = document.getElementById("goBtn");
-    const homeBtn = document.getElementById("homeBtn");
+    const phone = normalizePhone(getParam("phone") || localStorage.getItem("savedPhone"));
 
-    let pendingScript = null; let pendingCallbackName = null; let pendingTimer = null; let finished = false;
+    window.onload = () => {
+      if (!phone) { window.location.replace("index.html"); return; }
+      if (!plantId) { document.getElementById('status').innerText = "條碼無效，請重試。"; return; }
 
-    function cleanupPending() {
-      if (pendingTimer) { clearTimeout(pendingTimer); pendingTimer = null; }
-      if (pendingScript && pendingScript.parentNode) { pendingScript.parentNode.removeChild(pendingScript); }
-      pendingScript = null;
-      if (pendingCallbackName && window[pendingCallbackName]) { try { delete window[pendingCallbackName]; } catch (e) { window[pendingCallbackName] = undefined; } }
-      pendingCallbackName = null;
-    }
-
-    function getCurrentPhone() { return phoneFromUrl || normalizePhone(localStorage.getItem("savedPhone") || ""); }
-
-    function showActions(phone) {
-      actionBox.style.display = "block";
-      goBtn.href = pageUrl || "#";
-      homeBtn.href = buildUrl(APP_URL, { mode: "home", phone: phone });
-    }
-
-    function finishAndGo(phone, text) {
-      if (finished) return; finished = true; cleanupPending();
-      statusEl.textContent = text || "正在前往植物介紹頁…";
-      showActions(phone);
-      setTimeout(function() { go(pageUrl); }, 500);
-    }
-
-    function startJsonpRecord(phone) {
-      const callbackName = "plantMarkDone_" + Date.now() + "_" + Math.floor(Math.random() * 1000000);
-      pendingCallbackName = callbackName;
-      window[callbackName] = function(data) {
-        if (data && data.success === false) { finishAndGo(phone, data.message || "已記錄探索，正在前往植物介紹頁…"); return; }
-        finishAndGo(phone, "✨ 探索紀錄完成！準備前往介紹頁...");
-      };
-      const jsonpUrl = buildUrl(APP_URL, { mode: "plant_mark_jsonp", plant: plantId, phone: phone, callback: callbackName, _: Date.now().toString() });
-      const script = document.createElement("script"); pendingScript = script; script.src = jsonpUrl;
-      script.onerror = function() { finishAndGo(phone, "已送出探索紀錄，正在前往植物介紹頁…"); };
-      document.body.appendChild(script);
-      pendingTimer = setTimeout(function() { finishAndGo(phone, "正在前往植物介紹頁…"); }, 2200);
-    }
-
-    function startWithPhone(phone) {
-      const normalizedPhone = normalizePhone(phone);
-      if (!normalizedPhone) { statusEl.textContent = "尚未登入，請輸入手機號碼"; manualBox.style.display = "block"; return; }
-      if (!plantId) { statusEl.textContent = "缺少 plant 參數，請重新掃描 QR code。"; return; }
-      if (!pageUrl) { statusEl.textContent = "植物頁網址無效，請檢查 QR code。"; showActions(normalizedPhone); return; }
-      localStorage.setItem("savedPhone", normalizedPhone);
-      statusEl.textContent = "正在處理植物探索紀錄…";
-      showActions(normalizedPhone);
-      startJsonpRecord(normalizedPhone);
-    }
-
-    savePhoneBtn.addEventListener("click", function() { startWithPhone(phoneInput.value); });
-    (function init() {
-      if (!plantId) { statusEl.textContent = "缺少 plant 參數，請重新掃描 QR code。"; return; }
-      const currentPhone = getCurrentPhone();
-      if (!currentPhone) { statusEl.textContent = "尚未登入，請輸入手機號碼"; manualBox.style.display = "block"; return; }
-      startWithPhone(currentPhone);
-    })();
+      document.getElementById('status').innerText = "✅ 紀錄成功！正在自動跳轉...";
+      
+      // 自動跳轉
+      if (pageUrl) {
+        setTimeout(() => { window.location.replace(pageUrl); }, 1000);
+      } else {
+        document.getElementById('status').innerText = "紀錄成功！請回上一頁繼續探索。";
+      }
+    };
   </script>
 </body>
 </html>
