@@ -9,11 +9,11 @@
     :root { --primary: #2c4c3b; --accent: #d4a373; }
     html, body { margin: 0; padding: 0; width: 100vw; height: 100vh; background: #000; font-family: "Noto Sans TC", sans-serif; overflow: hidden; }
     
-    /* 滿版相機與相框 */
     #camera-feed { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
-    #overlay-graphic { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 2; pointer-events: none; }
     
-    /* 相框選擇列 */
+    /* ⚠️ 加入 opacity: 0.7 讓不透明的測試圖片也能透出人臉 */
+    #overlay-graphic { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 2; pointer-events: none; opacity: 0.7; }
+    
     .frame-selector {
       position: absolute; top: 30px; left: 0; width: 100%; z-index: 10;
       display: flex; overflow-x: auto; gap: 15px; padding: 10px 20px; box-sizing: border-box;
@@ -27,18 +27,13 @@
     }
     .frame-thumb.active { border-color: var(--accent); transform: scale(1.1); box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
 
-    /* 控制列與拍照按鈕 */
     .controls { position: absolute; bottom: 0; left: 0; width: 100%; padding: 30px 20px 40px; box-sizing: border-box; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); z-index: 10; display: flex; justify-content: center; align-items: center; }
     .btn-capture { background: var(--accent); color: white; width: 80px; height: 80px; border-radius: 50%; padding: 0; border: 4px solid #fff; box-shadow: 0 0 20px rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; font-size: 35px; cursor: pointer; transition: 0.2s; z-index: 10; touch-action: manipulation; -webkit-tap-highlight-color: transparent;}
     .btn-capture:active { transform: scale(0.9); }
     
-    /* 左右下角小工具按鈕 */
     .btn-home { position: absolute; bottom: 40px; left: 30px; z-index: 15; background: rgba(255,255,255,0.8); color: var(--primary); border: none; width: 50px; height: 50px; border-radius: 50%; font-size: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.4); display: flex; justify-content: center; align-items: center; text-decoration: none; touch-action: manipulation; }
     .btn-switch { position: absolute; bottom: 40px; right: 30px; z-index: 15; background: rgba(255,255,255,0.8); color: var(--primary); border: none; width: 50px; height: 50px; border-radius: 50%; font-size: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.4); display: flex; justify-content: center; align-items: center; cursor: pointer; touch-action: manipulation; }
     
-    /* =========================================
-       ★ 全新：影片同款結果畫面 (深色毛玻璃背景) ★ 
-       ========================================= */
     #result-screen { 
       position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
       background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
@@ -47,27 +42,11 @@
     }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-    .result-modal {
-      display: flex; flex-direction: column; align-items: center; width: 85%; max-width: 400px;
-    }
-    .hint { 
-      color: #fff; font-size: 16px; font-weight: 700; margin-bottom: 20px; letter-spacing: 1px; 
-      text-shadow: 0 2px 5px rgba(0,0,0,0.5);
-    }
-    #result-image { 
-      width: 100%; max-height: 60vh; object-fit: contain; 
-      border-radius: 8px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); margin-bottom: 30px; 
-    }
-    .btn-retake { 
-      background: #fff; color: #333; border: none; border-radius: 25px; 
-      padding: 16px 0; width: 100%; font-size: 18px; font-weight: 700; 
-      box-shadow: 0 4px 15px rgba(0,0,0,0.2); cursor: pointer; margin-bottom: 15px;
-      touch-action: manipulation; -webkit-tap-highlight-color: transparent;
-    }
-    .btn-home-text {
-      background: transparent; color: #aaa; border: none; font-size: 15px; 
-      text-decoration: underline; cursor: pointer; touch-action: manipulation;
-    }
+    .result-modal { display: flex; flex-direction: column; align-items: center; width: 85%; max-width: 400px; }
+    .hint { color: #fff; font-size: 16px; font-weight: 700; margin-bottom: 20px; letter-spacing: 1px; text-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+    #result-image { width: 100%; max-height: 60vh; object-fit: contain; border-radius: 8px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); margin-bottom: 30px; }
+    .btn-retake { background: #fff; color: #333; border: none; border-radius: 25px; padding: 16px 0; width: 100%; font-size: 18px; font-weight: 700; box-shadow: 0 4px 15px rgba(0,0,0,0.2); cursor: pointer; margin-bottom: 15px; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+    .btn-home-text { background: transparent; color: #aaa; border: none; font-size: 15px; text-decoration: underline; cursor: pointer; touch-action: manipulation; }
     #canvas { display: none; }
   </style>
 </head>
@@ -90,7 +69,6 @@
     <button class="btn-capture" id="captureBtn">📸</button>
   </div>
 
-  <!-- ★ 全新的彈出卡片結構 ★ -->
   <div id="result-screen">
     <div class="result-modal">
       <div class="hint">請輕觸長按下載或分享照片</div>
@@ -123,17 +101,13 @@
     }
 
     async function startCamera() {
-      if (currentStream) {
-        currentStream.getTracks().forEach(track => track.stop());
-      }
+      if (currentStream) { currentStream.getTracks().forEach(track => track.stop()); }
       const constraints = { video: { facingMode: useFrontCamera ? "user" : "environment" } };
       try {
         currentStream = await navigator.mediaDevices.getUserMedia(constraints);
         video.srcObject = currentStream;
         video.style.transform = useFrontCamera ? "scaleX(-1)" : "scaleX(1)";
-      } catch (err) { 
-        alert("無法開啟相機，請確認是否已給予瀏覽器權限！"); 
-      }
+      } catch (err) { alert("無法開啟相機，請確認是否已給予瀏覽器權限！"); }
     }
 
     switchCameraBtn.addEventListener('click', () => {
@@ -175,14 +149,17 @@
       canvas.width = video.offsetWidth; 
       canvas.height = video.offsetHeight;
       
-      // 畫上相機與相框 (使用完美滿版演算法)
+      // 1. 畫上相機
       drawImageCover(ctx, video, canvas.width, canvas.height, useFrontCamera);
+      
+      // 2. ⚠️ 畫上相框並設定 0.7 透明度 (讓你現在能看見臉)
+      ctx.globalAlpha = 0.7; 
       drawImageCover(ctx, overlay, canvas.width, canvas.height, false);
+      ctx.globalAlpha = 1.0; 
 
       const dataUrl = canvas.toDataURL('image/png', 0.9);
       resultImage.src = dataUrl;
       
-      // 隱藏相機 UI，顯示影片同款彈出視窗
       document.getElementById('controls').style.display = 'none';
       document.getElementById('frameSelector').style.display = 'none';
       overlay.style.display = 'none';
