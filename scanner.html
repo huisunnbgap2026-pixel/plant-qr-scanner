@@ -81,8 +81,7 @@
     </div>
   </div>
 
-  <script>
-    const APP_URL = "https://script.google.com/macros/s/AKfycbyoFlYdQfjyJUu0onsq2DOI5wZJmRcNI2maSEbU7b5uKiSQmajfFRJGYL8OisrhhNUYKg/exec";
+const APP_URL = "https://script.google.com/macros/s/AKfycbyoFlYdQfjyJUu0onsq2DOI5wZJmRcNI2maSEbU7b5uKiSQmajfFRJGYL8OisrhhNUYKg/exec";
     const COLLECTION_URL = "https://sites.google.com/view/nat-bot-gard-nchu/%E9%A6%96%E9%A0%81/%E7%9B%AE%E5%89%8D%E9%A4%A8%E8%97%8F";
 
     function normalizePhone(phone) { return String(phone || "").replace(/\D/g, "").trim(); }
@@ -96,7 +95,8 @@
         const url = new URL(APP_URL); url.searchParams.set("mode", "plant_mark_jsonp"); url.searchParams.set("plant", plant); url.searchParams.set("phone", phone); url.searchParams.set("callback", callbackName);
         const script = document.createElement("script"); let done = false;
         function cleanup() { try { delete window[callbackName]; } catch (e) {} if (script.parentNode) script.parentNode.removeChild(script); }
-        const timer = setTimeout(function() { if (done) return; done = true; cleanup(); reject(new Error("連線超時")); }, 10000);
+        // ★ 延長超時等待時間到 15 秒，給 Google 伺服器甦醒的時間
+        const timer = setTimeout(function() { if (done) return; done = true; cleanup(); reject(new Error("連線超時")); }, 15000);
         window[callbackName] = function(data) { if (done) return; done = true; clearTimeout(timer); cleanup(); resolve(data || {}); };
         script.onerror = function() { if (done) return; done = true; clearTimeout(timer); cleanup(); reject(new Error("載入失敗")); };
         script.src = url.toString(); document.body.appendChild(script);
@@ -165,7 +165,6 @@
       return (rearCamera || cameras[0]).id;
     }
 
-    // ★ 包含震動回饋與極速跳轉的處理邏輯
     async function handleScanResult(rawUrl) {
       const phone = getCurrentPhone();
       if (!isValidMobile(phone)) { await stopScanner(true); statusEl.textContent = "無效的手機號碼。"; return; }
@@ -177,39 +176,45 @@
         if (mode !== "plant_go" && mode !== "stamp") return;
       } catch (err) { return; }
 
-      // 掃到瞬間震動
       if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
 
       await stopScanner(true);
       document.getElementById("reader").style.display = "none"; 
       document.getElementById("scanActions").style.display = "none"; 
       
-      statusEl.innerHTML = `<div style="font-size:30px; margin-bottom:10px;">⏳</div>正在與展覽系統連線...<br><span style="font-size:13px; color:#888;">(請稍候約 2 秒鐘)</span>`;
+      statusEl.innerHTML = `<div style="font-size:30px; margin-bottom:10px;">⏳</div>正在與展覽系統連線...<br><span style="font-size:13px; color:#888;">(請稍候約 2~5 秒鐘)</span>`;
       statusEl.style.background = "#fff3cd"; 
       
       try {
         if (mode === "plant_go" && urlObj.searchParams.get("plant")) {
           const parsedPlant = urlObj.searchParams.get("plant");
-          const resp = await jsonpMarkPlantAndGetRedirect(parsedPlant, phone);
-          const target = resp.redirectUrl || COLLECTION_URL;
+          let resp;
           
-          if (navigator.vibrate) navigator.vibrate(200); // 成功震動
+          // ★ 加入防冷啟動的「自動重試機制」
+          try {
+            resp = await jsonpMarkPlantAndGetRedirect(parsedPlant, phone);
+          } catch(e) {
+            console.log("第一次連線超時，系統自動重試中...");
+            resp = await jsonpMarkPlantAndGetRedirect(parsedPlant, phone); // 自動偷偷重試第二次
+          }
+
+          const target = resp.redirectUrl || COLLECTION_URL;
+          if (navigator.vibrate) navigator.vibrate(200); 
           statusEl.innerHTML = `🎉 <b>${resp.message || "已完成記點"}</b><br><br>即將前往介紹頁...`;
           statusEl.style.background = "#d4edda";
           
           window.location.assign(target);
 
         } else if (mode === "stamp" && urlObj.searchParams.get("spot")) {
-          if (navigator.vibrate) navigator.vibrate(200); // 成功震動
+          if (navigator.vibrate) navigator.vibrate(200);
           statusEl.innerHTML = "✅ <b>掃描展區成功！</b><br><br>即將前往紀錄頁面...";
           statusEl.style.background = "#d4edda";
           urlObj.searchParams.set("phone", phone);
-          
           window.location.assign(urlObj.toString());
         }
       } catch (err) {
         resetScannerUI(); 
-        statusEl.textContent = "系統連線失敗，請檢查網路後再試一次。";
+        statusEl.innerHTML = "<b>系統連線失敗 💦</b><br>展場網路可能較弱，請確認網路後重新掃描。";
         statusEl.style.background = "#f8d7da";
       }
     }
@@ -223,7 +228,6 @@
         const currentCameraId = await chooseCameraId_();
         await stopScanner(true);
         html5QrCode = new Html5Qrcode("reader");
-        // ★ 降低 fps 到 5 省電防卡頓
         await html5QrCode.start(currentCameraId, { fps: 5, qrbox: { width: 250, height: 250 }, aspectRatio: 1.333334 }, async function(decodedText) { await handleScanResult(decodedText); }, function() {});
         hasScannerStarted = true; 
         startBtn.style.display = "none"; stopBtn.style.display = "block";
@@ -252,6 +256,5 @@
       manualBox.style.display = "block"; 
       statusEl.textContent = "已登出。如要掃描請重新輸入號碼。"; refreshActionLinks();
     });
-  </script>
 </body>
 </html>
