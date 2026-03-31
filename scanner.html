@@ -19,7 +19,6 @@
     .glass-card {
       background: rgba(255, 255, 255, 0.98); border-radius: 20px; padding: 25px;
       box-shadow: 0 15px 40px rgba(44, 76, 59, 0.05); margin-bottom: 20px;
-      /* ★ 開啟 GPU 硬體加速，安卓防卡頓 */
       transform: translateZ(0); will-change: transform;
     }
     .section-title { font-size: 14px; letter-spacing: 2px; color: var(--primary-light); margin-bottom: 10px; font-weight: 700; }
@@ -35,7 +34,6 @@
     .btn {
       width: 100%; box-sizing: border-box; border-radius: 16px; padding: 16px 14px; font-size: 18px;
       font-weight: 700; text-decoration: none; border: 0; text-align: center; display: block; cursor: pointer; transition: all 0.3s;
-      /* ★ 提升手機按鍵靈敏度 */
       touch-action: manipulation; user-select: none; -webkit-tap-highlight-color: transparent;
     }
     .btn.primary { background: var(--primary-light); color: #fff; box-shadow: 0 4px 15px rgba(114, 144, 117, 0.3); }
@@ -56,7 +54,8 @@
         <div class="section-title">SCANNER</div>
         <h2>啟動相機</h2>
 
-        <div id="manualBox" style="display:block; margin-bottom: 25px;">
+        <!-- ★ 預設隱藏，防止閃爍 -->
+        <div id="manualBox" style="display:none; margin-bottom: 25px;">
           <input id="phoneInput" type="tel" placeholder="請先輸入手機號碼：09..." maxlength="10" autocomplete="off" name="phone-no-autofill">
           <button class="btn primary" id="savePhoneBtn" style="margin-top: 15px;">套用號碼並就緒</button>
         </div>
@@ -81,13 +80,15 @@
     </div>
   </div>
 
-const APP_URL = "https://script.google.com/macros/s/AKfycbyoFlYdQfjyJUu0onsq2DOI5wZJmRcNI2maSEbU7b5uKiSQmajfFRJGYL8OisrhhNUYKg/exec";
+  <script>
+    const APP_URL = "https://script.google.com/macros/s/AKfycbyoFlYdQfjyJUu0onsq2DOI5wZJmRcNI2maSEbU7b5uKiSQmajfFRJGYL8OisrhhNUYKg/exec";
     const COLLECTION_URL = "https://sites.google.com/view/nat-bot-gard-nchu/%E9%A6%96%E9%A0%81/%E7%9B%AE%E5%89%8D%E9%A4%A8%E8%97%8F";
 
     function normalizePhone(phone) { return String(phone || "").replace(/\D/g, "").trim(); }
     function isValidMobile(phone) { return /^09\d{8}$/.test(String(phone || "").trim()); }
     function cleanDecodedText(raw) { return String(raw || "").replace(/[\u200B-\u200D\uFEFF]/g, "").replace(/\u00A0/g, " ").trim(); }
     function buildUrl(base, params) { const u = new URL(base); Object.keys(params).forEach(function(key) { if (params[key] !== undefined && params[key] !== null && params[key] !== "") { u.searchParams.set(key, params[key]); } }); return u.toString(); }
+    function getParam(name) { const url = new URL(window.location.href); return url.searchParams.get(name) || ""; }
 
     function jsonpMarkPlantAndGetRedirect(plant, phone) {
       return new Promise(function(resolve, reject) {
@@ -95,7 +96,6 @@ const APP_URL = "https://script.google.com/macros/s/AKfycbyoFlYdQfjyJUu0onsq2DOI
         const url = new URL(APP_URL); url.searchParams.set("mode", "plant_mark_jsonp"); url.searchParams.set("plant", plant); url.searchParams.set("phone", phone); url.searchParams.set("callback", callbackName);
         const script = document.createElement("script"); let done = false;
         function cleanup() { try { delete window[callbackName]; } catch (e) {} if (script.parentNode) script.parentNode.removeChild(script); }
-        // ★ 延長超時等待時間到 15 秒，給 Google 伺服器甦醒的時間
         const timer = setTimeout(function() { if (done) return; done = true; cleanup(); reject(new Error("連線超時")); }, 15000);
         window[callbackName] = function(data) { if (done) return; done = true; clearTimeout(timer); cleanup(); resolve(data || {}); };
         script.onerror = function() { if (done) return; done = true; clearTimeout(timer); cleanup(); reject(new Error("載入失敗")); };
@@ -129,9 +129,13 @@ const APP_URL = "https://script.google.com/macros/s/AKfycbyoFlYdQfjyJUu0onsq2DOI
     });
 
     window.onload = () => {
-      const savedPhone = sessionStorage.getItem("savedPhone");
+      // ★ 優先抓取網址上的手機號碼 (從 Google 返回時會用到)
+      let phoneParam = getParam("phone");
+      let savedPhone = phoneParam || sessionStorage.getItem("savedPhone");
+      
       if(savedPhone && isValidMobile(savedPhone)) {
         currentPhone = savedPhone;
+        sessionStorage.setItem("savedPhone", currentPhone); // 確保寫入暫存
         manualBox.style.display = "none";
         refreshActionLinks();
         resetScannerUI();
@@ -190,12 +194,11 @@ const APP_URL = "https://script.google.com/macros/s/AKfycbyoFlYdQfjyJUu0onsq2DOI
           const parsedPlant = urlObj.searchParams.get("plant");
           let resp;
           
-          // ★ 加入防冷啟動的「自動重試機制」
           try {
             resp = await jsonpMarkPlantAndGetRedirect(parsedPlant, phone);
           } catch(e) {
             console.log("第一次連線超時，系統自動重試中...");
-            resp = await jsonpMarkPlantAndGetRedirect(parsedPlant, phone); // 自動偷偷重試第二次
+            resp = await jsonpMarkPlantAndGetRedirect(parsedPlant, phone);
           }
 
           const target = resp.redirectUrl || COLLECTION_URL;
@@ -256,5 +259,6 @@ const APP_URL = "https://script.google.com/macros/s/AKfycbyoFlYdQfjyJUu0onsq2DOI
       manualBox.style.display = "block"; 
       statusEl.textContent = "已登出。如要掃描請重新輸入號碼。"; refreshActionLinks();
     });
+  </script>
 </body>
 </html>
