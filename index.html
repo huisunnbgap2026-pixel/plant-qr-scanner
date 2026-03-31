@@ -67,7 +67,8 @@
       <p style="margin-bottom: 30px;">請選擇您要進行的探索動作</p>
       
       <a href="scanner.html" class="btn primary">🔍 啟動 QR 掃描器</a>
-      <a href="ar_camera.html" class="btn accent">📸 專屬紀念拍立得</a>
+      <!-- 加上 ?v=2 強制清除手機快取，保證載入最新的 AR 相機 -->
+      <a href="ar_camera.html?v=2" class="btn accent">📸 專屬紀念拍立得</a>
       <button id="navQueryBtn" class="btn">🏆 查看探索進度</button>
       <button id="navRewardBtn" class="btn">🎁 查看兌換獎勵</button>
       <button id="logoutBtn" class="btn" style="margin-top:20px; background:transparent; color:#aaa; border-color:transparent;">登出切換帳號</button>
