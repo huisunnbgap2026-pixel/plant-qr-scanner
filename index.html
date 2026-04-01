@@ -31,7 +31,7 @@
     :root { --primary: #4a7c59; --solid-bg: #162419; --solid-border: #2a3d2e; }
     html, body { margin: 0; padding: 0; width: 100%; height: 100%; font-family: "Noto Sans TC", sans-serif; color: #fff; overflow: hidden; background-color: #111a13; }
     
-    /* ★ 絕對網址：迷霧森林鳥群 */
+    /* ★ 絕對網址：迷霧森林鳥群 (保證100%顯示) */
     .bg-fixed { 
       position: fixed; inset: 0; 
       width: 100vw; height: 100vh; height: 100dvh; 
@@ -71,6 +71,7 @@
 </head>
 <body>
   <div class="bg-fixed"></div>
+
   <div id="splash-screen" class="screen">
     <div class="collab-container">
       <img src="./logo_ark.png" class="collab-logo anim-item item-1" onerror="this.style.display='none'">
@@ -81,6 +82,7 @@
     </div>
     <h1 class="title-large anim-item item-6">方舟計畫展覽</h1>
   </div>
+
   <div id="login-screen" class="screen">
     <div class="solid-card">
       <h1>🌿 專屬探索通行證</h1>
@@ -89,10 +91,12 @@
       <button class="btn primary" id="loginBtn">登入展覽</button>
     </div>
   </div>
+
   <div id="home-screen" class="screen">
     <div class="solid-card">
       <h1 style="font-size: 24px;">歡迎，<span id="displayPhone"></span></h1>
       <p style="margin-bottom: 30px;">請選擇您要進行的探索動作</p>
+      
       <a href="scanner.html" class="btn primary">🔍 啟動 QR 掃描器</a>
       <a href="ar_camera.html" class="btn accent">📸 專屬紀念拍立得</a>
       <button id="navQueryBtn" class="btn">🏆 查看探索進度</button>
@@ -100,6 +104,7 @@
       <button id="logoutBtn" class="btn" style="margin-top:20px; background:transparent; color:#6d8c75; border-color:transparent; box-shadow:none;">登出切換帳號</button>
     </div>
   </div>
+
   <script>
     const APP_URL = "https://script.google.com/macros/s/AKfycbyoFlYdQfjyJUu0onsq2DOI5wZJmRcNI2maSEbU7b5uKiSQmajfFRJGYL8OisrhhNUYKg/exec";
     function normalizePhone(phone) { let p = String(phone || "").replace(/\D/g, "").trim(); if (p.length === 9 && p.startsWith("9")) p = "0" + p; return p; }
