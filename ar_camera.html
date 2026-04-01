@@ -9,24 +9,26 @@
     :root { --primary: #2c4c3b; --accent: #d4a373; }
     html, body { margin: 0; padding: 0; width: 100vw; height: 100vh; background: #000; font-family: "Noto Sans TC", sans-serif; overflow: hidden; }
     
-    #camera-feed { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
+    #camera-feed { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; display: none; }
+    #overlay-graphic { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 2; pointer-events: none; display: none; }
     
-    /* ★ 正式版：100% 實體疊加 (請設計師務必提供中間透明的 PNG 圖) */
-    #overlay-graphic { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 2; pointer-events: none; }
+    /* ★ 安全啟動畫面，防止瀏覽器阻擋自動播放 */
+    #start-screen { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; background: url('https://huisunnbgap2026-pixel.github.io/plant-qr-scanner/bg_main.jpg') center/cover no-repeat; z-index: 50; }
+    .start-overlay { position:absolute; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(8px); z-index:-1;}
+    .btn-start-cam { background: var(--accent); color: white; padding: 18px 40px; border-radius: 30px; font-size: 20px; font-weight: bold; border: none; box-shadow: 0 5px 20px rgba(0,0,0,0.5); cursor: pointer; }
     
-    .frame-selector { position: absolute; top: 30px; left: 0; width: 100%; z-index: 10; display: flex; overflow-x: auto; gap: 15px; padding: 10px 20px; box-sizing: border-box; scrollbar-width: none; -ms-overflow-style: none; }
+    .frame-selector { position: absolute; top: 30px; left: 0; width: 100%; z-index: 10; display: flex; overflow-x: auto; gap: 15px; padding: 10px 20px; box-sizing: border-box; scrollbar-width: none; -ms-overflow-style: none; display: none; }
     .frame-selector::-webkit-scrollbar { display: none; }
     .frame-thumb { width: 70px; height: 70px; flex-shrink: 0; object-fit: cover; border-radius: 12px; border: 3px solid rgba(255,255,255,0.5); background: rgba(0,0,0,0.3); backdrop-filter: blur(5px); transition: 0.2s; cursor: pointer; }
     .frame-thumb.active { border-color: var(--accent); transform: scale(1.1); box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
 
-    .controls { position: absolute; bottom: 0; left: 0; width: 100%; padding: 30px 20px 40px; box-sizing: border-box; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); z-index: 10; display: flex; justify-content: center; align-items: center; }
+    .controls { position: absolute; bottom: 0; left: 0; width: 100%; padding: 30px 20px 40px; box-sizing: border-box; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); z-index: 10; display: flex; justify-content: center; align-items: center; display: none; }
     .btn-capture { background: var(--accent); color: white; width: 80px; height: 80px; border-radius: 50%; padding: 0; border: 4px solid #fff; box-shadow: 0 0 20px rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; font-size: 35px; cursor: pointer; transition: 0.2s; z-index: 10; touch-action: manipulation; -webkit-tap-highlight-color: transparent;}
     .btn-capture:active { transform: scale(0.9); }
     
-    .btn-home { position: absolute; bottom: 40px; left: 30px; z-index: 15; background: rgba(255,255,255,0.8); color: var(--primary); border: none; width: 50px; height: 50px; border-radius: 50%; font-size: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.4); display: flex; justify-content: center; align-items: center; text-decoration: none; touch-action: manipulation; }
-    .btn-switch { position: absolute; bottom: 40px; right: 30px; z-index: 15; background: rgba(255,255,255,0.8); color: var(--primary); border: none; width: 50px; height: 50px; border-radius: 50%; font-size: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.4); display: flex; justify-content: center; align-items: center; cursor: pointer; touch-action: manipulation; }
+    .btn-home { position: absolute; bottom: 40px; left: 30px; z-index: 15; background: rgba(255,255,255,0.8); color: var(--primary); border: none; width: 50px; height: 50px; border-radius: 50%; font-size: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.4); display: flex; justify-content: center; align-items: center; text-decoration: none; touch-action: manipulation; display: none;}
+    .btn-switch { position: absolute; bottom: 40px; right: 30px; z-index: 15; background: rgba(255,255,255,0.8); color: var(--primary); border: none; width: 50px; height: 50px; border-radius: 50%; font-size: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.4); display: flex; justify-content: center; align-items: center; cursor: pointer; touch-action: manipulation; display: none;}
     
-    /* 影片同款結果畫面 */
     #result-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); z-index: 20; display: none; flex-direction: column; justify-content: center; align-items: center; animation: fadeIn 0.3s ease-out; }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
@@ -42,7 +44,14 @@
 </head>
 <body>
 
-  <a class="btn-home" href="index.html">🏠</a>
+  <!-- ★ 防鎖死：需要遊客手動點擊才會去要權限 -->
+  <div id="start-screen">
+    <div class="start-overlay"></div>
+    <button class="btn-start-cam" id="initCameraBtn">📷 點擊開啟相機</button>
+    <a href="index.html" style="color:#aaa; margin-top:20px; text-decoration:none;">返回首頁</a>
+  </div>
+
+  <a class="btn-home" href="index.html" id="uiHome">🏠</a>
   <button class="btn-switch" id="switchCameraBtn">🔄</button>
   
   <video id="camera-feed" autoplay playsinline></video>
@@ -92,27 +101,32 @@
 
     async function startCamera() {
       if (currentStream) { currentStream.getTracks().forEach(track => track.stop()); }
-      // ★ 限制相機解析度 720p，防止安卓卡頓發燙
-      const constraints = { 
-        video: { 
-          facingMode: useFrontCamera ? "user" : "environment",
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        } 
-      };
+      const constraints = { video: { facingMode: useFrontCamera ? "user" : "environment", width: { ideal: 1280 }, height: { ideal: 720 } } };
       try {
         currentStream = await navigator.mediaDevices.getUserMedia(constraints);
         video.srcObject = currentStream;
         video.style.transform = useFrontCamera ? "scaleX(-1)" : "scaleX(1)";
-      } catch (err) { alert("無法開啟相機，請確認是否已給予瀏覽器權限！"); }
+        
+        document.getElementById('start-screen').style.display = 'none';
+        video.style.display = 'block';
+        overlay.style.display = 'block';
+        document.getElementById('frameSelector').style.display = 'flex';
+        document.getElementById('controls').style.display = 'flex';
+        document.getElementById('uiHome').style.display = 'flex';
+        switchCameraBtn.style.display = 'flex';
+
+      } catch (err) { 
+        alert("無法開啟相機，請確認是否已給予瀏覽器相機權限！"); 
+      }
     }
+
+    document.getElementById('initCameraBtn').addEventListener('click', startCamera);
 
     switchCameraBtn.addEventListener('click', () => {
       useFrontCamera = !useFrontCamera;
       startCamera();
     });
 
-    // 完美裁切防變形演算法
     function drawImageCover(ctx, source, canvasWidth, canvasHeight, isMirror = false) {
       const sourceWidth = source.videoWidth || source.naturalWidth;
       const sourceHeight = source.videoHeight || source.naturalHeight;
@@ -135,19 +149,13 @@
       }
 
       ctx.save();
-      if (isMirror) {
-        ctx.translate(canvasWidth, 0);
-        ctx.scale(-1, 1);
-      }
+      if (isMirror) { ctx.translate(canvasWidth, 0); ctx.scale(-1, 1); }
       ctx.drawImage(source, startX, startY, drawWidth, drawHeight);
       ctx.restore();
     }
 
     captureBtn.addEventListener('click', () => {
-      canvas.width = video.offsetWidth; 
-      canvas.height = video.offsetHeight;
-      
-      // 畫上相機與相框 (完美裁切，100% 實體無半透明)
+      canvas.width = video.offsetWidth; canvas.height = video.offsetHeight;
       drawImageCover(ctx, video, canvas.width, canvas.height, useFrontCamera);
       drawImageCover(ctx, overlay, canvas.width, canvas.height, false);
 
@@ -158,7 +166,7 @@
       document.getElementById('frameSelector').style.display = 'none';
       overlay.style.display = 'none';
       switchCameraBtn.style.display = 'none';
-      document.querySelector('.btn-home').style.display = 'none';
+      document.getElementById('uiHome').style.display = 'none';
       resultScreen.style.display = 'flex';
     });
 
@@ -167,11 +175,9 @@
       document.getElementById('frameSelector').style.display = 'flex';
       overlay.style.display = 'block';
       switchCameraBtn.style.display = 'flex';
-      document.querySelector('.btn-home').style.display = 'flex';
+      document.getElementById('uiHome').style.display = 'flex';
       resultScreen.style.display = 'none';
     });
-
-    window.onload = startCamera;
   </script>
 </body>
 </html>
