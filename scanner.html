@@ -10,9 +10,9 @@
     :root { --primary-dark: #2c4c3b; --primary-light: #729075; }
     html, body { margin: 0; padding: 0; font-family: "Noto Sans TC", sans-serif; color: var(--primary-dark); }
     
-    /* ★ 背景換成絕對網址 */
-   /* ★ 改成迷霧森林 bg_misty.jpg */
-    .bg-fixed { position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100dvh; background: url('./bg_misty.jpg') center/cover no-repeat; z-index: -1; }
+    /* ★ 絕對網址：發光蕨類 */
+    .bg-fixed { position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100dvh; background: url('https://images.unsplash.com/photo-1595180473268-2ddcc696e57a?q=80&w=1920&auto=format&fit=crop') center/cover no-repeat; z-index: -1; }
+
     .page { position: relative; min-height: 100vh; padding: 24px 16px 32px; box-sizing: border-box; }
     .wrap { max-width: 600px; margin: 0 auto; }
     
@@ -60,7 +60,6 @@
         <div class="status" id="status">相機已就緒，請點擊下方按鈕啟動。</div>
 
         <div class="actions" id="scanActions">
-          <!-- ★ 手動啟動按鈕，防止權限鎖死 -->
           <button class="btn primary" id="startBtn">📷 啟動相機掃描</button>
           <button class="btn secondary" id="stopBtn" style="display:none;">暫停掃描</button>
         </div>
@@ -109,7 +108,6 @@
 
     let html5QrCode = null; let isStartingScanner = false; let isStoppingScanner = false; let hasScannerStarted = false; let currentPhone = "";
 
-    // 當使用者從別頁返回時，要求重新按鈕啟動，避免報錯
     window.addEventListener("pageshow", function(e) {
       stopScanner(true);
       document.getElementById("reader").style.display = "none";
@@ -194,10 +192,10 @@
       const phone = getCurrentPhone(); refreshActionLinks(); 
       if (!isValidMobile(phone)) { statusEl.textContent = "請先輸入您的手機號碼喔！"; isStartingScanner = false; return; }
       try {
-        statusEl.innerHTML = "正在啟動相機...<br><span style='font-size:12px;color:#888;'>(若跳出提示請允許相機權限)</span>";
+        statusEl.innerHTML = "正在啟動相機...<br><span style='font-size:12px;color:#888;'>(請點擊「允許」相機權限)</span>";
         statusEl.style.background = "#e8f0e8";
         
-        document.getElementById("reader").style.display = "block"; // 顯示畫面
+        document.getElementById("reader").style.display = "block";
         
         const currentCameraId = await chooseCameraId_();
         await stopScanner(true);
