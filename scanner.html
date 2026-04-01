@@ -10,7 +10,7 @@
     :root { --primary-dark: #2c4c3b; --primary-light: #729075; }
     html, body { margin: 0; padding: 0; font-family: "Noto Sans TC", sans-serif; color: var(--primary-dark); }
     
-    /* ★ 解決背景跳動黑科技 */
+    /* 解決背景跳動黑科技 */
     .bg-fixed { position: fixed; inset: 0; width: 100vw; height: 100vh; background: #f7f9f7; z-index: -1; }
 
     .page { position: relative; min-height: 100vh; padding: 24px 16px 32px; box-sizing: border-box; }
@@ -44,23 +44,24 @@
     <div class="wrap">
       <div class="hero">
         <h1>🔍 QR 掃描站</h1>
-        <p>請開啟相機對準植物旁的 QR Code，<br>點數將自動存入您的紀錄中。</p>
+        <p>請將相機對準植物旁的 QR Code，<br>點數將自動存入您的紀錄中。</p>
       </div>
 
       <div class="glass-card">
         <div class="section-title">SCANNER</div>
-        <h2>啟動相機</h2>
+        <h2>展區掃描器</h2>
 
         <div id="manualBox" style="display:none; margin-bottom: 25px;">
           <input id="phoneInput" type="tel" placeholder="請先輸入手機號碼：09..." maxlength="10" autocomplete="off" name="phone-no-autofill">
-          <button class="btn primary" id="savePhoneBtn" style="margin-top: 15px;">套用號碼並就緒</button>
+          <button class="btn primary" id="savePhoneBtn" style="margin-top: 15px;">套用號碼並啟動相機</button>
         </div>
 
         <div id="reader"></div>
-        <div class="status" id="status">準備就緒，請按下方按鈕啟動相機。</div>
+        <div class="status" id="status">正在為您啟動相機...</div>
 
         <div class="actions" id="scanActions">
-          <button class="btn primary" id="startBtn">📷 啟動掃描</button>
+          <!-- 預設隱藏啟動按鈕，改為全自動啟動 -->
+          <button class="btn primary" id="startBtn" style="display:none;">📷 手動啟動掃描</button>
           <button class="btn secondary" id="stopBtn" style="display:none;">暫停掃描</button>
         </div>
       </div>
@@ -109,25 +110,32 @@
 
     let html5QrCode = null; let isStartingScanner = false; let isStoppingScanner = false; let hasScannerStarted = false; let currentPhone = "";
 
-    function resetScannerUI() {
-      if (getCurrentPhone()) {
+    // 監聽網頁從背景返回或上一頁返回 (Bfcache)
+    window.addEventListener("pageshow", function(e) {
+      if (getCurrentPhone() && !isStartingScanner && !hasScannerStarted) {
         document.getElementById("reader").style.display = "block";
         document.getElementById("scanActions").style.display = "grid";
-        statusEl.innerHTML = "準備就緒，請按下方按鈕啟動相機。";
-        statusEl.style.background = "#e8f0e8";
-        startBtn.style.display = "block"; stopBtn.style.display = "none";
+        startScanner(); // 自動重啟相機
       }
-    }
-
-    window.addEventListener("pageshow", function(e) { stopScanner(true); resetScannerUI(); });
+    });
 
     window.onload = () => {
       let phoneParam = getParam("phone");
       let savedPhone = phoneParam || sessionStorage.getItem("savedPhone");
+      
       if(savedPhone && isValidMobile(savedPhone)) {
         currentPhone = savedPhone; sessionStorage.setItem("savedPhone", currentPhone);
-        manualBox.style.display = "none"; refreshActionLinks(); resetScannerUI();
-      } else { manualBox.style.display = "block"; }
+        manualBox.style.display = "none"; 
+        refreshActionLinks(); 
+        
+        // ★ 一載入網頁就立刻自動啟動相機
+        document.getElementById("reader").style.display = "block";
+        document.getElementById("scanActions").style.display = "grid";
+        startScanner();
+      } else {
+        manualBox.style.display = "block";
+        statusEl.textContent = "請先輸入正確手機號碼。";
+      }
     };
 
     function getCurrentPhone() { return normalizePhone(currentPhone); }
@@ -145,7 +153,10 @@
       try { await html5QrCode.clear(); } catch (e) {}
       html5QrCode = null; hasScannerStarted = false; isStoppingScanner = false;
       startBtn.style.display = "block"; stopBtn.style.display = "none";
-      if (!silent) { statusEl.textContent = "已暫停相機。"; }
+      if (!silent) { 
+        statusEl.textContent = "已暫停相機。點擊上方按鈕可再次啟動。"; 
+        statusEl.style.background = "#e8f0e8";
+      }
     }
 
     async function chooseCameraId_() {
@@ -184,7 +195,9 @@
           window.location.assign(urlObj.toString());
         }
       } catch (err) {
-        resetScannerUI(); statusEl.innerHTML = "<b>系統連線失敗 💦</b><br>展場網路可能較弱，請確認網路後重新掃描。"; statusEl.style.background = "#f8d7da";
+        statusEl.innerHTML = "<b>系統連線失敗 💦</b><br>展場網路可能較弱，請確認網路後點擊下方按鈕重新啟動相機。"; statusEl.style.background = "#f8d7da";
+        document.getElementById("scanActions").style.display = "grid";
+        startBtn.style.display = "block"; stopBtn.style.display = "none";
       }
     }
 
@@ -193,21 +206,31 @@
       const phone = getCurrentPhone(); refreshActionLinks(); 
       if (!isValidMobile(phone)) { statusEl.textContent = "請先輸入您的手機號碼喔！"; isStartingScanner = false; return; }
       try {
-        statusEl.textContent = "正在啟動相機…";
+        statusEl.innerHTML = "正在啟動相機...<br><span style='font-size:12px;color:#888;'>(若跳出提示請允許相機權限)</span>";
+        statusEl.style.background = "#e8f0e8";
         const currentCameraId = await chooseCameraId_();
         await stopScanner(true);
         html5QrCode = new Html5Qrcode("reader");
         await html5QrCode.start(currentCameraId, { fps: 5, qrbox: { width: 250, height: 250 }, aspectRatio: 1.333334 }, async function(decodedText) { await handleScanResult(decodedText); }, function() {});
         hasScannerStarted = true; startBtn.style.display = "none"; stopBtn.style.display = "block";
-        statusEl.textContent = "相機已啟動，請對準展場中的 QR code！";
-      } catch (err) { statusEl.textContent = "相機啟動失敗，請確認是否允許相機權限。"; }
+        statusEl.textContent = "✅ 相機已啟動，請對準展場中的 QR code！";
+      } catch (err) {
+        // ★ 防呆：如果手機擋住自動啟動，顯示手動按鈕
+        statusEl.innerHTML = "<b>自動啟動受阻 📷</b><br>請點擊下方「手動啟動掃描」按鈕，或確認瀏覽器相機權限。";
+        statusEl.style.background = "#f8d7da";
+        startBtn.style.display = "block"; stopBtn.style.display = "none";
+      }
       isStartingScanner = false;
     }
 
     document.getElementById("savePhoneBtn").addEventListener("click", function() {
       const phone = normalizePhone(phoneInput.value);
       if (!isValidMobile(phone)) { statusEl.textContent = "請輸入正確的 09 開頭十碼數字。"; return; }
-      setCurrentPhone(phone); manualBox.style.display = "none"; resetScannerUI();
+      setCurrentPhone(phone); 
+      manualBox.style.display = "none";
+      document.getElementById("reader").style.display = "block";
+      document.getElementById("scanActions").style.display = "grid";
+      startScanner(); // 套用號碼後立刻自動啟動
     });
 
     startBtn.addEventListener("click", startScanner);
