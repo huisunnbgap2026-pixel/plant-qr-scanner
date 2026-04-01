@@ -6,52 +6,55 @@
   <title>方舟植物展覽</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;500;700;900&display=swap" rel="stylesheet">
   
-  <!-- ★ 終極防閃爍黑科技：在畫面畫出來之前，瞬間決定該顯示哪個框，消滅載入空窗期 ★ -->
+  <!-- ★ 終極防閃爍黑科技：在 DOM 渲染前，瞬間決定該顯示哪個畫面 -->
   <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    
-    // 1. 如果從 GAS 帶電話跳轉回來，瞬間記住
-    if (urlParams.get('phone')) {
-      sessionStorage.setItem('savedPhone', urlParams.get('phone'));
-      sessionStorage.setItem('splashPlayed', 'true');
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-    
-    // 2. 如果是按了登出回來，瞬間清除記憶
-    if (urlParams.get('action') === 'logout') {
-      sessionStorage.removeItem("savedPhone");
-      sessionStorage.setItem("splashPlayed", "true");
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
+    (function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      // 1. 處理從 GAS 回傳的 phone
+      if (urlParams.get('phone')) {
+        sessionStorage.setItem('savedPhone', urlParams.get('phone'));
+        sessionStorage.setItem('splashPlayed', 'true');
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+      // 2. 處理登出
+      if (urlParams.get('action') === 'logout') {
+        sessionStorage.removeItem("savedPhone");
+        sessionStorage.setItem("splashPlayed", "true");
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
 
-    // 3. 瞬間判斷初始畫面，並注入強制顯示的 CSS
-    const hasPlayedSplash = sessionStorage.getItem("splashPlayed");
-    const savedPhone = sessionStorage.getItem("savedPhone");
-    let initialScreen = '#splash-screen';
-    
-    if (hasPlayedSplash === "true") {
-      initialScreen = savedPhone ? '#home-screen' : '#login-screen';
-    }
-
-    document.write('<style id="anti-flicker-style">' +
-      initialScreen + ' { opacity: 1 !important; visibility: visible !important; z-index: 20 !important; transition: none !important; } ' +
-      (hasPlayedSplash === "true" ? '#splash-screen { display: none !important; }' : '') +
-    '</style>');
+      // 3. 瞬間注入 CSS 強制顯示目標畫面，消滅載入空窗期
+      const hasPlayed = sessionStorage.getItem("splashPlayed");
+      const phone = sessionStorage.getItem("savedPhone");
+      let targetId = 'splash-screen';
+      if (hasPlayed === "true") {
+        targetId = phone ? 'home-screen' : 'login-screen';
+      }
+      // 強制寫入樣式
+      document.write('<style>#' + targetId + ' { display: flex !important; opacity: 1 !important; visibility: visible !important; }</style>');
+    })();
   </script>
 
   <style>
     :root { --primary: #4a7c59; --glass-bg: rgba(20, 35, 25, 0.65); --glass-border: rgba(255, 255, 255, 0.15); }
-    html, body { margin: 0; padding: 0; min-height: 100vh; font-family: "Noto Sans TC", sans-serif; color: #fff; overflow: hidden; }
+    /* ★ 背景底色設為深綠色，避免圖片載入前閃白光 */
+    html, body { margin: 0; padding: 0; width: 100%; height: 100%; font-family: "Noto Sans TC", sans-serif; color: #fff; overflow: hidden; background-color: #1a261d; }
     
-    /* 解決背景跳動黑科技 */
-    .bg-fixed { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: url('https://images.unsplash.com/photo-1502085671122-2d218cd434e6?q=80&w=1920&auto=format&fit=crop') center/cover no-repeat; z-index: -1; }
+    /* ★ 解決背景跳動黑科技：加入 100dvh 與 inset 釘死背景 */
+    .bg-fixed { 
+      position: fixed; inset: 0; /* 釘死上下左右 */
+      width: 100vw; height: 100vh; height: 100dvh; 
+      /* 👇 在這裡替換你喜歡的圖片網址 👇 */
+      background: url('https://images.unsplash.com/photo-1595180473268-2ddcc696e57a?q=80&w=1920&auto=format&fit=crop') center/cover no-repeat; 
+      z-index: -1; 
+    }
 
-    .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 24px; box-sizing: border-box; opacity: 0; visibility: hidden; transition: opacity 0.5s ease; z-index: 10; }
-    .screen.active { opacity: 1; visibility: visible; z-index: 20; }
+    /* 所有的畫面預設都是隱藏的 (由上面的 JS 瞬間打開) */
+    .screen { display: none; opacity: 0; visibility: hidden; position: absolute; top: 0; left: 0; width: 100%; height: 100%; height: 100dvh; flex-direction: column; justify-content: center; align-items: center; padding: 24px; box-sizing: border-box; z-index: 10; transition: opacity 0.4s ease; }
+    .screen.active-transition { display: flex; opacity: 1; visibility: visible; z-index: 20; }
 
     #splash-screen { background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); }
     .collab-container { display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 40px; }
-    
     .collab-logo { width: 160px; height: auto; object-fit: contain; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5)); }
     .cross-mark { font-size: 26px; color: rgba(255,255,255,0.6); }
     
@@ -61,15 +64,7 @@
     
     .item-1 { animation-delay: 0.6s; } .item-2 { animation-delay: 1.6s; } .item-3 { animation-delay: 2.6s; } .item-4 { animation-delay: 3.6s; } .item-5 { animation-delay: 4.6s; } .item-6 { animation-delay: 6.0s; }
 
-    .glass-card { 
-      width: 100%; max-width: 400px; background: var(--glass-bg); 
-      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); 
-      border-radius: 28px; padding: 40px 30px; text-align: center; 
-      box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid var(--glass-border);
-      /* ★ 開啟 GPU 硬體加速，讓安卓渲染毛玻璃不再卡頓 */
-      transform: translateZ(0); will-change: transform;
-    }
-    
+    .glass-card { width: 100%; max-width: 400px; background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-radius: 28px; padding: 40px 30px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid var(--glass-border); transform: translateZ(0); will-change: transform; }
     h1 { margin: 0 0 10px; font-size: 28px; font-weight: 900; letter-spacing: 2px; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
     p { margin: 0 0 25px; font-size: 16px; line-height: 1.6; color: rgba(255,255,255,0.8); }
 
@@ -115,7 +110,7 @@
       <p style="margin-bottom: 30px;">請選擇您要進行的探索動作</p>
       
       <a href="scanner.html" class="btn primary">🔍 啟動 QR 掃描器</a>
-      <a href="ar_camera.html?v=4" class="btn accent">📸 專屬紀念拍立得</a>
+      <a href="ar_camera.html?v=5" class="btn accent">📸 專屬紀念拍立得</a>
       <button id="navQueryBtn" class="btn">🏆 查看探索進度</button>
       <button id="navRewardBtn" class="btn">🎁 查看兌換獎勵</button>
       <button id="logoutBtn" class="btn" style="margin-top:20px; background:transparent; color:#aaa; border-color:transparent;">登出切換帳號</button>
@@ -133,63 +128,68 @@
     const homeScreen = document.getElementById('home-screen');
     let userPhone = normalizePhone(sessionStorage.getItem("savedPhone") || "");
 
-    // 資料綁定
     function bindHomeData() {
       document.getElementById('displayPhone').innerText = userPhone.replace(/(\d{4})(\d{3})(\d{3})/, '$1-$2-$3');
       document.getElementById('navQueryBtn').onclick = (e) => { e.target.innerHTML = "⏳ 載入中..."; window.location.href = buildUrl(APP_URL, { mode: "query", phone: userPhone }); };
       document.getElementById('navRewardBtn').onclick = (e) => { e.target.innerHTML = "⏳ 載入中..."; window.location.href = buildUrl(APP_URL, { mode: "rewards", phone: userPhone }); };
     }
 
-    // 處理顯示邏輯 (平滑交接給 Anti-Flicker 腳本)
-    const isSplashPlayed = sessionStorage.getItem("splashPlayed");
-    if (isSplashPlayed === "true") {
-      if (userPhone) {
-        homeScreen.classList.add('active');
-        bindHomeData();
+    // 動畫流程控制
+    window.onload = () => {
+      const hasPlayedSplash = sessionStorage.getItem("splashPlayed");
+      if (hasPlayedSplash === "true") {
+        if (userPhone) { bindHomeData(); }
       } else {
-        loginScreen.classList.add('active');
+        sessionStorage.setItem("splashPlayed", "true"); 
+        setTimeout(() => {
+          splashScreen.style.opacity = "0";
+          setTimeout(() => { 
+            splashScreen.style.display = "none";
+            // 動畫結束後平滑切換
+            if (userPhone) {
+              homeScreen.classList.add('active-transition');
+              bindHomeData();
+            } else {
+              loginScreen.classList.add('active-transition');
+            }
+          }, 500); 
+        }, 9000);
       }
-      // 安全移除防閃爍標籤
-      setTimeout(() => { const antiFlicker = document.getElementById('anti-flicker-style'); if(antiFlicker) antiFlicker.remove(); }, 50);
-    } else {
-      splashScreen.classList.add('active');
-      setTimeout(() => { const antiFlicker = document.getElementById('anti-flicker-style'); if(antiFlicker) antiFlicker.remove(); }, 50);
-      
-      sessionStorage.setItem("splashPlayed", "true"); 
-      setTimeout(() => {
-        splashScreen.classList.remove('active');
-        setTimeout(() => { 
-          splashScreen.style.display = "none"; 
-          if (userPhone) { homeScreen.classList.add('active'); bindHomeData(); } 
-          else { loginScreen.classList.add('active'); }
-        }, 500); 
-      }, 9000);
-    }
+    };
 
     // 登入按鈕
     document.getElementById('loginBtn').addEventListener('click', () => {
       const input = normalizePhone(document.getElementById('phoneInput').value);
       if (input.length === 10 && input.startsWith("09")) {
         userPhone = input; sessionStorage.setItem("savedPhone", userPhone);
-        loginScreen.style.opacity = "0"; // 平滑切換
+        
+        loginScreen.style.opacity = "0"; 
         setTimeout(() => {
-          loginScreen.classList.remove('active');
-          loginScreen.style.opacity = "";
-          homeScreen.classList.add('active');
+          loginScreen.style.display = "none";
+          loginScreen.classList.remove('active-transition');
+          
+          homeScreen.style.display = "flex";
+          // 強制重繪
+          void homeScreen.offsetWidth;
+          homeScreen.classList.add('active-transition');
           bindHomeData();
-        }, 300);
+        }, 400);
       } else { alert("格式錯誤，請輸入正確的 09 開頭手機號碼！"); }
     });
 
     // 登出按鈕
     document.getElementById('logoutBtn').addEventListener('click', () => {
       sessionStorage.removeItem("savedPhone"); userPhone = ""; document.getElementById('phoneInput').value = "";
-      homeScreen.style.opacity = "0"; // 平滑切換
+      
+      homeScreen.style.opacity = "0"; 
       setTimeout(() => {
-        homeScreen.classList.remove('active');
-        homeScreen.style.opacity = "";
-        loginScreen.classList.add('active');
-      }, 300);
+        homeScreen.style.display = "none";
+        homeScreen.classList.remove('active-transition');
+        
+        loginScreen.style.display = "flex";
+        void loginScreen.offsetWidth;
+        loginScreen.classList.add('active-transition');
+      }, 400);
     });
   </script>
 </body>
