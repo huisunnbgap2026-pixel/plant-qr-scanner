@@ -10,7 +10,7 @@
     :root { --primary-dark: #2c4c3b; --primary-light: #729075; }
     html, body { margin: 0; padding: 0; font-family: "Noto Sans TC", sans-serif; color: var(--primary-dark); }
     
-    /* ★ 絕對網址：發光蕨類 */
+    /* ★ 絕對網址：發光蕨類背景 */
     .bg-fixed { position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100dvh; background: url('https://images.unsplash.com/photo-1595180473268-2ddcc696e57a?q=80&w=1920&auto=format&fit=crop') center/cover no-repeat; z-index: -1; }
 
     .page { position: relative; min-height: 100vh; padding: 24px 16px 32px; box-sizing: border-box; }
@@ -117,19 +117,12 @@
 
     let html5QrCode = null; let isStartingScanner = false; let isStoppingScanner = false; let hasScannerStarted = false; let currentPhone = "";
 
-    function resetScannerUI() {
-      document.getElementById("reader").style.display = "none";
-      document.getElementById("scanActions").style.display = "grid";
-      document.getElementById("startBtn").style.display = "block";
-      document.getElementById("stopBtn").style.display = "none";
-      document.getElementById("global-loader").style.display = "none";
-      statusEl.innerHTML = "相機已就緒，請點擊下方按鈕啟動。";
-      statusEl.style.background = "#e8f0e8";
-    }
-
+    // ★ 自動喚醒相機：當看完植物「上一頁」回來時，自動幫使用者打開相機！
     window.addEventListener("pageshow", function(e) {
-      stopScanner(true);
-      resetScannerUI();
+      document.getElementById("global-loader").style.display = "none";
+      if (getCurrentPhone()) {
+        startScanner(); // 自動靜默重啟相機，免除按鈕
+      }
     });
 
     window.onload = () => {
@@ -138,6 +131,7 @@
       if(savedPhone && isValidMobile(savedPhone)) {
         currentPhone = savedPhone; sessionStorage.setItem("savedPhone", currentPhone);
         manualBox.style.display = "none"; refreshActionLinks(); 
+        startScanner(); // 進來這頁就自動開相機
       } else {
         manualBox.style.display = "block";
         statusEl.textContent = "請先輸入正確手機號碼。";
@@ -193,16 +187,12 @@
           const target = resp.redirectUrl || COLLECTION_URL;
           
           if (navigator.vibrate) navigator.vibrate(200); 
-          document.getElementById("global-loader").style.display = "none"; // 隱藏載入遮罩
+          document.getElementById("loader-text").innerHTML = "🎉 紀錄成功！<br><span style='font-size:14px;color:#aaa;'>正在為您跳轉至植物介紹...</span>";
           
-          // ★ 防權限跳針：不跳轉頁面，顯示「開新分頁」按鈕
-          statusEl.innerHTML = `🎉 <b>${resp.message || "已完成記點"}</b><br><br><button id="viewPlantBtn" class="btn primary" style="margin-top:10px;">🌿 前往植物介紹頁</button>`;
-          statusEl.style.background = "#d4edda";
-          
-          document.getElementById("viewPlantBtn").onclick = function() {
-            window.open(target, '_blank'); // 開啟新分頁看介紹
-            resetScannerUI(); // 遊客關掉介紹頁回來時，相機已就緒
-          };
+          // ★ 全自動跳轉！看完按上一頁會自動重開相機
+          setTimeout(() => {
+            window.location.assign(target);
+          }, 1500);
 
         } else if (mode === "stamp" && urlObj.searchParams.get("spot")) {
           if (navigator.vibrate) navigator.vibrate(200);
@@ -236,7 +226,7 @@
         statusEl.textContent = "✅ 相機已啟動，請對準展場中的 QR code！";
       } catch (err) {
         document.getElementById("reader").style.display = "none";
-        statusEl.innerHTML = "<b>無法啟動相機 📷</b><br>請確認瀏覽器是否允許相機權限。";
+        statusEl.innerHTML = "<b>需要相機權限 📷</b><br>請點擊下方按鈕允許相機。";
         statusEl.style.background = "#f8d7da";
         startBtn.style.display = "block"; stopBtn.style.display = "none";
       }
@@ -247,6 +237,7 @@
       const phone = normalizePhone(phoneInput.value);
       if (!isValidMobile(phone)) { statusEl.textContent = "請輸入正確的 09 開頭十碼數字。"; return; }
       setCurrentPhone(phone); manualBox.style.display = "none";
+      startScanner(); // 套用後自動開
     });
 
     startBtn.addEventListener("click", startScanner);
