@@ -21,6 +21,7 @@
 
       const hasPlayed = sessionStorage.getItem("splashPlayed") === "true";
       const phone = sessionStorage.getItem("savedPhone");
+      
       if (!hasPlayed) { document.documentElement.classList.add('init-splash'); } 
       else if (phone) { document.documentElement.classList.add('init-home'); } 
       else { document.documentElement.classList.add('init-login'); }
@@ -30,8 +31,13 @@
     :root { --primary: #4a7c59; --solid-bg: #162419; --solid-border: #2a3d2e; }
     html, body { margin: 0; padding: 0; width: 100%; height: 100%; font-family: "Noto Sans TC", sans-serif; color: #fff; overflow: hidden; background-color: #111a13; }
     
-    /* 迷霧森林絕對網址 */
-    .bg-fixed { position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100dvh; background: url('https://huisunnbgap2026-pixel.github.io/plant-qr-scanner/bg_misty.jpg') center/cover no-repeat; z-index: -1; }
+    /* ★ 絕對網址：迷霧森林鳥群 */
+    .bg-fixed { 
+      position: fixed; inset: 0; 
+      width: 100vw; height: 100vh; height: 100dvh; 
+      background: url('https://images.unsplash.com/photo-1448375240586-882707db888b?q=80&w=1080&auto=format&fit=crop') center/cover no-repeat; 
+      z-index: -1; 
+    }
 
     .screen { display: none; opacity: 0; visibility: hidden; position: absolute; top: 0; left: 0; width: 100%; height: 100%; height: 100dvh; flex-direction: column; justify-content: center; align-items: center; padding: 24px; box-sizing: border-box; z-index: 10; transition: opacity 0.5s ease; }
     .screen.active-transition { display: flex; opacity: 1; visibility: visible; z-index: 20; }
@@ -57,10 +63,10 @@
     input[type="tel"]:focus { border-color: var(--primary); background: #111a13; }
     input[type="tel"]::placeholder { color: #4a6350; }
 
-    button.btn, a.btn { width: 100%; box-sizing: border-box; border-radius: 18px; padding: 18px 12px; margin-bottom: 12px; font-size: 18px; font-weight: 700; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px; background: #233326; color: #fff; cursor: pointer; border: 1px solid var(--solid-border); transition: 0.3s; touch-action: manipulation; user-select: none; -webkit-tap-highlight-color: transparent; }
-    button.btn:active, a.btn:active { transform: scale(0.96); }
-    button.primary, a.btn.primary { background: linear-gradient(135deg, #5c8d6b, #2c4c3b); border: none; box-shadow: 0 8px 20px rgba(44, 76, 59, 0.4); }
-    button.accent, a.btn.accent { background: linear-gradient(135deg, #d4a373, #a67c52); border: none; }
+    .btn { width: 100%; box-sizing: border-box; border-radius: 18px; padding: 18px 12px; margin-bottom: 12px; font-size: 18px; font-weight: 700; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px; background: #233326; color: #fff; cursor: pointer; border: 1px solid var(--solid-border); transition: 0.3s; touch-action: manipulation; user-select: none; -webkit-tap-highlight-color: transparent; }
+    .btn:active { transform: scale(0.96); }
+    .btn.primary { background: linear-gradient(135deg, #5c8d6b, #2c4c3b); border: none; box-shadow: 0 8px 20px rgba(44, 76, 59, 0.4); }
+    .btn.accent { background: linear-gradient(135deg, #d4a373, #a67c52); border: none; }
     
     #global-loader { display: none; position: fixed; inset: 0; background: rgba(17, 26, 19, 0.95); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; color: #fff; }
     .spinner { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid #4a7c59; border-radius: 50%; width: 45px; height: 45px; animation: spin 1s linear infinite; margin-bottom: 20px; }
@@ -69,7 +75,6 @@
 </head>
 <body>
   <div class="bg-fixed"></div>
-
   <div id="splash-screen" class="screen">
     <div class="collab-container">
       <img src="./logo_ark.png" class="collab-logo anim-item item-1" onerror="this.style.display='none'">
@@ -80,7 +85,6 @@
     </div>
     <h1 class="title-large anim-item item-6">方舟計畫展覽</h1>
   </div>
-
   <div id="login-screen" class="screen">
     <div class="solid-card">
       <h1>🌿 專屬探索通行證</h1>
@@ -89,12 +93,10 @@
       <button class="btn primary" id="loginBtn">登入展覽</button>
     </div>
   </div>
-
   <div id="home-screen" class="screen">
     <div class="solid-card">
       <h1 style="font-size: 24px;">歡迎，<span id="displayPhone"></span></h1>
       <p style="margin-bottom: 30px;">請選擇您要進行的探索動作</p>
-      
       <a href="scanner.html" class="btn primary">🔍 啟動 QR 掃描器</a>
       <a href="ar_camera.html" class="btn accent">📸 專屬紀念拍立得</a>
       <button id="navQueryBtn" class="btn gas-link">🏆 查看探索進度</button>
@@ -102,7 +104,7 @@
       <button id="logoutBtn" class="btn" style="margin-top:20px; background:transparent; color:#6d8c75; border-color:transparent; box-shadow:none;">登出切換帳號</button>
     </div>
   </div>
-
+  
   <div id="global-loader"><div class="spinner"></div><h3>載入中...</h3></div>
 
   <script>
@@ -121,7 +123,6 @@
       document.getElementById('navRewardBtn').dataset.href = buildUrl(APP_URL, { mode: "rewards", phone: userPhone });
     }
 
-    // 防白屏跳轉
     document.querySelectorAll('.gas-link').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
