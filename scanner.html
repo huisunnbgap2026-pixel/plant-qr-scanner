@@ -10,13 +10,8 @@
     :root { --primary-dark: #2c4c3b; --primary-light: #729075; }
     html, body { margin: 0; padding: 0; font-family: "Noto Sans TC", sans-serif; color: var(--primary-dark); background-color:#111a13;}
     
-    /* ★ 絕對網址：迷霧森林鳥群 */
-    .bg-fixed { 
-      position: fixed; inset: 0; 
-      width: 100vw; height: 100vh; height: 100dvh; 
-      background: url('https://images.unsplash.com/photo-1448375240586-882707db888b?q=80&w=1080&auto=format&fit=crop') center/cover no-repeat; 
-      z-index: -1; 
-    }
+    /* ★ 背景換成發光蕨類絕對網址 */
+    .bg-fixed { position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100dvh; background: url('https://images.unsplash.com/photo-1595180473268-2ddcc696e57a?q=80&w=1080&auto=format&fit=crop') center/cover no-repeat; z-index: -1; }
 
     .page { position: relative; min-height: 100vh; padding: 24px 16px 32px; box-sizing: border-box; }
     .wrap { max-width: 600px; margin: 0 auto; }
@@ -84,7 +79,7 @@
     </div>
   </div>
 
-  <div id="global-loader"><div class="spinner"></div><h3 id="loader-text">載入中...</h3></div>
+  <div id="global-loader"><div class="spinner"></div><h3 id="loader-text">系統載入中...</h3></div>
 
   <script>
     const APP_URL = "https://script.google.com/macros/s/AKfycbyoFlYdQfjyJUu0onsq2DOI5wZJmRcNI2maSEbU7b5uKiSQmajfFRJGYL8OisrhhNUYKg/exec";
@@ -119,15 +114,20 @@
 
     let html5QrCode = null; let isStartingScanner = false; let isStoppingScanner = false; let hasScannerStarted = false; let currentPhone = "";
 
+    // ★ 重點修復：從植物頁按上一頁回來，如果曾經授權過，會自動幫使用者啟動相機！
     window.addEventListener("pageshow", function(e) {
-      stopScanner(true);
-      document.getElementById("reader").style.display = "none";
-      document.getElementById("scanActions").style.display = "grid";
-      document.getElementById("startBtn").style.display = "block";
-      document.getElementById("stopBtn").style.display = "none";
-      document.getElementById("global-loader").style.display = "none"; 
-      statusEl.innerHTML = "相機已暫停，請點擊下方按鈕繼續掃描。";
-      statusEl.style.background = "#e8f0e8";
+      document.getElementById("global-loader").style.display = "none";
+      if (getCurrentPhone() && sessionStorage.getItem('cameraAllowed') === 'true') {
+        startScanner(); // 曾經按過啟動，回來就自動啟動
+      } else {
+        stopScanner(true);
+        document.getElementById("reader").style.display = "none";
+        document.getElementById("scanActions").style.display = "grid";
+        document.getElementById("startBtn").style.display = "block";
+        document.getElementById("stopBtn").style.display = "none";
+        statusEl.innerHTML = "相機已就緒，請點擊下方按鈕啟動。";
+        statusEl.style.background = "#e8f0e8";
+      }
     });
 
     window.onload = () => {
@@ -136,6 +136,10 @@
       if(savedPhone && isValidMobile(savedPhone)) {
         currentPhone = savedPhone; sessionStorage.setItem("savedPhone", currentPhone);
         manualBox.style.display = "none"; refreshActionLinks(); 
+        
+        if (sessionStorage.getItem('cameraAllowed') === 'true') {
+          startScanner(); // 自動開相機
+        }
       } else {
         manualBox.style.display = "block";
         statusEl.textContent = "請先輸入正確手機號碼。";
@@ -185,11 +189,12 @@
       try { urlObj = new URL(cleanDecodedText(rawUrl)); mode = urlObj.searchParams.get("mode"); if (mode !== "plant_go" && mode !== "stamp") return; } catch (err) { return; }
 
       if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+      
+      document.getElementById("loader-text").innerHTML = "正在存入點數...<br><span style='font-size:14px;color:#aaa;'>(請稍候約 2 秒鐘)</span>";
+      document.getElementById("global-loader").style.display = "flex";
+
       await stopScanner(true);
       document.getElementById("scanActions").style.display = "none"; 
-      
-      document.getElementById("loader-text").innerHTML = "正在存入點數...<br><span style='font-size:14px;color:#aaa;'>(請稍候約 2~3 秒)</span>";
-      document.getElementById("global-loader").style.display = "flex";
       
       try {
         if (mode === "plant_go" && urlObj.searchParams.get("plant")) {
@@ -197,18 +202,19 @@
           let resp;
           try { resp = await jsonpMarkPlantAndGetRedirect(parsedPlant, phone); } catch(e) { resp = await jsonpMarkPlantAndGetRedirect(parsedPlant, phone); }
           const target = resp.redirectUrl || COLLECTION_URL;
-          if (navigator.vibrate) navigator.vibrate(200); 
-          document.getElementById("global-loader").style.display = "none"; 
           
-          statusEl.innerHTML = `🎉 <b>${resp.message || "已完成記點"}</b><br><br><a href="${target}" target="_blank" class="btn primary" style="margin-top:10px;">🌿 前往植物介紹頁</a>`;
-          statusEl.style.background = "#d4edda";
-          document.getElementById("scanActions").style.display = "grid"; 
+          if (navigator.vibrate) navigator.vibrate(200); 
+          document.getElementById("loader-text").innerHTML = "🎉 紀錄成功！<br><span style='font-size:14px;color:#aaa;'>正在為您跳轉至植物介紹...</span>";
+          
+          // ★ 使用 replace 無痕跳轉！按上一頁會回到相機而且不會有殘留畫面
+          setTimeout(() => { window.location.replace(target); }, 800);
 
         } else if (mode === "stamp" && urlObj.searchParams.get("spot")) {
           if (navigator.vibrate) navigator.vibrate(200);
           document.getElementById("loader-text").innerHTML = "✅ 掃描展區成功！<br><span style='font-size:14px;color:#aaa;'>準備前往紀錄頁面...</span>";
           urlObj.searchParams.set("phone", phone);
-          window.location.replace(urlObj.toString());
+          
+          setTimeout(() => { window.location.replace(urlObj.toString()); }, 800);
         }
       } catch (err) {
         document.getElementById("global-loader").style.display = "none";
@@ -224,6 +230,7 @@
       try {
         statusEl.innerHTML = "正在啟動相機...<br><span style='font-size:12px;color:#888;'>(若跳出提示請點擊「允許」)</span>";
         statusEl.style.background = "#e8f0e8";
+        
         document.getElementById("reader").style.display = "block"; 
         
         const currentCameraId = await chooseCameraId_();
@@ -231,7 +238,10 @@
         document.getElementById("reader").style.display = "block";
         html5QrCode = new Html5Qrcode("reader");
         await html5QrCode.start(currentCameraId, { fps: 5, qrbox: { width: 250, height: 250 }, aspectRatio: 1.333334 }, async function(decodedText) { await handleScanResult(decodedText); }, function() {});
-        hasScannerStarted = true; startBtn.style.display = "none"; stopBtn.style.display = "block";
+        
+        hasScannerStarted = true; 
+        sessionStorage.setItem('cameraAllowed', 'true'); // 記住已給權限，之後回來自動開
+        startBtn.style.display = "none"; stopBtn.style.display = "block";
         statusEl.textContent = "✅ 相機已啟動，請對準展場中的 QR code！";
       } catch (err) {
         document.getElementById("reader").style.display = "none";
@@ -246,6 +256,7 @@
       const phone = normalizePhone(phoneInput.value);
       if (!isValidMobile(phone)) { statusEl.textContent = "請輸入正確的 09 開頭十碼數字。"; return; }
       setCurrentPhone(phone); manualBox.style.display = "none";
+      startScanner(); 
     });
 
     startBtn.addEventListener("click", startScanner);
