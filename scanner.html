@@ -8,10 +8,15 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
   <style>
     :root { --primary-dark: #2c4c3b; --primary-light: #729075; }
+    /* ★ 加入底色，防止圖片載入前的白屏 */
     html, body { margin: 0; padding: 0; font-family: "Noto Sans TC", sans-serif; color: var(--primary-dark); background-color:#111a13;}
     
-    /* ★ 絕對網址：發光蕨類 */
-    .bg-fixed { position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100dvh; background: url('https://images.unsplash.com/photo-1595180473268-2ddcc696e57a?q=80&w=1080&auto=format&fit=crop') center/cover no-repeat; z-index: -1; }
+    /* ★ 完美背景釘死黑科技：解決底部被切斷的問題 */
+    .bg-fixed { 
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
+      background: url('https://images.unsplash.com/photo-1595180473268-2ddcc696e57a?q=80&w=1080&auto=format&fit=crop') center/cover no-repeat; 
+      z-index: -1; 
+    }
 
     .page { position: relative; min-height: 100vh; padding: 24px 16px 32px; box-sizing: border-box; }
     .wrap { max-width: 600px; margin: 0 auto; }
@@ -114,6 +119,7 @@
 
     let html5QrCode = null; let isStartingScanner = false; let isStoppingScanner = false; let hasScannerStarted = false; let currentPhone = "";
 
+    // ★ 當使用者按「上一頁」回到此頁面時，重置為乾淨的狀態，不會殘留成功畫面
     window.addEventListener("pageshow", function(e) {
       stopScanner(true);
       document.getElementById("reader").style.display = "none";
@@ -149,9 +155,10 @@
     document.querySelectorAll('.gas-link').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
-        document.getElementById('loader-text').innerHTML = "載入中...";
+        document.getElementById('loader-text').innerHTML = "正在前往系統...";
         document.getElementById('global-loader').style.display = 'flex';
-        setTimeout(() => { window.location.href = btn.dataset.href; }, 50);
+        // 延遲跳轉，確保載入畫面出現
+        setTimeout(() => { window.location.href = btn.dataset.href; }, 100);
       });
     });
 
@@ -180,11 +187,12 @@
       try { urlObj = new URL(cleanDecodedText(rawUrl)); mode = urlObj.searchParams.get("mode"); if (mode !== "plant_go" && mode !== "stamp") return; } catch (err) { return; }
 
       if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-      await stopScanner(true);
-      document.getElementById("scanActions").style.display = "none"; 
       
       document.getElementById("loader-text").innerHTML = "正在存入點數...<br><span style='font-size:14px;color:#aaa;'>(請稍候約 2 秒鐘)</span>";
       document.getElementById("global-loader").style.display = "flex";
+
+      await stopScanner(true);
+      document.getElementById("scanActions").style.display = "none"; 
       
       try {
         if (mode === "plant_go" && urlObj.searchParams.get("plant")) {
@@ -194,18 +202,21 @@
           const target = resp.redirectUrl || COLLECTION_URL;
           
           if (navigator.vibrate) navigator.vibrate(200); 
-          document.getElementById("global-loader").style.display = "none";
+          document.getElementById("loader-text").innerHTML = "🎉 紀錄成功！<br><span style='font-size:14px;color:#aaa;'>正在為您跳轉至植物介紹...</span>";
           
-          // ★ 掃描成功，直接顯示「前往介紹頁」按鈕 (另開分頁，保證回來不用重新要權限)
-          statusEl.innerHTML = `🎉 <b>${resp.message || "已完成記點"}</b><br><br><a href="${target}" target="_blank" class="btn primary" style="margin-top:10px;">🌿 前往植物介紹頁</a>`;
-          statusEl.style.background = "#d4edda";
-          document.getElementById("scanActions").style.display = "grid"; 
+          // ★ 使用 replace 無痕跳轉！按上一頁就不會出現成功畫面
+          setTimeout(() => {
+            window.location.replace(target);
+          }, 800);
 
         } else if (mode === "stamp" && urlObj.searchParams.get("spot")) {
           if (navigator.vibrate) navigator.vibrate(200);
           document.getElementById("loader-text").innerHTML = "✅ 掃描展區成功！<br><span style='font-size:14px;color:#aaa;'>準備前往紀錄頁面...</span>";
           urlObj.searchParams.set("phone", phone);
-          window.location.href = urlObj.toString();
+          
+          setTimeout(() => {
+             window.location.replace(urlObj.toString());
+          }, 800);
         }
       } catch (err) {
         document.getElementById("global-loader").style.display = "none";
@@ -244,6 +255,7 @@
       const phone = normalizePhone(phoneInput.value);
       if (!isValidMobile(phone)) { statusEl.textContent = "請輸入正確的 09 開頭十碼數字。"; return; }
       setCurrentPhone(phone); manualBox.style.display = "none";
+      startScanner(); 
     });
 
     startBtn.addEventListener("click", startScanner);
