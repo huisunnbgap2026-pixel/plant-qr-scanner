@@ -12,8 +12,8 @@
     #camera-feed { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; display: none; }
     #overlay-graphic { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 2; pointer-events: none; display: none; }
     
-    /* ★ 安全啟動畫面背景：發光蕨類 */
-    #start-screen { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; background: url('https://images.unsplash.com/photo-1595180473268-2ddcc696e57a?q=80&w=1080&auto=format&fit=crop') center/cover no-repeat; z-index: 50; }
+    /* ★ 絕對網址：迷霧森林鳥群 */
+    #start-screen { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; background: url('https://images.unsplash.com/photo-1448375240586-882707db888b?q=80&w=1080&auto=format&fit=crop') center/cover no-repeat; z-index: 50; }
     .start-overlay { position:absolute; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(8px); z-index:-1;}
     .btn-start-cam { background: var(--accent); color: white; padding: 18px 40px; border-radius: 30px; font-size: 20px; font-weight: bold; border: none; box-shadow: 0 5px 20px rgba(0,0,0,0.5); cursor: pointer; touch-action: manipulation; }
     
@@ -43,11 +43,9 @@
   </style>
 </head>
 <body>
-
-  <!-- 手動啟動畫面，防止被瀏覽器鎖死 -->
   <div id="start-screen">
     <div class="start-overlay"></div>
-    <button class="btn-start-cam" id="initCameraBtn">📷 點擊允許開啟相機</button>
+    <button class="btn-start-cam" id="initCameraBtn">📷 點擊允許啟動相機</button>
     <a href="index.html" style="color:#ccc; margin-top:20px; text-decoration:none; font-size:16px;">返回首頁</a>
   </div>
 
