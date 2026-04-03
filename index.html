@@ -150,4 +150,33 @@
           setTimeout(() => {
             document.documentElement.className = ''; 
             splashScreen.style.opacity = ""; 
-            if (userPhone) { h
+            if (userPhone) { homeScreen.classList.add('active-transition'); bindHomeData(); } 
+            else { loginScreen.classList.add('active-transition'); }
+          }, 500); 
+        }, 8500);
+      }
+    };
+
+    document.getElementById('loginBtn').addEventListener('click', () => {
+      const input = normalizePhone(document.getElementById('phoneInput').value);
+      if (input.length === 10 && input.startsWith("09")) {
+        userPhone = input; sessionStorage.setItem("savedPhone", userPhone);
+        loginScreen.style.opacity = "0"; 
+        setTimeout(() => {
+          loginScreen.classList.remove('active-transition'); loginScreen.style.opacity = "";
+          homeScreen.classList.add('active-transition'); bindHomeData();
+        }, 400);
+      } else { alert("格式錯誤，請輸入正確的 09 開頭手機號碼！"); }
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      sessionStorage.removeItem("savedPhone"); userPhone = ""; document.getElementById('phoneInput').value = "";
+      homeScreen.style.opacity = "0"; 
+      setTimeout(() => {
+        homeScreen.classList.remove('active-transition'); homeScreen.style.opacity = "";
+        loginScreen.classList.add('active-transition');
+      }, 400);
+    });
+  </script>
+</body>
+</html>
