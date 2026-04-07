@@ -32,11 +32,11 @@
     :root { --primary: #4a7c59; --solid-bg: #162419; --solid-border: #2a3d2e; }
     html, body { margin: 0; padding: 0; width: 100%; height: 100%; font-family: "Noto Sans TC", sans-serif; color: #fff; overflow: hidden; background-color: #111a13; touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adjust: 100%;}
     
-    /* ★ 迷霧森林絕對網址防盜連圖床，保證顯示 */
+    /* ★ 改用完全無防盜連的 GitHub 圖片代管網址 (迷霧森林) */
     .bg-fixed { 
       position: fixed; inset: 0; 
       width: 100vw; height: 100vh; height: 100dvh; 
-      background: url('https://images.unsplash.com/photo-1448375240586-882707db888b?q=80&w=1080&auto=format&fit=crop') center/cover no-repeat; 
+      background: url('https://raw.githubusercontent.com/huisunnbgap2026-pixel/plant-qr-scanner/main/bg_misty.jpg') center/cover no-repeat; 
       z-index: -1; 
     }
 
@@ -65,11 +65,11 @@
     input[type="tel"]:focus { border-color: var(--primary); background: #111a13; }
     input[type="tel"]::placeholder { color: #4a6350; }
 
-    /* ★ 修正白字問題：強制加上 color 屬性保證對比度 */
-    .btn { width: 100%; box-sizing: border-box; border-radius: 18px; padding: 16px 12px; margin-bottom: 12px; font-size: 18px; font-weight: 700; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px; background: #233326; color: #ffffff !important; cursor: pointer; border: 1px solid var(--solid-border); transition: 0.3s; touch-action: manipulation; user-select: none; -webkit-tap-highlight-color: transparent; }
+    /* ★ 修正按鈕字體對比度 */
+    .btn { width: 100%; box-sizing: border-box; border-radius: 18px; padding: 16px 12px; margin-bottom: 12px; font-size: 18px; font-weight: 700; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px; background: #233326; color: #ffffff; cursor: pointer; border: 1px solid var(--solid-border); transition: 0.3s; touch-action: manipulation; user-select: none; -webkit-tap-highlight-color: transparent; }
     .btn:active { transform: scale(0.96); }
-    .btn.primary { background: linear-gradient(135deg, #5c8d6b, #2c4c3b); border: none; box-shadow: 0 8px 20px rgba(44, 76, 59, 0.4); }
-    .btn.accent { background: linear-gradient(135deg, #d4a373, #a67c52); border: none; }
+    .btn.primary { background: linear-gradient(135deg, #5c8d6b, #2c4c3b); border: none; box-shadow: 0 8px 20px rgba(44, 76, 59, 0.4); color: #fff;}
+    .btn.accent { background: linear-gradient(135deg, #d4a373, #a67c52); border: none; color: #fff;}
     
     #global-loader { display: none; position: fixed; inset: 0; background: rgba(17, 26, 19, 1); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; color: #fff; }
     .spinner { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid #4a7c59; border-radius: 50%; width: 45px; height: 45px; animation: spin 1s linear infinite; margin-bottom: 20px; }
@@ -118,7 +118,15 @@
     const APP_URL = "https://script.google.com/macros/s/AKfycbyoFlYdQfjyJUu0onsq2DOI5wZJmRcNI2maSEbU7b5uKiSQmajfFRJGYL8OisrhhNUYKg/exec";
 
     function normalizePhone(phone) { let p = String(phone || "").replace(/\D/g, "").trim(); if (p.length === 9 && p.startsWith("9")) p = "0" + p; return p; }
-    function buildUrl(base, params) { const u = new URL(base); Object.keys(params).forEach(key => { if (params[key]) u.searchParams.set(key, params[key]); }); return u.toString(); }
+    
+    // ★ 修正 URL 組合邏輯，確保只有正確參數被傳送
+    function buildUrl(base, params) { 
+      const u = new URL(base); 
+      Object.keys(params).forEach(key => { 
+        if (params[key]) u.searchParams.set(key, String(params[key]).replace(/[^0-9a-zA-Z_-]/g, '')); 
+      }); 
+      return u.toString(); 
+    }
 
     const splashScreen = document.getElementById('splash-screen');
     const loginScreen = document.getElementById('login-screen');
@@ -127,11 +135,10 @@
 
     function bindHomeData() {
       document.getElementById('displayPhone').innerText = userPhone.replace(/(\d{4})(\d{3})(\d{3})/, '$1-$2-$3');
-      document.getElementById('navQueryBtn').dataset.href = buildUrl(APP_URL, { mode: "query", phone: userPhone });
-      document.getElementById('navRewardBtn').dataset.href = buildUrl(APP_URL, { mode: "rewards", phone: userPhone });
+      document.getElementById('navQueryBtn').dataset.href = APP_URL + "?mode=query&phone=" + userPhone;
+      document.getElementById('navRewardBtn').dataset.href = APP_URL + "?mode=rewards&phone=" + userPhone;
     }
 
-    // 點擊後直接跳轉，不再使用 SPA 抽換
     document.querySelectorAll('.gas-link').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
