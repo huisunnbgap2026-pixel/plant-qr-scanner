@@ -9,34 +9,36 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
   <style>
     :root { --primary-dark: #2c4c3b; --primary-light: #729075; }
-    /* ★ 加入 text-size-adjust 防 Chrome 字體暴走 */
     html, body { margin: 0; padding: 0; font-family: "Noto Sans TC", sans-serif; color: var(--primary-dark); background-color:#111a13; touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adjust: 100%;}
     
-    /* ★ 絕對網址：發光蕨類 */
-    .bg-fixed { position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100dvh; background: url('https://i.imgur.com/8QoN3Wl.jpeg') center/cover no-repeat; z-index: -1; }
+    /* ★ 絕對網址：發光蕨類，防盜連圖床 */
+    .bg-fixed { position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100dvh; background: url('https://raw.githubusercontent.com/huisunnbgap2026-pixel/plant-qr-scanner/main/bg_main.jpg') center/cover no-repeat; z-index: -1; }
 
-    .page { position: relative; min-height: 100vh; padding: 24px 16px 32px; box-sizing: border-box; }
+    .page { position: relative; min-height: 100vh; padding: 24px 16px 32px; box-sizing: border-box; overflow-y: auto;}
     
-    .hero { max-width: 400px; margin: 0 auto 24px auto; padding: 30px 25px; border-radius: 20px; background: linear-gradient(135deg, var(--primary-dark), var(--primary)); color: #fff; box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: center; }
-    .hero h1 { margin: 0 0 10px; font-size: 28px; font-weight: 700; letter-spacing: 2px; }
+    .hero { max-width: 400px; margin: 0 auto 24px auto; padding: 30px 25px; border-radius: 20px; background: linear-gradient(135deg, var(--primary-dark), var(--primary-light)); color: #fff; box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: center; }
+    .hero h1 { margin: 0 0 10px; font-size: 28px; font-weight: 700; letter-spacing: 2px; text-shadow: 0 2px 10px rgba(0,0,0,0.5);}
     .hero p { margin: 0; line-height: 1.6; color: rgba(255,255,255,.9); font-size: 15px;}
 
     .solid-card { width: 100%; box-sizing: border-box; max-width: 400px; margin: 0 auto 20px auto; background: rgba(255, 255, 255, 0.95); border-radius: 20px; padding: 25px; box-shadow: 0 15px 40px rgba(0,0,0, 0.6); border: 1px solid #e0e0e0; transform: translateZ(0); will-change: transform; }
-    .section-title { font-size: 14px; letter-spacing: 2px; color: var(--primary); margin-bottom: 10px; font-weight: 700; }
+    .section-title { font-size: 14px; letter-spacing: 2px; color: var(--primary-light); margin-bottom: 10px; font-weight: 700; }
     h2 { margin: 0 0 15px; font-size: 24px; font-weight: 700; color: var(--primary-dark); }
     
     #reader { width: 100%; min-height: 280px; border-radius: 16px; overflow: hidden; border: 2px dashed #ccc; transition: 0.3s; display: none; background:#000;}
     .status { margin-top: 20px; padding: 16px; border-radius: 14px; background: #e8f0e8; color: var(--primary-dark); font-weight: 700; line-height: 1.6; text-align: center; }
     
     input { width: 100%; box-sizing: border-box; border-radius: 16px; padding: 16px 14px; font-size: 18px; border: 2px solid #ddd; background: #fff; margin-top: 10px; color: var(--primary-dark); letter-spacing: 1px; text-align:center;}
-    input:focus { border-color: var(--primary); outline: none; }
+    input:focus { border-color: var(--primary-light); outline: none; }
     
     .actions { display: grid; gap: 12px; margin-top: 20px; }
+    
+    /* ★ 修正按鈕字體顏色，保證深綠色/白色對比分明 */
     button.btn, a.btn { width: 100%; box-sizing: border-box; border-radius: 16px; padding: 16px 14px; font-size: 18px; font-weight: 700; text-decoration: none; border: 0; text-align: center; display: block; cursor: pointer; transition: all 0.3s; touch-action: manipulation; user-select: none; -webkit-tap-highlight-color: transparent; }
-    .btn.primary { background: var(--primary); color: #fff !important; box-shadow: 0 4px 15px rgba(74, 124, 89, 0.3); }
+    .btn.primary { background: var(--primary-light); color: #fff !important; box-shadow: 0 4px 15px rgba(74, 124, 89, 0.3); }
     .btn.primary:active { transform: scale(0.96); }
     .btn.secondary { background: #fff; color: var(--primary-dark) !important; border: 2px solid #ddd; }
     
+    /* AR 拍立得視窗 */
     #ar-container { position: fixed; inset: 0; background: #000; z-index: 1000; display: none; flex-direction: column; }
     #ar-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
     #ar-overlay { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 2; pointer-events: none; }
@@ -51,7 +53,7 @@
     #ar-result-screen { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.9); z-index: 20; display: none; flex-direction: column; justify-content: center; align-items: center; padding:20px; text-align:center;}
     #result-image { width: 100%; max-width: 400px; max-height: 60vh; object-fit: contain; border-radius: 10px; margin-bottom: 20px; }
 
-    #global-loader { display: none; position: fixed; inset: 0; background: rgba(17, 26, 19, 1); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; color: #fff; }
+    #global-loader { display: none; position: fixed; inset: 0; background: rgba(17, 26, 19, 0.95); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; color: #fff; }
     .spinner { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid #4a7c59; border-radius: 50%; width: 45px; height: 45px; animation: spin 1s linear infinite; margin-bottom: 20px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
@@ -59,7 +61,7 @@
 <body>
   <div class="bg-fixed"></div>
   <div class="page">
-
+    <div class="wrap">
       <div class="hero">
         <h1>🔍 展區掃描站</h1>
         <p>請掃描展區內的植物與 AR 專屬 QR Code<br>系統將自動為您處理動作。</p>
@@ -88,7 +90,7 @@
           <a class="btn secondary" id="homeBtn" href="index.html">🏠 回展場首頁</a>
         </div>
       </div>
-
+    </div>
   </div>
 
   <div id="global-loader"><div class="spinner"></div><h3 id="loader-text">載入中...</h3></div>
@@ -121,6 +123,7 @@
 
     function normalizePhone(phone) { return String(phone || "").replace(/\D/g, "").trim(); }
     function isValidMobile(phone) { return /^09\d{8}$/.test(String(phone || "").trim()); }
+    function cleanDecodedText(raw) { return String(raw || "").replace(/[\u200B-\u200D\uFEFF]/g, "").replace(/\u00A0/g, " ").trim(); }
     function buildUrl(base, params) { const u = new URL(base); Object.keys(params).forEach(function(key) { if (params[key] !== undefined && params[key] !== null && params[key] !== "") { u.searchParams.set(key, params[key]); } }); return u.toString(); }
     function getParam(name) { const url = new URL(window.location.href); return url.searchParams.get(name) || ""; }
 
@@ -147,12 +150,15 @@
     let html5QrCode = null; let currentPhone = "";
     let useFrontCam = false; let arStream = null;
 
-    // ★ 關鍵：從植物頁上一頁回來時，強制重新載入，並觸發靜默重啟相機
     window.addEventListener("pageshow", function(e) {
-      if (e.persisted || sessionStorage.getItem('justVisitedPlant') === 'true') {
-        sessionStorage.removeItem('justVisitedPlant');
-        window.location.reload(); 
-      }
+      document.getElementById("global-loader").style.display = "none";
+      stopScanner(true);
+      document.getElementById("reader").style.display = "none";
+      document.getElementById("scanActions").style.display = "grid";
+      document.getElementById("startBtn").style.display = "block";
+      document.getElementById("stopBtn").style.display = "none";
+      statusEl.innerHTML = "相機已待命，請點擊下方按鈕啟動。";
+      statusEl.style.background = "#e8f0e8";
     });
 
     window.onload = () => {
@@ -161,11 +167,6 @@
         currentPhone = savedPhone; sessionStorage.setItem("savedPhone", currentPhone);
         document.getElementById("manualBox").style.display = "none"; 
         refreshActionLinks(); 
-        
-        // ★ 自動啟動相機防護：只要你之前按過允許，進來這頁就自動開相機
-        if (sessionStorage.getItem('camAllowed') === 'true') {
-          startScanner();
-        }
       } else {
         document.getElementById("manualBox").style.display = "block";
         statusEl.textContent = "請先輸入正確手機號碼。";
@@ -173,8 +174,8 @@
     };
 
     function refreshActionLinks() {
-      document.getElementById("queryBtn").dataset.href = buildUrl(APP_URL, { mode: "query", phone: currentPhone });
-      document.getElementById("rewardBtn").dataset.href = buildUrl(APP_URL, { mode: "rewards", phone: currentPhone });
+      document.getElementById("queryBtn").dataset.href = APP_URL + "?mode=query&phone=" + currentPhone;
+      document.getElementById("rewardBtn").dataset.href = APP_URL + "?mode=rewards&phone=" + currentPhone;
     }
 
     document.querySelectorAll('.gas-link').forEach(btn => {
@@ -182,7 +183,7 @@
         e.preventDefault();
         document.getElementById('loader-text').innerHTML = "正在前往系統...";
         document.getElementById('global-loader').style.display = 'flex';
-        setTimeout(() => { window.location.href = btn.dataset.href; }, 50);
+        setTimeout(() => { window.location.href = btn.dataset.href; }, 100);
       });
     });
 
@@ -204,7 +205,6 @@
         picNum = urlObj.searchParams.get("pic");
       } catch (err) { return; }
 
-      // 掃到 AR 拍立得 
       if (mode === "ar" && picNum) {
         if (navigator.vibrate) navigator.vibrate(100);
         await stopScanner(true);
@@ -232,9 +232,7 @@
           statusEl.innerHTML = `🎉 <b>${resp.message || "已完成記點"}</b><br><br><span style='color:#729075; font-weight:bold;'>正在為您跳轉至植物介紹...</span>`;
           statusEl.style.background = "#d4edda";
           
-          // ★ 標記準備跳轉，這樣從植物頁按上一頁回來時，程式就知道要重啟相機
-          sessionStorage.setItem('justVisitedPlant', 'true');
-          setTimeout(() => { window.location.href = target; }, 1500);
+          setTimeout(() => { window.location.replace(target); }, 1500);
 
         } else if (mode === "stamp" && spotId) {
           if (navigator.vibrate) navigator.vibrate(200);
@@ -244,8 +242,8 @@
         }
       } catch (err) {
         document.getElementById("global-loader").style.display = "none";
-        statusEl.innerHTML = "<b>系統連線失敗 💦</b><br>請點擊下方按鈕重新啟動相機。"; statusEl.style.background = "#f8d7da";
-        document.getElementById("scanActions").style.display = "grid"; document.getElementById("startBtn").style.display = "block";
+        statusEl.innerHTML = "<b>網路連線失敗 💦</b><br>請點擊下方按鈕重新啟動相機掃描。"; statusEl.style.background = "#f8d7da";
+        document.getElementById("scanActions").style.display = "grid"; document.getElementById("startBtn").style.display = "block"; document.getElementById("stopBtn").style.display = "none";
       }
     }
 
@@ -254,6 +252,7 @@
       try {
         statusEl.innerHTML = "正在啟動相機...<br><span style='font-size:12px;color:#888;'>(若跳出提示請點擊「允許」)</span>";
         statusEl.style.background = "#e8f0e8";
+        
         document.getElementById("reader").style.display = "block"; 
         
         const cameras = await Html5Qrcode.getCameras();
@@ -264,9 +263,8 @@
         html5QrCode = new Html5Qrcode("reader");
         await html5QrCode.start(rearCamera.id, { fps: 5, qrbox: { width: 250, height: 250 }, aspectRatio: 1.333 }, handleScanResult, () => {});
         
-        sessionStorage.setItem('camAllowed', 'true'); // ★ 記住相機已允許
         document.getElementById("startBtn").style.display = "none"; document.getElementById("stopBtn").style.display = "block";
-        statusEl.textContent = "✅ 相機已啟動，請掃描 QR Code。";
+        statusEl.textContent = "✅ 相機已啟動，請對準展場中的 QR code！";
       } catch (err) {
         document.getElementById("reader").style.display = "none";
         statusEl.innerHTML = "<b>無法啟動相機 📷</b><br>請確認瀏覽器是否允許相機權限。";
@@ -279,15 +277,12 @@
       const p = normalizePhone(document.getElementById("phoneInput").value);
       if (!isValidMobile(p)) { statusEl.textContent = "請輸入正確的 09 開頭十碼數字。"; return; }
       setCurrentPhone(p); document.getElementById("manualBox").style.display = "none";
-      startScanner();
     });
 
     document.getElementById("startBtn").addEventListener("click", startScanner);
     document.getElementById("stopBtn").addEventListener("click", () => stopScanner(false));
 
-    // =======================================
     // AR 拍立得系統
-    // =======================================
     async function openAr(picNum) {
       document.getElementById('ar-container').style.display = 'flex';
       document.getElementById('ar-overlay').src = `./ar_${picNum}.png`;
@@ -318,7 +313,6 @@
       document.getElementById('ar-overlay').style.display = 'none';
       document.getElementById('ar-controls').style.display = 'none';
       document.getElementById('ar-result-screen').style.display = 'none';
-      startScanner(); // 拍完照回到掃描頁自動開啟相機
     }
 
     function drawCover(ctx, source, cw, ch, isMirror) {
