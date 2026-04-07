@@ -32,11 +32,10 @@
     :root { --primary: #4a7c59; --solid-bg: #162419; --solid-border: #2a3d2e; }
     html, body { margin: 0; padding: 0; width: 100%; height: 100%; font-family: "Noto Sans TC", sans-serif; color: #fff; overflow: hidden; background-color: #111a13; touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adjust: 100%;}
     
-    /* ★ 改用完全無防盜連的 GitHub 圖片代管網址 (迷霧森林) */
+    /* ★ 改用最穩定的維基百科無版權樹林圖片，保證 100% 讀取 */
     .bg-fixed { 
-      position: fixed; inset: 0; 
-      width: 100vw; height: 100vh; height: 100dvh; 
-      background: url('https://raw.githubusercontent.com/huisunnbgap2026-pixel/plant-qr-scanner/main/bg_misty.jpg') center/cover no-repeat; 
+      position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100dvh; 
+      background: linear-gradient(rgba(17,26,19,0.7), rgba(17,26,19,0.7)), url('https://upload.wikimedia.org/wikipedia/commons/4/4e/Ferns_in_the_forest.jpg') center/cover no-repeat; 
       z-index: -1; 
     }
 
@@ -47,7 +46,7 @@
     html.init-login #login-screen { display: flex; opacity: 1; visibility: visible; z-index: 20; }
     html.init-home #home-screen { display: flex; opacity: 1; visibility: visible; z-index: 20; }
 
-    #splash-screen { background: rgba(17, 26, 19, 0.85); }
+    #splash-screen { background: rgba(17, 26, 19, 0.95); }
     .collab-container { display: flex; align-items: center; justify-content: center; gap: 4vw; margin-bottom: 40px; width: 100%; max-width: 350px; margin-left: auto; margin-right: auto;}
     .collab-logo { width: 30%; max-width: 100px; height: auto; object-fit: contain; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5)); }
     .cross-mark { font-size: clamp(16px, 4vw, 24px); color: rgba(255,255,255,0.6); }
@@ -65,8 +64,7 @@
     input[type="tel"]:focus { border-color: var(--primary); background: #111a13; }
     input[type="tel"]::placeholder { color: #4a6350; }
 
-    /* ★ 修正按鈕字體對比度 */
-    .btn { width: 100%; box-sizing: border-box; border-radius: 18px; padding: 16px 12px; margin-bottom: 12px; font-size: 18px; font-weight: 700; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px; background: #233326; color: #ffffff; cursor: pointer; border: 1px solid var(--solid-border); transition: 0.3s; touch-action: manipulation; user-select: none; -webkit-tap-highlight-color: transparent; }
+    .btn { width: 100%; box-sizing: border-box; border-radius: 18px; padding: 16px 12px; margin-bottom: 12px; font-size: 18px; font-weight: 700; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px; background: #233326; color: #ffffff !important; cursor: pointer; border: 1px solid var(--solid-border); transition: 0.3s; touch-action: manipulation; user-select: none; -webkit-tap-highlight-color: transparent; }
     .btn:active { transform: scale(0.96); }
     .btn.primary { background: linear-gradient(135deg, #5c8d6b, #2c4c3b); border: none; box-shadow: 0 8px 20px rgba(44, 76, 59, 0.4); color: #fff;}
     .btn.accent { background: linear-gradient(135deg, #d4a373, #a67c52); border: none; color: #fff;}
@@ -79,6 +77,7 @@
 <body>
   <div class="bg-fixed"></div>
 
+  <!-- 開場動畫 -->
   <div id="splash-screen" class="screen">
     <div class="collab-container">
       <img src="./logo_ark.png" class="collab-logo anim-item item-1" onerror="this.style.display='none'">
@@ -90,6 +89,7 @@
     <h1 class="title-large anim-item item-6">方舟計畫展覽</h1>
   </div>
 
+  <!-- 輸入電話頁面 -->
   <div id="login-screen" class="screen">
     <div class="solid-card">
       <h1>🌿 專屬探索通行證</h1>
@@ -99,12 +99,14 @@
     </div>
   </div>
 
+  <!-- 主選單 -->
   <div id="home-screen" class="screen">
     <div class="solid-card">
       <h1 style="font-size: 24px;">歡迎，<span id="displayPhone"></span></h1>
       <p style="margin-bottom: 30px;">請選擇您要進行的探索動作</p>
       
-      <a href="scanner.html" class="btn primary">🔍 進入展區掃描站</a>
+      <!-- ★ 強制寫死的網址，確保不迷路 -->
+      <button class="btn primary" onclick="window.location.href='scanner.html'">🔍 進入展區掃描站</button>
       <a href="https://sites.google.com/view/nat-bot-gard-nchu/%E9%A6%96%E9%A0%81/%E7%9B%AE%E5%89%8D%E9%A4%A8%E8%97%8F" target="_blank" class="btn accent" style="background: linear-gradient(135deg, #7c9885, #4a6350);">🌳 瀏覽目前館藏</a>
       <button id="navQueryBtn" class="btn gas-link">🏆 查看探索進度</button>
       <button id="navRewardBtn" class="btn gas-link">🎁 查看兌換獎勵</button>
@@ -118,15 +120,7 @@
     const APP_URL = "https://script.google.com/macros/s/AKfycbyoFlYdQfjyJUu0onsq2DOI5wZJmRcNI2maSEbU7b5uKiSQmajfFRJGYL8OisrhhNUYKg/exec";
 
     function normalizePhone(phone) { let p = String(phone || "").replace(/\D/g, "").trim(); if (p.length === 9 && p.startsWith("9")) p = "0" + p; return p; }
-    
-    // ★ 修正 URL 組合邏輯，確保只有正確參數被傳送
-    function buildUrl(base, params) { 
-      const u = new URL(base); 
-      Object.keys(params).forEach(key => { 
-        if (params[key]) u.searchParams.set(key, String(params[key]).replace(/[^0-9a-zA-Z_-]/g, '')); 
-      }); 
-      return u.toString(); 
-    }
+    function buildUrl(base, params) { const u = new URL(base); Object.keys(params).forEach(key => { if (params[key]) u.searchParams.set(key, String(params[key]).replace(/[^0-9a-zA-Z_-]/g, '')); }); return u.toString(); }
 
     const splashScreen = document.getElementById('splash-screen');
     const loginScreen = document.getElementById('login-screen');
@@ -142,7 +136,7 @@
     document.querySelectorAll('.gas-link').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
-        e.target.innerHTML = "⏳ 載入中...";
+        document.getElementById('loader-text').innerHTML = "載入中...";
         document.getElementById('global-loader').style.display = 'flex';
         setTimeout(() => { window.location.href = btn.dataset.href; }, 100);
       });
@@ -150,8 +144,6 @@
 
     window.addEventListener("pageshow", function() {
       document.getElementById('global-loader').style.display = 'none';
-      document.getElementById('navQueryBtn').innerHTML = "🏆 查看探索進度";
-      document.getElementById('navRewardBtn').innerHTML = "🎁 查看兌換獎勵";
     });
 
     window.onload = () => {
