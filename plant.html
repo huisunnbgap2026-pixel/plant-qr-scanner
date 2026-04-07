@@ -2,68 +2,80 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>方舟植物展覽｜植物探索</title>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+  <meta name="format-detection" content="telephone=no">
+  <title>紀錄成功｜方舟植物展覽</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;500;700;900&display=swap" rel="stylesheet">
   <style>
-    :root { --primary-dark: #1e362d; --primary-light: #4a7c59; }
-    html, body {
-      margin: 0; padding: 0; min-height: 100vh;
-      font-family: "Noto Sans TC", sans-serif; color: var(--primary-dark);
-      background: url('https://images.unsplash.com/photo-1463320726281-696a485928c7?q=80&w=1920&auto=format&fit=crop') center/cover fixed;
+    /* 深色過場，徹底消除白屏閃爍 */
+    html, body { 
+      margin: 0; padding: 0; width: 100vw; height: 100vh; 
+      font-family: "Noto Sans TC", sans-serif; color: #fff; 
+      background-color: #111a13; display: flex; flex-direction: column; 
+      justify-content: center; align-items: center; overflow: hidden;
+      touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adjust: 100%;
     }
-    .page { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; box-sizing: border-box; background: rgba(0,0,0,0.3); }
     
-    .glass-card {
-      width: min(92vw, 420px); background: rgba(255, 255, 255, 0.85);
-      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-      border-radius: 24px; padding: 40px 30px; text-align: center;
-      box-shadow: 0 15px 40px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.6);
+    /* 迷霧森林背景 */
+    .bg-fixed { position: fixed; inset: 0; width: 100vw; height: 100vh; background: url('https://i.imgur.com/gK1qB0U.jpeg') center/cover no-repeat; z-index: -1; opacity: 0.6; }
+
+    .card {
+      width: 90%; max-width: 350px; background: rgba(22, 36, 25, 0.95); 
+      border-radius: 28px; padding: 40px 30px; text-align: center; 
+      box-shadow: 0 25px 50px rgba(0,0,0,0.8); border: 1px solid #2a3d2e;
+      animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
     }
-    h1 { margin: 0 0 15px; font-size: 28px; font-weight: 900; }
-    #status { margin: 0 0 20px; font-size: 18px; line-height: 1.6; color: #333; font-weight: 700;}
+
+    @keyframes popIn { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+    .icon { font-size: 50px; margin-bottom: 15px; }
+    h1 { margin: 0 0 10px; font-size: 24px; font-weight: 900; letter-spacing: 2px; color: #d4edda; }
+    p { margin: 0; font-size: 15px; line-height: 1.6; color: #a3b8a8; }
     
-    .btn {
-      width: 100%; box-sizing: border-box; border-radius: 16px; padding: 18px 12px;
-      font-size: 18px; font-weight: 900; margin-top: 14px; text-decoration: none; display: block; text-align: center; transition: 0.3s; border: none;
-    }
-    .btn.primary { background: linear-gradient(135deg, var(--primary-light), var(--primary-dark)); color: #fff; box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
-    .btn.primary:active { transform: scale(0.96); }
+    .spinner { border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid #d4a373; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto 0; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
-  <div class="page">
-    <div class="glass-card">
-      <h1>🌿 植物探索中</h1>
-      <p id="status">正在存取您的集點紀錄…</p>
-      
-      <div id="actionBox" style="display:none;">
-        <a id="goBtn" class="btn primary" href="#">進入植物介紹</a>
-      </div>
-    </div>
+  <div class="bg-fixed"></div>
+  
+  <div class="card">
+    <div class="icon">🎉</div>
+    <h1 id="titleText">探索紀錄成功</h1>
+    <p id="subText">正在為您開啟植物介紹頁面...</p>
+    <div class="spinner" id="spinner"></div>
   </div>
 
   <script>
-    const APP_URL = "https://script.google.com/macros/s/AKfycbyoFlYdQfjyJUu0onsq2DOI5wZJmRcNI2maSEbU7b5uKiSQmajfFRJGYL8OisrhhNUYKg/exec";
-    function normalizePhone(p) { return String(p||"").replace(/\D/g,"").trim(); }
-    function getParam(n) { return new URL(window.location.href).searchParams.get(n) || ""; }
-    function normalizePageUrl(url) { let u = String(url||"").trim(); try{ u=decodeURIComponent(u); }catch(e){} if(!/^https?:\/\//i.test(u)) return ""; return u; }
+    // 解析網址上的參數
+    const urlParams = new URLSearchParams(window.location.search);
+    const targetUrl = urlParams.get('url');
+    const msg = urlParams.get('msg');
 
-    const plantId = getParam("plant");
-    const pageUrl = normalizePageUrl(getParam("page"));
-    const phone = normalizePhone(getParam("phone") || localStorage.getItem("savedPhone"));
+    if (msg) document.getElementById('titleText').innerText = decodeURIComponent(msg);
+
+    // ★ 核心防呆邏輯：判斷是「剛掃描完準備跳轉」還是「看完介紹按上一頁回來」
+    window.addEventListener("pageshow", function(e) {
+      if (e.persisted || sessionStorage.getItem('justVisitedPlant') === 'true') {
+        // 如果是按上一頁回來的，立刻拔腿就跑，退回掃描器
+        sessionStorage.removeItem('justVisitedPlant');
+        document.getElementById('titleText').innerText = "準備繼續探索...";
+        document.getElementById('subText').innerText = "正在返回相機";
+        setTimeout(() => { window.location.replace("scanner.html"); }, 100);
+      }
+    });
 
     window.onload = () => {
-      if (!phone) { window.location.replace("index.html"); return; }
-      if (!plantId) { document.getElementById('status').innerText = "條碼無效，請重試。"; return; }
-
-      document.getElementById('status').innerText = "✅ 紀錄成功！正在自動跳轉...";
-      
-      // 自動跳轉
-      if (pageUrl) {
-        setTimeout(() => { window.location.replace(pageUrl); }, 1000);
+      // 如果真的有網址要跳轉，就在 1.2 秒後跳轉
+      if (targetUrl) {
+        setTimeout(() => {
+          sessionStorage.setItem('justVisitedPlant', 'true'); // 標記即將離開
+          window.location.href = decodeURIComponent(targetUrl);
+        }, 1200);
       } else {
-        document.getElementById('status').innerText = "紀錄成功！請回上一頁繼續探索。";
+        // 沒有網址，代表是展區打卡點 (mode=stamp)，2秒後退回掃描器
+        document.getElementById('subText').innerText = "點數已發送！準備返回相機...";
+        setTimeout(() => { window.location.replace("scanner.html"); }, 2000);
       }
     };
   </script>
