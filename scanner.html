@@ -11,38 +11,45 @@
     :root { --primary-dark: #2c4c3b; --primary-light: #729075; }
     html, body { margin: 0; padding: 0; font-family: "Noto Sans TC", sans-serif; color: var(--primary-dark); background-color:#111a13; touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adjust: 100%;}
     
-    .bg-fixed { position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100dvh; background: url('https://i.imgur.com/8QoN3Wl.jpeg') center/cover no-repeat; z-index: -1; }
+    /* ★ 終極解法：使用 GitHub 上你的專屬圖片網址，發光蕨類 */
+    .bg-fixed { position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100dvh; background: url('https://huisunnbgap2026-pixel.github.io/plant-qr-scanner/bg_main.jpg') center/cover no-repeat; z-index: -1; }
 
     .page { position: relative; min-height: 100vh; padding: 24px 16px 32px; box-sizing: border-box; }
     
-    .hero { max-width: 400px; margin: 0 auto 24px auto; padding: 30px 25px; border-radius: 20px; background: linear-gradient(135deg, var(--primary-dark), var(--primary-light)); color: #fff; box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: center; }
+    .hero { max-width: 400px; margin: 0 auto 24px auto; padding: 30px 25px; border-radius: 20px; background: linear-gradient(135deg, var(--primary-dark), var(--primary)); color: #fff; box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: center; }
     .hero h1 { margin: 0 0 10px; font-size: 28px; font-weight: 700; letter-spacing: 2px; }
     .hero p { margin: 0; line-height: 1.6; color: rgba(255,255,255,.9); font-size: 15px;}
 
-    .solid-card { width: 100%; box-sizing: border-box; max-width: 400px; margin: 0 auto 20px auto; background: rgba(255, 255, 255, 0.95); border-radius: 20px; padding: 25px; box-shadow: 0 15px 40px rgba(0,0,0, 0.6); border: 1px solid #e0e0e0; }
-    .section-title { font-size: 14px; letter-spacing: 2px; color: var(--primary-light); margin-bottom: 10px; font-weight: 700; }
+    .solid-card { width: 100%; box-sizing: border-box; max-width: 400px; margin: 0 auto 20px auto; background: rgba(255, 255, 255, 0.95); border-radius: 20px; padding: 25px; box-shadow: 0 15px 40px rgba(0,0,0, 0.6); border: 1px solid #e0e0e0; transform: translateZ(0); will-change: transform; animation: fadeIn 0.4s ease forwards;}
+    @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+    
+    .section-title { font-size: 14px; letter-spacing: 2px; color: var(--primary); margin-bottom: 10px; font-weight: 700; }
     h2 { margin: 0 0 15px; font-size: 24px; font-weight: 700; color: var(--primary-dark); }
     
-    #reader { width: 100%; min-height: 280px; border-radius: 16px; overflow: hidden; border: 2px dashed #ccc; display: none; background:#000;}
+    #reader { width: 100%; min-height: 280px; border-radius: 16px; overflow: hidden; border: 2px dashed #ccc; transition: 0.3s; display: none; background:#000;}
     .status { margin-top: 20px; padding: 16px; border-radius: 14px; background: #e8f0e8; color: var(--primary-dark); font-weight: 700; line-height: 1.6; text-align: center; }
     
     input { width: 100%; box-sizing: border-box; border-radius: 16px; padding: 16px 14px; font-size: 18px; border: 2px solid #ddd; background: #fff; margin-top: 10px; color: var(--primary-dark); letter-spacing: 1px; text-align:center;}
-    input:focus { border-color: var(--primary-light); outline: none; }
+    input:focus { border-color: var(--primary); outline: none; }
     
     .actions { display: grid; gap: 12px; margin-top: 20px; }
-    button.btn, a.btn { width: 100%; box-sizing: border-box; border-radius: 16px; padding: 16px 14px; font-size: 18px; font-weight: 700; text-decoration: none; border: 0; text-align: center; display: block; cursor: pointer; touch-action: manipulation; user-select: none; -webkit-tap-highlight-color: transparent; }
-    .btn.primary { background: var(--primary-light); color: #fff; box-shadow: 0 4px 15px rgba(74, 124, 89, 0.3); }
+    button.btn, a.btn { width: 100%; box-sizing: border-box; border-radius: 16px; padding: 16px 14px; font-size: 18px; font-weight: 700; text-decoration: none; border: 0; text-align: center; display: block; cursor: pointer; transition: all 0.3s; touch-action: manipulation; user-select: none; -webkit-tap-highlight-color: transparent; }
+    .btn.primary { background: var(--primary); color: #fff; box-shadow: 0 4px 15px rgba(74, 124, 89, 0.3); }
     .btn.primary:active { transform: scale(0.96); }
     .btn.secondary { background: #fff; color: var(--primary-dark); border: 2px solid #ddd; }
     
+    /* AR 拍立得視窗 */
     #ar-container { position: fixed; inset: 0; background: #000; z-index: 1000; display: none; flex-direction: column; }
     #ar-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
     #ar-overlay { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 2; pointer-events: none; }
+    
     .ar-controls { position: absolute; bottom: 40px; left: 0; width: 100%; display: flex; justify-content: center; z-index: 10; }
     .btn-capture { background: #d4a373; color: white; width: 80px; height: 80px; border-radius: 50%; border: 4px solid #fff; display: flex; justify-content: center; align-items: center; font-size: 35px; cursor: pointer; box-shadow: 0 5px 20px rgba(0,0,0,0.5); touch-action: manipulation; }
     .btn-capture:active { transform: scale(0.9); }
+    
     .btn-close-ar { position: absolute; top: 30px; left: 20px; background: rgba(0,0,0,0.6); color: #fff; border: 1px solid rgba(255,255,255,0.3); padding: 10px 20px; border-radius: 20px; z-index: 15; font-weight: bold; cursor: pointer;}
     .btn-switch-cam { position: absolute; top: 30px; right: 20px; background: rgba(0,0,0,0.6); color: #fff; border: 1px solid rgba(255,255,255,0.3); padding: 10px 20px; border-radius: 20px; z-index: 15; font-weight: bold; cursor: pointer;}
+    
     #ar-result-screen { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.9); z-index: 20; display: none; flex-direction: column; justify-content: center; align-items: center; padding:20px; text-align:center;}
     #result-image { width: 100%; max-width: 400px; max-height: 60vh; object-fit: contain; border-radius: 10px; margin-bottom: 20px; }
 
@@ -54,7 +61,7 @@
 <body>
   <div class="bg-fixed"></div>
   <div class="page">
-    <div class="wrap">
+
       <div class="hero">
         <h1>🔍 展區掃描站</h1>
         <p>請掃描展區內的植物與 AR 專屬 QR Code<br>系統將自動為您處理動作。</p>
@@ -71,6 +78,7 @@
         <div class="status" id="status">相機已待命，請點擊下方按鈕啟動。</div>
 
         <div class="actions" id="scanActions">
+          <!-- ★ 返回時永遠呈現這個「手動啟動」狀態，解決蘋果報錯問題 -->
           <button class="btn primary" id="startBtn">📷 點擊啟動相機</button>
           <button class="btn secondary" id="stopBtn" style="display:none;">暫停掃描</button>
         </div>
@@ -83,17 +91,22 @@
           <a class="btn secondary" id="homeBtn" href="index.html">🏠 回展場首頁</a>
         </div>
       </div>
-    </div>
+
   </div>
 
   <div id="global-loader"><div class="spinner"></div><h3 id="loader-text">載入中...</h3></div>
 
+  <!-- AR 拍立得視窗 -->
   <div id="ar-container">
     <button class="btn-close-ar" onclick="closeAr()">✖ 關閉</button>
     <button class="btn-switch-cam" onclick="switchArCam()">🔄 翻轉</button>
     <video id="ar-video" autoplay playsinline></video>
     <img id="ar-overlay" src="" crossorigin="anonymous">
-    <div id="ar-controls" class="ar-controls"><button class="btn-capture" onclick="takeArPhoto()">📸</button></div>
+    
+    <div id="ar-controls" class="ar-controls">
+      <button class="btn-capture" onclick="takeArPhoto()">📸</button>
+    </div>
+    
     <div id="ar-result-screen">
       <div style="color:#fff; font-weight:bold; margin-bottom:15px; font-size:18px;">✨ 拍照成功！長按圖片即可儲存 ✨</div>
       <img id="result-image" src="">
@@ -111,6 +124,7 @@
 
     function normalizePhone(phone) { return String(phone || "").replace(/\D/g, "").trim(); }
     function isValidMobile(phone) { return /^09\d{8}$/.test(String(phone || "").trim()); }
+    function cleanDecodedText(raw) { return String(raw || "").replace(/[\u200B-\u200D\uFEFF]/g, "").replace(/\u00A0/g, " ").trim(); }
     function buildUrl(base, params) { const u = new URL(base); Object.keys(params).forEach(function(key) { if (params[key] !== undefined && params[key] !== null && params[key] !== "") { u.searchParams.set(key, params[key]); } }); return u.toString(); }
     function getParam(name) { const url = new URL(window.location.href); return url.searchParams.get(name) || ""; }
 
@@ -137,6 +151,7 @@
     let html5QrCode = null; let currentPhone = "";
     let useFrontCam = false; let arStream = null;
 
+    // ★ 當從植物頁面「上一頁」回來時，強制停止相機，回到最乾淨的初始狀態
     window.addEventListener("pageshow", function(e) {
       document.getElementById("global-loader").style.display = "none";
       stopScanner(true);
@@ -170,7 +185,7 @@
         e.preventDefault();
         document.getElementById('loader-text').innerHTML = "正在前往系統...";
         document.getElementById('global-loader').style.display = 'flex';
-        setTimeout(() => { window.location.href = btn.dataset.href; }, 100);
+        setTimeout(() => { window.location.href = btn.dataset.href; }, 50);
       });
     });
 
@@ -192,18 +207,22 @@
         picNum = urlObj.searchParams.get("pic");
       } catch (err) { return; }
 
+      // 掃到 AR 拍立得 
       if (mode === "ar" && picNum) {
         if (navigator.vibrate) navigator.vibrate(100);
-        await stopScanner(true); openAr(picNum); return;
+        await stopScanner(true);
+        openAr(picNum);
+        return;
       }
 
       if (mode !== "plant_go" && mode !== "stamp") return;
 
       if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-      document.getElementById("loader-text").innerHTML = "正在存入點數...<br><span style='font-size:14px;color:#aaa;'>(請稍候約 2 秒鐘)</span>";
-      document.getElementById("global-loader").style.display = "flex";
       await stopScanner(true);
       document.getElementById("scanActions").style.display = "none"; 
+      
+      document.getElementById("loader-text").innerHTML = "正在存入點數...<br><span style='font-size:14px;color:#aaa;'>(請稍候約 2 秒)</span>";
+      document.getElementById("global-loader").style.display = "flex";
       
       try {
         if (mode === "plant_go") {
@@ -215,7 +234,7 @@
           statusEl.innerHTML = `🎉 <b>${resp.message || "已完成記點"}</b><br><br><span style='color:#729075; font-weight:bold;'>正在為您自動跳轉至植物介紹...</span>`;
           statusEl.style.background = "#d4edda";
           
-          // ★ 無痕跳轉
+          // ★ 自動無痕跳轉
           setTimeout(() => { window.location.replace(target); }, 1500);
 
         } else if (mode === "stamp" && spotId) {
@@ -226,7 +245,7 @@
         }
       } catch (err) {
         document.getElementById("global-loader").style.display = "none";
-        statusEl.innerHTML = "<b>網路連線失敗 💦</b><br>請點擊下方按鈕重新掃描。"; statusEl.style.background = "#f8d7da";
+        statusEl.innerHTML = "<b>系統連線失敗 💦</b><br>請點擊下方按鈕重新啟動相機掃描。"; statusEl.style.background = "#f8d7da";
         document.getElementById("scanActions").style.display = "grid"; document.getElementById("startBtn").style.display = "block"; document.getElementById("stopBtn").style.display = "none";
       }
     }
@@ -234,8 +253,9 @@
     async function startScanner() {
       if (!isValidMobile(currentPhone)) { statusEl.textContent = "請先輸入手機號碼喔！"; return; }
       try {
-        statusEl.innerHTML = "啟動中... <span style='font-size:12px;'>(若跳出提示請點允許)</span>";
+        statusEl.innerHTML = "正在啟動相機...<br><span style='font-size:12px;color:#888;'>(若跳出提示請點擊「允許」)</span>";
         statusEl.style.background = "#e8f0e8";
+        
         document.getElementById("reader").style.display = "block"; 
         
         const cameras = await Html5Qrcode.getCameras();
@@ -265,9 +285,11 @@
     document.getElementById("startBtn").addEventListener("click", startScanner);
     document.getElementById("stopBtn").addEventListener("click", () => stopScanner(false));
 
+    // AR 拍立得系統
     async function openAr(picNum) {
       document.getElementById('ar-container').style.display = 'flex';
       document.getElementById('ar-overlay').src = `./ar_${picNum}.png`;
+      
       const video = document.getElementById('ar-video');
       try {
         arStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: useFrontCam ? "user" : "environment", width: {ideal: 1280}, height: {ideal: 720} } });
@@ -276,14 +298,60 @@
         await video.play();
         document.getElementById('ar-overlay').style.display = 'block';
         document.getElementById('ar-controls').style.display = 'flex';
-      } catch (err) { alert("無法開啟相機進行拍攝！"); closeAr(); }
+      } catch (err) {
+        alert("無法開啟相機進行拍攝！");
+        closeAr();
+      }
     }
 
-    function switchArCam() { useFrontCam = !useFrontCam; if (arStream) { arStream.getTracks().forEach(t => t.stop()); } openAr(document.getElementById('ar-overlay').src.match(/ar_(\d+)/)[1]); }
-    function closeAr() { if (arStream) { arStream.getTracks().forEach(t => t.stop()); arStream = null; } document.getElementById('ar-container').style.display = 'none'; document.getElementById('ar-overlay').style.display = 'none'; document.getElementById('ar-controls').style.display = 'none'; document.getElementById('ar-result-screen').style.display = 'none'; }
-    function drawCover(ctx, source, cw, ch, isMirror) { const sw = source.videoWidth || source.naturalWidth; const sh = source.videoHeight || source.naturalHeight; if(!sw || !sh) return; const sRatio = sw / sh; const cRatio = cw / ch; let dw, dh, sx, sy; if (sRatio > cRatio) { dh = ch; dw = sw * (ch / sh); sx = (cw - dw) / 2; sy = 0; } else { dw = cw; dh = sh * (cw / sw); sx = 0; sy = (ch - dh) / 2; } ctx.save(); if (isMirror) { ctx.translate(cw, 0); ctx.scale(-1, 1); } ctx.drawImage(source, sx, sy, dw, dh); ctx.restore(); }
-    function takeArPhoto() { const video = document.getElementById('ar-video'); const canvas = document.getElementById('ar-canvas'); const ctx = canvas.getContext('2d'); const overlay = document.getElementById('ar-overlay'); canvas.width = video.offsetWidth; canvas.height = video.offsetHeight; drawCover(ctx, video, canvas.width, canvas.height, useFrontCam); drawCover(ctx, overlay, canvas.width, canvas.height, false); document.getElementById('result-image').src = canvas.toDataURL('image/png', 0.9); document.getElementById('ar-controls').style.display = 'none'; document.getElementById('ar-overlay').style.display = 'none'; document.getElementById('ar-result-screen').style.display = 'flex'; }
-    function retakeAr() { document.getElementById('ar-result-screen').style.display = 'none'; document.getElementById('ar-controls').style.display = 'flex'; document.getElementById('ar-overlay').style.display = 'block'; }
+    function switchArCam() {
+      useFrontCam = !useFrontCam;
+      if (arStream) { arStream.getTracks().forEach(t => t.stop()); }
+      openAr(document.getElementById('ar-overlay').src.match(/ar_(\d+)/)[1]);
+    }
+
+    function closeAr() {
+      if (arStream) { arStream.getTracks().forEach(t => t.stop()); arStream = null; }
+      document.getElementById('ar-container').style.display = 'none';
+      document.getElementById('ar-overlay').style.display = 'none';
+      document.getElementById('ar-controls').style.display = 'none';
+      document.getElementById('ar-result-screen').style.display = 'none';
+    }
+
+    function drawCover(ctx, source, cw, ch, isMirror) {
+      const sw = source.videoWidth || source.naturalWidth; const sh = source.videoHeight || source.naturalHeight;
+      if(!sw || !sh) return;
+      const sRatio = sw / sh; const cRatio = cw / ch;
+      let dw, dh, sx, sy;
+      if (sRatio > cRatio) { dh = ch; dw = sw * (ch / sh); sx = (cw - dw) / 2; sy = 0; } 
+      else { dw = cw; dh = sh * (cw / sw); sx = 0; sy = (ch - dh) / 2; }
+      ctx.save();
+      if (isMirror) { ctx.translate(cw, 0); ctx.scale(-1, 1); }
+      ctx.drawImage(source, sx, sy, dw, dh);
+      ctx.restore();
+    }
+
+    function takeArPhoto() {
+      const video = document.getElementById('ar-video');
+      const canvas = document.getElementById('ar-canvas');
+      const ctx = canvas.getContext('2d');
+      const overlay = document.getElementById('ar-overlay');
+      
+      canvas.width = video.offsetWidth; canvas.height = video.offsetHeight;
+      drawCover(ctx, video, canvas.width, canvas.height, useFrontCam);
+      drawCover(ctx, overlay, canvas.width, canvas.height, false);
+
+      document.getElementById('result-image').src = canvas.toDataURL('image/png', 0.9);
+      document.getElementById('ar-controls').style.display = 'none';
+      document.getElementById('ar-overlay').style.display = 'none';
+      document.getElementById('ar-result-screen').style.display = 'flex';
+    }
+
+    function retakeAr() {
+      document.getElementById('ar-result-screen').style.display = 'none';
+      document.getElementById('ar-controls').style.display = 'flex';
+      document.getElementById('ar-overlay').style.display = 'block';
+    }
   </script>
 </body>
 </html>
