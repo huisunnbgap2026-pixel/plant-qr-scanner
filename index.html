@@ -6,68 +6,30 @@
   <meta name="format-detection" content="telephone=no">
   <title>方舟植物展覽</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;500;700;900&display=swap" rel="stylesheet">
-  <script>
-    (function() {
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('phone')) {
-        sessionStorage.setItem('savedPhone', urlParams.get('phone'));
-        sessionStorage.setItem('splashPlayed', 'true');
-        window.history.replaceState({}, document.title, window.location.pathname);
-      }
-      if (urlParams.get('action') === 'logout') {
-        sessionStorage.removeItem("savedPhone");
-        sessionStorage.setItem("splashPlayed", "true");
-        window.history.replaceState({}, document.title, window.location.pathname);
-      }
-
-      const hasPlayed = sessionStorage.getItem("splashPlayed") === "true";
-      const phone = sessionStorage.getItem("savedPhone");
-      
-      if (!hasPlayed) { document.documentElement.classList.add('init-splash'); } 
-      else if (phone) { document.documentElement.classList.add('init-home'); } 
-      else { document.documentElement.classList.add('init-login'); }
-    })();
-  </script>
   <style>
     :root { --primary: #4a7c59; --solid-bg: #162419; --solid-border: #2a3d2e; }
-    html, body { margin: 0; padding: 0; width: 100%; height: 100%; font-family: "Noto Sans TC", sans-serif; color: #fff; overflow: hidden; background-color: #111a13; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; touch-action: manipulation;}
+    html, body { margin: 0; padding: 0; width: 100%; height: 100%; font-family: "Noto Sans TC", sans-serif; color: #fff; background-color: #111a13; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; touch-action: manipulation;}
     
-    /* 迷霧森林 */
-    .bg-fixed { 
-      position: fixed; inset: 0; 
-      width: 100vw; height: 100vh; height: 100dvh; 
-      background: url('https://i.imgur.com/gK1qB0U.jpeg') center/cover no-repeat; 
-      z-index: -1; 
-    }
+    .bg-fixed { position: fixed; inset: 0; width: 100vw; height: 100vh; background: url('https://i.imgur.com/gK1qB0U.jpeg') center/cover no-repeat; z-index: -1; }
 
-    .screen { display: none; opacity: 0; visibility: hidden; position: absolute; inset: 0; width: 100%; height: 100%; flex-direction: column; justify-content: center; align-items: center; padding: 24px; box-sizing: border-box; z-index: 10; transition: opacity 0.5s ease; }
-    .screen.active-transition { display: flex; opacity: 1; visibility: visible; z-index: 20; }
+    .screen { display: none; position: absolute; inset: 0; width: 100%; height: 100%; flex-direction: column; justify-content: center; align-items: center; padding: 24px; box-sizing: border-box; z-index: 10; overflow-y: auto; }
+    .screen.active { display: flex; z-index: 20; }
 
-    html.init-splash #splash-screen { display: flex; opacity: 1; visibility: visible; z-index: 20; }
-    html.init-login #login-screen { display: flex; opacity: 1; visibility: visible; z-index: 20; }
-    html.init-home #home-screen { display: flex; opacity: 1; visibility: visible; z-index: 20; }
-
-    #splash-screen { background: rgba(17, 26, 19, 0.85); }
-    .collab-container { display: flex; align-items: center; justify-content: center; gap: 4vw; margin-bottom: 40px; width: 100%; max-width: 320px; }
-    .collab-logo { width: 35%; max-width: 120px; height: auto; object-fit: contain; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5)); }
+    #splash-screen { background: rgba(17, 26, 19, 0.95); }
+    .collab-container { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 30px; width: 100%; }
+    .collab-logo { width: 110px; height: auto; object-fit: contain; }
     .cross-mark { font-size: 20px; color: rgba(255,255,255,0.6); }
-    .title-large { font-size: clamp(28px, 8vw, 42px); font-weight: 900; letter-spacing: 4px; text-shadow: 0 4px 15px rgba(0,0,0,0.8); margin: 0; text-align: center; }
+    .title-large { font-size: 36px; font-weight: 900; letter-spacing: 4px; text-shadow: 0 4px 15px rgba(0,0,0,0.8); margin: 0; text-align: center; }
     
-    .anim-item { opacity: 0; transform: translateY(25px); animation: fadeUp 2s forwards ease-out; }
-    @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
-    .item-1 { animation-delay: 0.6s; } .item-2 { animation-delay: 1.6s; } .item-3 { animation-delay: 2.6s; } .item-4 { animation-delay: 3.6s; } .item-5 { animation-delay: 4.6s; } .item-6 { animation-delay: 6.0s; }
+    .solid-card { width: 100%; box-sizing: border-box; background: rgba(22, 36, 25, 0.95); border-radius: 28px; padding: 40px 25px; text-align: center; box-shadow: 0 25px 50px rgba(0,0,0,0.8); border: 1px solid var(--solid-border); margin: 0 auto; max-width: 400px; }
+    h1 { margin: 0 0 10px; font-size: 26px; font-weight: 900; letter-spacing: 2px; }
+    p { margin: 0 0 25px; font-size: 15px; line-height: 1.6; color: #a3b8a8; }
 
-    .solid-card { width: 100%; box-sizing: border-box; background: rgba(22, 36, 25, 0.95); border-radius: 28px; padding: 40px 25px; text-align: center; box-shadow: 0 25px 50px rgba(0,0,0,0.8); border: 1px solid var(--solid-border); transform: translateZ(0); will-change: transform; margin: 0 auto; max-width: 400px; }
-    h1 { margin: 0 0 10px; font-size: 28px; font-weight: 900; letter-spacing: 2px; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
-    p { margin: 0 0 25px; font-size: 16px; line-height: 1.6; color: #a3b8a8; }
+    input[type="tel"] { width: 100%; box-sizing: border-box; padding: 18px; font-size: 22px; text-align: center; letter-spacing: 3px; border: 2px solid var(--solid-border); border-radius: 18px; margin-bottom: 20px; background: #0c140e; color: #fff; font-weight: bold; outline: none; }
+    input[type="tel"]:focus { border-color: var(--primary); }
 
-    input[type="tel"] { width: 100%; box-sizing: border-box; padding: 18px; font-size: 22px; text-align: center; letter-spacing: 3px; border: 2px solid var(--solid-border); border-radius: 18px; margin-bottom: 20px; background: #0c140e; color: #fff; font-weight: bold; outline: none; transition: 0.3s; }
-    input[type="tel"]:focus { border-color: var(--primary); background: #111a13; }
-    input[type="tel"]::placeholder { color: #4a6350; }
-
-    .btn { width: 100%; box-sizing: border-box; border-radius: 18px; padding: 16px 12px; margin-bottom: 12px; font-size: 18px; font-weight: 700; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px; background: #233326; color: #fff; cursor: pointer; border: 1px solid var(--solid-border); transition: 0.3s; touch-action: manipulation; user-select: none; -webkit-tap-highlight-color: transparent; }
-    .btn:active { transform: scale(0.96); }
-    .btn.primary { background: linear-gradient(135deg, #5c8d6b, #2c4c3b); border: none; box-shadow: 0 8px 20px rgba(44, 76, 59, 0.4); }
+    .btn { width: 100%; box-sizing: border-box; border-radius: 18px; padding: 16px 12px; margin-bottom: 12px; font-size: 18px; font-weight: 700; text-decoration: none; display: flex; align-items: center; justify-content: center; background: #233326; color: #fff; cursor: pointer; border: 1px solid var(--solid-border); }
+    .btn.primary { background: linear-gradient(135deg, #5c8d6b, #2c4c3b); border: none; }
     .btn.accent { background: linear-gradient(135deg, #d4a373, #a67c52); border: none; }
   </style>
 </head>
@@ -75,24 +37,24 @@
   <div class="bg-fixed"></div>
 
   <!-- 開場動畫 -->
-  <div id="splash-screen" class="screen">
+  <div id="splash-screen" class="screen active">
     <div class="collab-container">
-      <img src="./logo_ark.png" class="collab-logo anim-item item-1" onerror="this.style.display='none'">
-      <span class="cross-mark anim-item item-2">✖</span>
-      <img src="./logo_nchu.png" class="collab-logo anim-item item-3" onerror="this.style.display='none'">
-      <span class="cross-mark anim-item item-4">✖</span>
-      <img src="./logo_huisun.png" class="collab-logo anim-item item-5" onerror="this.style.display='none'">
+      <img src="./logo_ark.png" class="collab-logo" onerror="this.style.display='none'">
+      <span class="cross-mark">✖</span>
+      <img src="./logo_nchu.png" class="collab-logo" onerror="this.style.display='none'">
+      <span class="cross-mark">✖</span>
+      <img src="./logo_huisun.png" class="collab-logo" onerror="this.style.display='none'">
     </div>
-    <h1 class="title-large anim-item item-6">方舟計畫展覽</h1>
+    <h1 class="title-large">方舟計畫展覽</h1>
   </div>
 
-  <!-- 輸入電話頁面 -->
+  <!-- 登入頁面 -->
   <div id="login-screen" class="screen">
     <div class="solid-card">
-      <h1>🌿 專屬探索通行證</h1>
-      <p>請輸入手機號碼，開啟您的植物集點之旅。</p>
-      <input id="phoneInput" type="tel" placeholder="09XXXXXXXX" maxlength="10" autocomplete="off" name="phone-no-autofill">
-      <button class="btn primary" id="loginBtn">登入展覽</button>
+      <h1>🌿 專屬通行證</h1>
+      <p>請輸入手機號碼，開啟您的探索之旅。</p>
+      <input id="phoneInput" type="tel" placeholder="09XXXXXXXX" maxlength="10" autocomplete="off">
+      <button class="btn primary" onclick="login()">登入展覽</button>
     </div>
   </div>
 
@@ -100,84 +62,70 @@
   <div id="home-screen" class="screen">
     <div class="solid-card">
       <h1 style="font-size: 24px;">歡迎，<span id="displayPhone"></span></h1>
-      <p style="margin-bottom: 30px;">請選擇您要進行的探索動作</p>
-      
-      <!-- 導向獨立的掃描頁面 scanner.html -->
-      <a href="scanner.html" class="btn primary">🔍 進入展區掃描站</a>
-      <a href="https://sites.google.com/view/nat-bot-gard-nchu/%E9%A6%96%E9%A0%81/%E7%9B%AE%E5%89%8D%E9%A4%A8%E8%97%8F" target="_blank" class="btn accent" style="background: linear-gradient(135deg, #7c9885, #4a6350);">🌳 瀏覽目前館藏</a>
-      <button id="navQueryBtn" class="btn gas-link">🏆 查看探索進度</button>
-      <button id="navRewardBtn" class="btn gas-link">🎁 查看兌換獎勵</button>
-      <button id="logoutBtn" class="btn" style="margin-top:20px; background:transparent; color:#6d8c75; border-color:transparent; box-shadow:none;">登出切換帳號</button>
+      <p style="margin-bottom: 30px;">請選擇您要進行的動作</p>
+      <button class="btn primary" onclick="window.location.href='scanner.html'">🔍 進入展區掃描站</button>
+      <a href="https://sites.google.com/view/nat-bot-gard-nchu/%E9%A6%96%E9%A0%81/%E7%9B%AE%E5%89%8D%E9%A4%A8%E8%97%8F" class="btn accent" style="background: linear-gradient(135deg, #7c9885, #4a6350);">🌳 瀏覽目前館藏</a>
+      <button class="btn primary" onclick="gotoGas('query')">🏆 查看探索進度</button>
+      <button class="btn primary" onclick="gotoGas('rewards')">🎁 查看兌換獎勵</button>
+      <button class="btn" style="background:transparent; color:#6d8c75; border:none;" onclick="logout()">登出切換帳號</button>
     </div>
   </div>
 
   <script>
     const APP_URL = "https://script.google.com/macros/s/AKfycbyoFlYdQfjyJUu0onsq2DOI5wZJmRcNI2maSEbU7b5uKiSQmajfFRJGYL8OisrhhNUYKg/exec";
-
     function normalizePhone(phone) { let p = String(phone || "").replace(/\D/g, "").trim(); if (p.length === 9 && p.startsWith("9")) p = "0" + p; return p; }
-    function buildUrl(base, params) { const u = new URL(base); Object.keys(params).forEach(key => { if (params[key]) u.searchParams.set(key, params[key]); }); return u.toString(); }
+    
+    let currentPhone = sessionStorage.getItem("savedPhone") || "";
 
-    const splashScreen = document.getElementById('splash-screen');
-    const loginScreen = document.getElementById('login-screen');
-    const homeScreen = document.getElementById('home-screen');
-    let userPhone = normalizePhone(sessionStorage.getItem("savedPhone") || "");
-
-    function bindHomeData() {
-      document.getElementById('displayPhone').innerText = userPhone.replace(/(\d{4})(\d{3})(\d{3})/, '$1-$2-$3');
-      document.getElementById('navQueryBtn').dataset.href = buildUrl(APP_URL, { mode: "query", phone: userPhone });
-      document.getElementById('navRewardBtn').dataset.href = buildUrl(APP_URL, { mode: "rewards", phone: userPhone });
+    function switchView(viewId) {
+      document.getElementById('splash-screen').classList.remove('active');
+      document.getElementById('login-screen').classList.remove('active');
+      document.getElementById('home-screen').classList.remove('active');
+      document.getElementById(viewId + '-screen').classList.add('active');
     }
 
-    document.querySelectorAll('.gas-link').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.target.innerHTML = "⏳ 載入中...";
-        document.body.style.opacity = 0; 
-        document.body.style.transition = "opacity 0.2s";
-        setTimeout(() => { window.location.href = btn.dataset.href; }, 200);
-      });
-    });
-
     window.onload = () => {
-      const hasPlayed = sessionStorage.getItem("splashPlayed") === "true";
-      if (hasPlayed) {
-        document.documentElement.className = ''; 
-        if (userPhone) { homeScreen.classList.add('active-transition'); bindHomeData(); } 
-        else { loginScreen.classList.add('active-transition'); }
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('phone')) currentPhone = urlParams.get('phone');
+      if (urlParams.get('action') === 'logout') currentPhone = "";
+      
+      if (currentPhone) {
+        sessionStorage.setItem("savedPhone", currentPhone);
+        document.getElementById('displayPhone').innerText = currentPhone.replace(/(\d{4})(\d{3})(\d{3})/, '$1-$2-$3');
+        switchView('home');
       } else {
-        sessionStorage.setItem("splashPlayed", "true");
-        setTimeout(() => {
-          splashScreen.style.opacity = "0"; 
-          setTimeout(() => {
-            document.documentElement.className = ''; 
-            splashScreen.style.opacity = ""; 
-            if (userPhone) { homeScreen.classList.add('active-transition'); bindHomeData(); } 
-            else { loginScreen.classList.add('active-transition'); }
-          }, 500); 
-        }, 8500);
+        sessionStorage.removeItem("savedPhone");
+        const hasPlayed = sessionStorage.getItem("splashPlayed");
+        if (hasPlayed) {
+          switchView('login');
+        } else {
+          sessionStorage.setItem("splashPlayed", "true");
+          setTimeout(() => { switchView('login'); }, 3000);
+        }
       }
     };
 
-    document.getElementById('loginBtn').addEventListener('click', () => {
+    function login() {
       const input = normalizePhone(document.getElementById('phoneInput').value);
       if (input.length === 10 && input.startsWith("09")) {
-        userPhone = input; sessionStorage.setItem("savedPhone", userPhone);
-        loginScreen.style.opacity = "0"; 
-        setTimeout(() => {
-          loginScreen.classList.remove('active-transition'); loginScreen.style.opacity = "";
-          homeScreen.classList.add('active-transition'); bindHomeData();
-        }, 400);
-      } else { alert("格式錯誤，請輸入正確的 09 開頭手機號碼！"); }
-    });
+        currentPhone = input;
+        sessionStorage.setItem("savedPhone", currentPhone);
+        document.getElementById('displayPhone').innerText = currentPhone.replace(/(\d{4})(\d{3})(\d{3})/, '$1-$2-$3');
+        switchView('home');
+      } else {
+        alert("格式錯誤，請輸入正確的 09 開頭手機號碼！");
+      }
+    }
 
-    document.getElementById('logoutBtn').addEventListener('click', () => {
-      sessionStorage.removeItem("savedPhone"); userPhone = ""; document.getElementById('phoneInput').value = "";
-      homeScreen.style.opacity = "0"; 
-      setTimeout(() => {
-        homeScreen.classList.remove('active-transition'); homeScreen.style.opacity = "";
-        loginScreen.classList.add('active-transition');
-      }, 400);
-    });
+    function logout() {
+      currentPhone = "";
+      sessionStorage.removeItem("savedPhone");
+      switchView('login');
+    }
+
+    function gotoGas(mode) {
+      window.location.href = `${APP_URL}?mode=${mode}&phone=${currentPhone}`;
+    }
   </script>
 </body>
 </html>
