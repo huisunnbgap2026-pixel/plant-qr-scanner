@@ -3,79 +3,46 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-  <meta name="format-detection" content="telephone=no">
   <title>紀錄成功｜方舟植物展覽</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;500;700;900&display=swap" rel="stylesheet">
   <style>
-    /* 深色過場，徹底消除白屏閃爍 */
-    html, body { 
-      margin: 0; padding: 0; width: 100vw; height: 100vh; 
-      font-family: "Noto Sans TC", sans-serif; color: #fff; 
-      background-color: #111a13; display: flex; flex-direction: column; 
-      justify-content: center; align-items: center; overflow: hidden;
-      touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adjust: 100%;
-    }
-    
-    /* 迷霧森林背景 */
+    html, body { margin: 0; padding: 0; width: 100vw; height: 100vh; font-family: "Noto Sans TC", sans-serif; color: #fff; background-color: #111a13; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: hidden;}
     .bg-fixed { position: fixed; inset: 0; width: 100vw; height: 100vh; background: url('https://i.imgur.com/gK1qB0U.jpeg') center/cover no-repeat; z-index: -1; opacity: 0.6; }
-
-    .card {
-      width: 90%; max-width: 350px; background: rgba(22, 36, 25, 0.95); 
-      border-radius: 28px; padding: 40px 30px; text-align: center; 
-      box-shadow: 0 25px 50px rgba(0,0,0,0.8); border: 1px solid #2a3d2e;
-      animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-    }
-
-    @keyframes popIn { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-
+    .card { width: 90%; max-width: 350px; background: rgba(22, 36, 25, 0.95); border-radius: 28px; padding: 40px 30px; text-align: center; border: 1px solid #2a3d2e; }
     .icon { font-size: 50px; margin-bottom: 15px; }
-    h1 { margin: 0 0 10px; font-size: 24px; font-weight: 900; letter-spacing: 2px; color: #d4edda; }
-    p { margin: 0; font-size: 15px; line-height: 1.6; color: #a3b8a8; }
-    
-    .spinner { border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid #d4a373; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto 0; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    h1 { margin: 0 0 10px; font-size: 24px; font-weight: 900; color: #d4edda; }
+    p { margin: 0; font-size: 15px; color: #a3b8a8; }
   </style>
 </head>
 <body>
   <div class="bg-fixed"></div>
-  
   <div class="card">
     <div class="icon">🎉</div>
-    <h1 id="titleText">探索紀錄成功</h1>
+    <h1 id="titleText">紀錄成功</h1>
     <p id="subText">正在為您開啟植物介紹頁面...</p>
-    <div class="spinner" id="spinner"></div>
   </div>
-
   <script>
-    // 解析網址上的參數
-    const urlParams = new URLSearchParams(window.location.search);
-    const targetUrl = urlParams.get('url');
-    const msg = urlParams.get('msg');
-
-    if (msg) document.getElementById('titleText').innerText = decodeURIComponent(msg);
-
-    // ★ 核心防呆邏輯：判斷是「剛掃描完準備跳轉」還是「看完介紹按上一頁回來」
     window.addEventListener("pageshow", function(e) {
       if (e.persisted || sessionStorage.getItem('justVisitedPlant') === 'true') {
-        // 如果是按上一頁回來的，立刻拔腿就跑，退回掃描器
         sessionStorage.removeItem('justVisitedPlant');
         document.getElementById('titleText').innerText = "準備繼續探索...";
         document.getElementById('subText').innerText = "正在返回相機";
-        setTimeout(() => { window.location.replace("scanner.html"); }, 100);
+        window.location.replace("scanner.html");
       }
     });
 
     window.onload = () => {
-      // 如果真的有網址要跳轉，就在 1.2 秒後跳轉
+      const urlParams = new URLSearchParams(window.location.search);
+      const targetUrl = urlParams.get('url');
+      const msg = urlParams.get('msg');
+      if (msg) document.getElementById('titleText').innerText = decodeURIComponent(msg);
       if (targetUrl) {
         setTimeout(() => {
-          sessionStorage.setItem('justVisitedPlant', 'true'); // 標記即將離開
+          sessionStorage.setItem('justVisitedPlant', 'true');
           window.location.href = decodeURIComponent(targetUrl);
-        }, 1200);
+        }, 1500); // 停頓 1.5 秒後跳轉
       } else {
-        // 沒有網址，代表是展區打卡點 (mode=stamp)，2秒後退回掃描器
-        document.getElementById('subText').innerText = "點數已發送！準備返回相機...";
-        setTimeout(() => { window.location.replace("scanner.html"); }, 2000);
+        setTimeout(() => { window.location.replace("scanner.html"); }, 1500);
       }
     };
   </script>
