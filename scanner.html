@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="format-detection" content="telephone=no">
   <title>方舟植物展覽｜QR 探索掃描站</title>
   <script src="https://unpkg.com/html5-qrcode"></script>
@@ -11,8 +11,7 @@
     :root { --primary-dark: #2c4c3b; --primary-light: #729075; }
     html, body { margin: 0; padding: 0; font-family: "Noto Sans TC", sans-serif; color: var(--primary-dark); background-color:#111a13; touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adjust: 100%;}
     
-    /* ★ 終極解法：使用 GitHub 上你的專屬圖片網址，發光蕨類 */
-    .bg-fixed { position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100dvh; background: url('https://huisunnbgap2026-pixel.github.io/plant-qr-scanner/bg_main.jpg') center/cover no-repeat; z-index: -1; }
+    .bg-fixed { position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100dvh; background: url('https://i.imgur.com/8QoN3Wl.jpeg') center/cover no-repeat; z-index: -1; }
 
     .page { position: relative; min-height: 100vh; padding: 24px 16px 32px; box-sizing: border-box; }
     
@@ -20,9 +19,7 @@
     .hero h1 { margin: 0 0 10px; font-size: 28px; font-weight: 700; letter-spacing: 2px; }
     .hero p { margin: 0; line-height: 1.6; color: rgba(255,255,255,.9); font-size: 15px;}
 
-    .solid-card { width: 100%; box-sizing: border-box; max-width: 400px; margin: 0 auto 20px auto; background: rgba(255, 255, 255, 0.95); border-radius: 20px; padding: 25px; box-shadow: 0 15px 40px rgba(0,0,0, 0.6); border: 1px solid #e0e0e0; transform: translateZ(0); will-change: transform; animation: fadeIn 0.4s ease forwards;}
-    @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
-    
+    .solid-card { width: 100%; box-sizing: border-box; max-width: 400px; margin: 0 auto 20px auto; background: rgba(255, 255, 255, 0.95); border-radius: 20px; padding: 25px; box-shadow: 0 15px 40px rgba(0,0,0, 0.6); border: 1px solid #e0e0e0; transform: translateZ(0); will-change: transform; }
     .section-title { font-size: 14px; letter-spacing: 2px; color: var(--primary); margin-bottom: 10px; font-weight: 700; }
     h2 { margin: 0 0 15px; font-size: 24px; font-weight: 700; color: var(--primary-dark); }
     
@@ -53,7 +50,7 @@
     #ar-result-screen { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.9); z-index: 20; display: none; flex-direction: column; justify-content: center; align-items: center; padding:20px; text-align:center;}
     #result-image { width: 100%; max-width: 400px; max-height: 60vh; object-fit: contain; border-radius: 10px; margin-bottom: 20px; }
 
-    #global-loader { display: none; position: fixed; inset: 0; background: rgba(17, 26, 19, 0.95); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; color: #fff; }
+    #global-loader { display: none; position: fixed; inset: 0; background: rgba(17, 26, 19, 1); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; color: #fff; }
     .spinner { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid #4a7c59; border-radius: 50%; width: 45px; height: 45px; animation: spin 1s linear infinite; margin-bottom: 20px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
@@ -61,7 +58,7 @@
 <body>
   <div class="bg-fixed"></div>
   <div class="page">
-
+    <div class="wrap">
       <div class="hero">
         <h1>🔍 展區掃描站</h1>
         <p>請掃描展區內的植物與 AR 專屬 QR Code<br>系統將自動為您處理動作。</p>
@@ -78,8 +75,7 @@
         <div class="status" id="status">相機已待命，請點擊下方按鈕啟動。</div>
 
         <div class="actions" id="scanActions">
-          <!-- ★ 返回時永遠呈現這個「手動啟動」狀態，解決蘋果報錯問題 -->
-          <button class="btn primary" id="startBtn">📷 點擊啟動相機</button>
+          <button class="btn primary" id="startBtn">📷 點擊允許啟動相機</button>
           <button class="btn secondary" id="stopBtn" style="display:none;">暫停掃描</button>
         </div>
       </div>
@@ -91,7 +87,7 @@
           <a class="btn secondary" id="homeBtn" href="index.html">🏠 回展場首頁</a>
         </div>
       </div>
-
+    </div>
   </div>
 
   <div id="global-loader"><div class="spinner"></div><h3 id="loader-text">載入中...</h3></div>
@@ -120,17 +116,15 @@
 
   <script>
     const APP_URL = "https://script.google.com/macros/s/AKfycbyoFlYdQfjyJUu0onsq2DOI5wZJmRcNI2maSEbU7b5uKiSQmajfFRJGYL8OisrhhNUYKg/exec";
-    const COLLECTION_URL = "https://sites.google.com/view/nat-bot-gard-nchu/%E9%A6%96%E9%A0%81/%E7%9B%AE%E5%89%8D%E9%A4%A8%E8%97%8F";
 
     function normalizePhone(phone) { return String(phone || "").replace(/\D/g, "").trim(); }
     function isValidMobile(phone) { return /^09\d{8}$/.test(String(phone || "").trim()); }
-    function cleanDecodedText(raw) { return String(raw || "").replace(/[\u200B-\u200D\uFEFF]/g, "").replace(/\u00A0/g, " ").trim(); }
     function buildUrl(base, params) { const u = new URL(base); Object.keys(params).forEach(function(key) { if (params[key] !== undefined && params[key] !== null && params[key] !== "") { u.searchParams.set(key, params[key]); } }); return u.toString(); }
     function getParam(name) { const url = new URL(window.location.href); return url.searchParams.get(name) || ""; }
 
     function jsonpMarkPlant(plant, phone) {
       return new Promise((resolve, reject) => {
-        const cbName = "__cb_" + Date.now() + "_" + Math.floor(Math.random() * 100000);
+        const cbName = "__cb_" + Date.now();
         const url = new URL(APP_URL); 
         url.searchParams.set("mode", "plant_mark_jsonp"); 
         url.searchParams.set("plant", plant); 
@@ -140,7 +134,7 @@
 
         const script = document.createElement("script"); let done = false;
         function clean() { try{delete window[cbName];}catch(e){} if(script.parentNode) script.parentNode.removeChild(script); }
-        const timer = setTimeout(() => { if(!done){ done=true; clean(); reject(new Error("Timeout")); } }, 15000);
+        const timer = setTimeout(() => { if(!done){ done=true; clean(); reject(new Error("Timeout")); } }, 10000);
         window[cbName] = (data) => { if(!done){ done=true; clearTimeout(timer); clean(); resolve(data); } };
         script.onerror = () => { if(!done){ done=true; clearTimeout(timer); clean(); reject(new Error("Error")); } };
         script.src = url.toString(); document.body.appendChild(script);
@@ -151,7 +145,7 @@
     let html5QrCode = null; let currentPhone = "";
     let useFrontCam = false; let arStream = null;
 
-    // ★ 當從植物頁面「上一頁」回來時，強制停止相機，回到最乾淨的初始狀態
+    // ★ 從任何地方按上一頁回來時，強制停止相機，需要手動開啟
     window.addEventListener("pageshow", function(e) {
       document.getElementById("global-loader").style.display = "none";
       stopScanner(true);
@@ -207,7 +201,6 @@
         picNum = urlObj.searchParams.get("pic");
       } catch (err) { return; }
 
-      // 掃到 AR 拍立得 
       if (mode === "ar" && picNum) {
         if (navigator.vibrate) navigator.vibrate(100);
         await stopScanner(true);
@@ -218,24 +211,24 @@
       if (mode !== "plant_go" && mode !== "stamp") return;
 
       if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+      
+      document.getElementById("loader-text").innerHTML = "正在存入點數...<br><span style='font-size:14px;color:#aaa;'>(請稍候約 2 秒鐘)</span>";
+      document.getElementById("global-loader").style.display = "flex";
       await stopScanner(true);
       document.getElementById("scanActions").style.display = "none"; 
-      
-      document.getElementById("loader-text").innerHTML = "正在存入點數...<br><span style='font-size:14px;color:#aaa;'>(請稍候約 2 秒)</span>";
-      document.getElementById("global-loader").style.display = "flex";
       
       try {
         if (mode === "plant_go") {
           let resp; try { resp = await jsonpMarkPlant(plantId, currentPhone); } catch(e) { resp = await jsonpMarkPlant(plantId, currentPhone); }
-          const target = resp.redirectUrl || COLLECTION_URL;
+          const target = resp.redirectUrl;
           
           if (navigator.vibrate) navigator.vibrate(200); 
           document.getElementById("global-loader").style.display = "none";
-          statusEl.innerHTML = `🎉 <b>${resp.message || "已完成記點"}</b><br><br><span style='color:#729075; font-weight:bold;'>正在為您自動跳轉至植物介紹...</span>`;
-          statusEl.style.background = "#d4edda";
           
-          // ★ 自動無痕跳轉
-          setTimeout(() => { window.location.replace(target); }, 1500);
+          // ★ 瞬間跳轉交給中繼站 plant.html 處理
+          const msg = encodeURIComponent(resp.message || "已完成記點");
+          const safeUrl = encodeURIComponent(target || "");
+          window.location.replace(`plant.html?msg=${msg}&url=${safeUrl}`);
 
         } else if (mode === "stamp" && spotId) {
           if (navigator.vibrate) navigator.vibrate(200);
@@ -245,8 +238,8 @@
         }
       } catch (err) {
         document.getElementById("global-loader").style.display = "none";
-        statusEl.innerHTML = "<b>系統連線失敗 💦</b><br>請點擊下方按鈕重新啟動相機掃描。"; statusEl.style.background = "#f8d7da";
-        document.getElementById("scanActions").style.display = "grid"; document.getElementById("startBtn").style.display = "block"; document.getElementById("stopBtn").style.display = "none";
+        statusEl.innerHTML = "<b>系統連線失敗 💦</b><br>請點擊下方按鈕重新啟動相機。"; statusEl.style.background = "#f8d7da";
+        document.getElementById("scanActions").style.display = "grid"; document.getElementById("startBtn").style.display = "block";
       }
     }
 
@@ -285,7 +278,9 @@
     document.getElementById("startBtn").addEventListener("click", startScanner);
     document.getElementById("stopBtn").addEventListener("click", () => stopScanner(false));
 
+    // =======================================
     // AR 拍立得系統
+    // =======================================
     async function openAr(picNum) {
       document.getElementById('ar-container').style.display = 'flex';
       document.getElementById('ar-overlay').src = `./ar_${picNum}.png`;
