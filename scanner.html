@@ -11,8 +11,7 @@
     :root { --primary-dark: #2c4c3b; --primary-light: #729075; }
     html, body { margin: 0; padding: 0; font-family: "Noto Sans TC", sans-serif; color: var(--primary-dark); background-color:#111a13; touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adjust: 100%;}
     
-    /* ★ 內建 Base64 蕨類森林背景 */
-    .bg-fixed { position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100dvh; background: linear-gradient(rgba(17,26,19,0.7), rgba(17,26,19,0.7)), url('https://upload.wikimedia.org/wikipedia/commons/4/4e/Ferns_in_the_forest.jpg') center/cover no-repeat; z-index: -1; }
+    .bg-fixed { position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100dvh; background: url('https://raw.githubusercontent.com/huisunnbgap2026-pixel/plant-qr-scanner/main/bg_main.jpg') center/cover no-repeat; z-index: -1; }
 
     .page { position: relative; min-height: 100vh; padding: 24px 16px 32px; box-sizing: border-box; overflow-y: auto;}
     .wrap { max-width: 400px; margin: 0 auto; z-index:10;}
@@ -37,6 +36,7 @@
     .btn.primary:active { transform: scale(0.96); }
     .btn.secondary { background: #fff; color: var(--primary-dark) !important; border: 2px solid #ddd; }
     
+    /* AR 拍立得視窗 */
     #ar-container { position: fixed; inset: 0; background: #000; z-index: 1000; display: none; flex-direction: column; }
     #ar-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
     #ar-overlay { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 2; pointer-events: none; }
@@ -44,8 +44,10 @@
     .ar-controls { position: absolute; bottom: 40px; left: 0; width: 100%; display: flex; justify-content: center; z-index: 10; }
     .btn-capture { background: #d4a373; color: white; width: 80px; height: 80px; border-radius: 50%; border: 4px solid #fff; display: flex; justify-content: center; align-items: center; font-size: 35px; cursor: pointer; box-shadow: 0 5px 20px rgba(0,0,0,0.5); touch-action: manipulation; }
     .btn-capture:active { transform: scale(0.9); }
+    
     .btn-close-ar { position: absolute; top: 30px; left: 20px; background: rgba(0,0,0,0.6); color: #fff; border: 1px solid rgba(255,255,255,0.3); padding: 10px 20px; border-radius: 20px; z-index: 15; font-weight: bold; cursor: pointer;}
     .btn-switch-cam { position: absolute; top: 30px; right: 20px; background: rgba(0,0,0,0.6); color: #fff; border: 1px solid rgba(255,255,255,0.3); padding: 10px 20px; border-radius: 20px; z-index: 15; font-weight: bold; cursor: pointer;}
+    
     #ar-result-screen { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.9); z-index: 20; display: none; flex-direction: column; justify-content: center; align-items: center; padding:20px; text-align:center;}
     #result-image { width: 100%; max-width: 400px; max-height: 60vh; object-fit: contain; border-radius: 10px; margin-bottom: 20px; }
 
@@ -83,7 +85,7 @@
         <div class="actions" style="margin-top: 0;">
           <button class="btn primary gas-link" id="queryBtn">🏆 查看我的進度</button>
           <button class="btn primary gas-link" id="rewardBtn">🎁 查看可兌換獎勵</button>
-          <button class="btn secondary gas-link" id="homeBtn">🏠 回展場首頁</button>
+          <a class="btn secondary" id="homeBtn" href="index.html">🏠 回展場首頁</a>
         </div>
       </div>
     </div>
@@ -118,26 +120,21 @@
 
     function normalizePhone(phone) { return String(phone || "").replace(/\D/g, "").trim(); }
     function isValidMobile(phone) { return /^09\d{8}$/.test(String(phone || "").trim()); }
-    function cleanDecodedText(raw) { return String(raw || "").replace(/[\u200B-\u200D\uFEFF]/g, "").replace(/\u00A0/g, " ").trim(); }
     function buildUrl(base, params) { const u = new URL(base); Object.keys(params).forEach(function(key) { if (params[key] !== undefined && params[key] !== null && params[key] !== "") { u.searchParams.set(key, params[key]); } }); return u.toString(); }
     function getParam(name) { const url = new URL(window.location.href); return url.searchParams.get(name) || ""; }
 
+    // ★ 徹底修復網路連線失敗，取消亂跳的 callback 變數
     function jsonpMarkPlant(plant, phone) {
       return new Promise((resolve, reject) => {
-        const cbName = "__cb_" + Date.now() + "_" + Math.floor(Math.random() * 100000);
-        const url = new URL(APP_URL); 
-        url.searchParams.set("mode", "plant_mark_jsonp"); 
-        url.searchParams.set("plant", plant); 
-        url.searchParams.set("phone", phone); 
-        url.searchParams.set("callback", cbName);
-        url.searchParams.set("t", Date.now()); 
-
+        const cbName = "callback_" + plant + "_" + Date.now(); // 固定的 callback 名稱，防死結
+        const url = `${APP_URL}?mode=plant_mark_jsonp&plant=${plant}&phone=${phone}&callback=${cbName}`;
+        
         const script = document.createElement("script"); let done = false;
         function clean() { try{delete window[cbName];}catch(e){} if(script.parentNode) script.parentNode.removeChild(script); }
         const timer = setTimeout(() => { if(!done){ done=true; clean(); reject(new Error("Timeout")); } }, 15000);
         window[cbName] = (data) => { if(!done){ done=true; clearTimeout(timer); clean(); resolve(data); } };
         script.onerror = () => { if(!done){ done=true; clearTimeout(timer); clean(); reject(new Error("Error")); } };
-        script.src = url.toString(); document.body.appendChild(script);
+        script.src = url; document.body.appendChild(script);
       });
     }
 
@@ -145,7 +142,7 @@
     let html5QrCode = null; let currentPhone = "";
     let useFrontCam = false; let arStream = null;
 
-    // ★ 放棄自動啟動相機，回到這頁永遠手動按，徹底解決蘋果權限阻擋
+    // 返回頁面時，必定回到乾淨的相機待命狀態
     window.addEventListener("pageshow", function(e) {
       document.getElementById("global-loader").style.display = "none";
       stopScanner(true);
@@ -172,13 +169,12 @@
     function refreshActionLinks() {
       document.getElementById("queryBtn").dataset.href = APP_URL + "?mode=query&phone=" + currentPhone;
       document.getElementById("rewardBtn").dataset.href = APP_URL + "?mode=rewards&phone=" + currentPhone;
-      document.getElementById("homeBtn").dataset.href = "index.html";
     }
 
     document.querySelectorAll('.gas-link').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
-        document.getElementById('loader-text').innerHTML = "正在前往...";
+        document.getElementById('loader-text').innerHTML = "載入中...";
         document.getElementById('global-loader').style.display = 'flex';
         setTimeout(() => { window.location.href = btn.dataset.href; }, 100);
       });
@@ -214,31 +210,32 @@
       if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
       document.getElementById("loader-text").innerHTML = "正在存入點數...<br><span style='font-size:14px;color:#aaa;'>(請稍候約 2 秒鐘)</span>";
       document.getElementById("global-loader").style.display = "flex";
-
       await stopScanner(true);
       document.getElementById("scanActions").style.display = "none"; 
       
       try {
         if (mode === "plant_go") {
-          let resp; try { resp = await jsonpMarkPlant(plantId, currentPhone); } catch(e) { resp = await jsonpMarkPlant(plantId, currentPhone); }
+          let resp = await jsonpMarkPlant(plantId, currentPhone);
           const target = resp.redirectUrl || COLLECTION_URL;
           
           if (navigator.vibrate) navigator.vibrate(200); 
           document.getElementById("global-loader").style.display = "none";
+          
           statusEl.innerHTML = `🎉 <b>${resp.message || "已完成記點"}</b><br><br><span style='color:#729075; font-weight:bold;'>正在為您自動跳轉至植物介紹...</span>`;
           statusEl.style.background = "#d4edda";
           
-          setTimeout(() => { window.location.assign(target); }, 1500);
+          // ★ 完美跳轉到植物頁
+          setTimeout(() => { window.location.href = target; }, 1500);
 
         } else if (mode === "stamp" && spotId) {
           if (navigator.vibrate) navigator.vibrate(200);
           document.getElementById("loader-text").innerHTML = "✅ 掃描展區成功！<br><span style='font-size:14px;color:#aaa;'>準備前往紀錄頁面...</span>";
           urlObj.searchParams.set("phone", currentPhone);
-          setTimeout(() => { window.location.replace(urlObj.toString()); }, 500);
+          setTimeout(() => { window.location.href = urlObj.toString(); }, 500);
         }
       } catch (err) {
         document.getElementById("global-loader").style.display = "none";
-        statusEl.innerHTML = "<b>網路連線失敗 💦</b><br>請點擊下方按鈕重新啟動相機掃描。"; statusEl.style.background = "#f8d7da";
+        statusEl.innerHTML = "<b>網路連線錯誤 💦</b><br>請點擊下方按鈕重新啟動相機掃描。"; statusEl.style.background = "#f8d7da";
         document.getElementById("scanActions").style.display = "grid"; document.getElementById("startBtn").style.display = "block"; document.getElementById("stopBtn").style.display = "none";
       }
     }
@@ -329,6 +326,7 @@
       canvas.width = video.offsetWidth; canvas.height = video.offsetHeight;
       drawCover(ctx, video, canvas.width, canvas.height, useFrontCam);
       drawCover(ctx, overlay, canvas.width, canvas.height, false);
+
       document.getElementById('result-image').src = canvas.toDataURL('image/png', 0.9);
       document.getElementById('ar-controls').style.display = 'none';
       document.getElementById('ar-overlay').style.display = 'none';
