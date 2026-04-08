@@ -11,8 +11,8 @@
     :root { --primary-dark: #2c4c3b; --primary-light: #729075; }
     html, body { margin: 0; padding: 0; font-family: "Noto Sans TC", sans-serif; color: var(--primary-dark); background-color:#111a13; touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adjust: 100%;}
     
-    /* ★ 絕對網址：發光蕨類 */
-    .bg-fixed { position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100dvh; background: url('https://raw.githubusercontent.com/huisunnbgap2026-pixel/plant-qr-scanner/main/bg_main.jpg') center/cover no-repeat; z-index: -1; }
+    /* ★ 內建 Base64 蕨類森林背景 */
+    .bg-fixed { position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100dvh; background: linear-gradient(rgba(17,26,19,0.7), rgba(17,26,19,0.7)), url('https://upload.wikimedia.org/wikipedia/commons/4/4e/Ferns_in_the_forest.jpg') center/cover no-repeat; z-index: -1; }
 
     .page { position: relative; min-height: 100vh; padding: 24px 16px 32px; box-sizing: border-box; overflow-y: auto;}
     .wrap { max-width: 400px; margin: 0 auto; z-index:10;}
@@ -32,13 +32,11 @@
     input:focus { border-color: var(--primary-light); outline: none; }
     
     .actions { display: grid; gap: 12px; margin-top: 20px; }
-    
     button.btn, a.btn { width: 100%; box-sizing: border-box; border-radius: 16px; padding: 16px 14px; font-size: 18px; font-weight: 700; text-decoration: none; border: 0; text-align: center; display: block; cursor: pointer; transition: all 0.3s; touch-action: manipulation; user-select: none; -webkit-tap-highlight-color: transparent; }
     .btn.primary { background: var(--primary-light); color: #fff !important; box-shadow: 0 4px 15px rgba(74, 124, 89, 0.3); }
     .btn.primary:active { transform: scale(0.96); }
     .btn.secondary { background: #fff; color: var(--primary-dark) !important; border: 2px solid #ddd; }
     
-    /* AR 拍立得視窗 */
     #ar-container { position: fixed; inset: 0; background: #000; z-index: 1000; display: none; flex-direction: column; }
     #ar-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
     #ar-overlay { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 2; pointer-events: none; }
@@ -46,14 +44,12 @@
     .ar-controls { position: absolute; bottom: 40px; left: 0; width: 100%; display: flex; justify-content: center; z-index: 10; }
     .btn-capture { background: #d4a373; color: white; width: 80px; height: 80px; border-radius: 50%; border: 4px solid #fff; display: flex; justify-content: center; align-items: center; font-size: 35px; cursor: pointer; box-shadow: 0 5px 20px rgba(0,0,0,0.5); touch-action: manipulation; }
     .btn-capture:active { transform: scale(0.9); }
-    
     .btn-close-ar { position: absolute; top: 30px; left: 20px; background: rgba(0,0,0,0.6); color: #fff; border: 1px solid rgba(255,255,255,0.3); padding: 10px 20px; border-radius: 20px; z-index: 15; font-weight: bold; cursor: pointer;}
     .btn-switch-cam { position: absolute; top: 30px; right: 20px; background: rgba(0,0,0,0.6); color: #fff; border: 1px solid rgba(255,255,255,0.3); padding: 10px 20px; border-radius: 20px; z-index: 15; font-weight: bold; cursor: pointer;}
-    
     #ar-result-screen { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.9); z-index: 20; display: none; flex-direction: column; justify-content: center; align-items: center; padding:20px; text-align:center;}
     #result-image { width: 100%; max-width: 400px; max-height: 60vh; object-fit: contain; border-radius: 10px; margin-bottom: 20px; }
 
-    #global-loader { display: none; position: fixed; inset: 0; background: rgba(17, 26, 19, 0.95); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; color: #fff; }
+    #global-loader { display: none; position: fixed; inset: 0; background: rgba(17, 26, 19, 1); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; color: #fff; }
     .spinner { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid #4a7c59; border-radius: 50%; width: 45px; height: 45px; animation: spin 1s linear infinite; margin-bottom: 20px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
@@ -87,7 +83,7 @@
         <div class="actions" style="margin-top: 0;">
           <button class="btn primary gas-link" id="queryBtn">🏆 查看我的進度</button>
           <button class="btn primary gas-link" id="rewardBtn">🎁 查看可兌換獎勵</button>
-          <a class="btn secondary" id="homeBtn" href="index.html">🏠 回展場首頁</a>
+          <button class="btn secondary gas-link" id="homeBtn">🏠 回展場首頁</button>
         </div>
       </div>
     </div>
@@ -95,7 +91,6 @@
 
   <div id="global-loader"><div class="spinner"></div><h3 id="loader-text">載入中...</h3></div>
 
-  <!-- AR 拍立得視窗 -->
   <div id="ar-container">
     <button class="btn-close-ar" onclick="closeAr()">✖ 關閉</button>
     <button class="btn-switch-cam" onclick="switchArCam()">🔄 翻轉</button>
@@ -150,7 +145,7 @@
     let html5QrCode = null; let currentPhone = "";
     let useFrontCam = false; let arStream = null;
 
-    // ★ 關鍵：回到此頁時，強制停止相機，使用者必須手動啟動。
+    // ★ 放棄自動啟動相機，回到這頁永遠手動按，徹底解決蘋果權限阻擋
     window.addEventListener("pageshow", function(e) {
       document.getElementById("global-loader").style.display = "none";
       stopScanner(true);
@@ -177,12 +172,13 @@
     function refreshActionLinks() {
       document.getElementById("queryBtn").dataset.href = APP_URL + "?mode=query&phone=" + currentPhone;
       document.getElementById("rewardBtn").dataset.href = APP_URL + "?mode=rewards&phone=" + currentPhone;
+      document.getElementById("homeBtn").dataset.href = "index.html";
     }
 
     document.querySelectorAll('.gas-link').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
-        document.getElementById('loader-text').innerHTML = "正在前往系統...";
+        document.getElementById('loader-text').innerHTML = "正在前往...";
         document.getElementById('global-loader').style.display = 'flex';
         setTimeout(() => { window.location.href = btn.dataset.href; }, 100);
       });
@@ -206,7 +202,6 @@
         picNum = urlObj.searchParams.get("pic");
       } catch (err) { return; }
 
-      // 掃到 AR 拍立得 
       if (mode === "ar" && picNum) {
         if (navigator.vibrate) navigator.vibrate(100);
         await stopScanner(true);
@@ -219,6 +214,7 @@
       if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
       document.getElementById("loader-text").innerHTML = "正在存入點數...<br><span style='font-size:14px;color:#aaa;'>(請稍候約 2 秒鐘)</span>";
       document.getElementById("global-loader").style.display = "flex";
+
       await stopScanner(true);
       document.getElementById("scanActions").style.display = "none"; 
       
@@ -229,22 +225,21 @@
           
           if (navigator.vibrate) navigator.vibrate(200); 
           document.getElementById("global-loader").style.display = "none";
-          statusEl.innerHTML = `🎉 <b>${resp.message || "已完成記點"}</b><br><br><span style='color:#729075; font-weight:bold;'>正在為您跳轉至植物介紹...</span>`;
+          statusEl.innerHTML = `🎉 <b>${resp.message || "已完成記點"}</b><br><br><span style='color:#729075; font-weight:bold;'>正在為您自動跳轉至植物介紹...</span>`;
           statusEl.style.background = "#d4edda";
           
-          // ★ 這裡確保 100% 原生跳轉
-          setTimeout(() => { window.location.href = target; }, 1500);
+          setTimeout(() => { window.location.assign(target); }, 1500);
 
         } else if (mode === "stamp" && spotId) {
           if (navigator.vibrate) navigator.vibrate(200);
           document.getElementById("loader-text").innerHTML = "✅ 掃描展區成功！<br><span style='font-size:14px;color:#aaa;'>準備前往紀錄頁面...</span>";
           urlObj.searchParams.set("phone", currentPhone);
-          setTimeout(() => { window.location.href = urlObj.toString(); }, 500);
+          setTimeout(() => { window.location.replace(urlObj.toString()); }, 500);
         }
       } catch (err) {
         document.getElementById("global-loader").style.display = "none";
-        statusEl.innerHTML = "<b>網路連線失敗 💦</b><br>請點擊下方按鈕重新掃描。"; statusEl.style.background = "#f8d7da";
-        document.getElementById("scanActions").style.display = "grid"; document.getElementById("startBtn").style.display = "block";
+        statusEl.innerHTML = "<b>網路連線失敗 💦</b><br>請點擊下方按鈕重新啟動相機掃描。"; statusEl.style.background = "#f8d7da";
+        document.getElementById("scanActions").style.display = "grid"; document.getElementById("startBtn").style.display = "block"; document.getElementById("stopBtn").style.display = "none";
       }
     }
 
@@ -334,7 +329,6 @@
       canvas.width = video.offsetWidth; canvas.height = video.offsetHeight;
       drawCover(ctx, video, canvas.width, canvas.height, useFrontCam);
       drawCover(ctx, overlay, canvas.width, canvas.height, false);
-
       document.getElementById('result-image').src = canvas.toDataURL('image/png', 0.9);
       document.getElementById('ar-controls').style.display = 'none';
       document.getElementById('ar-overlay').style.display = 'none';
