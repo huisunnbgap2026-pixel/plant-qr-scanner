@@ -6,185 +6,402 @@
   <meta name="format-detection" content="telephone=no">
   <title>方舟植物展覽</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;500;700;900&display=swap" rel="stylesheet">
-  <script>
-    (function() {
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('phone')) {
-        sessionStorage.setItem('savedPhone', urlParams.get('phone'));
-        sessionStorage.setItem('splashPlayed', 'true');
-        window.history.replaceState({}, document.title, window.location.pathname);
-      }
-      if (urlParams.get('action') === 'logout') {
-        sessionStorage.removeItem("savedPhone");
-        sessionStorage.setItem("splashPlayed", "true");
-        window.history.replaceState({}, document.title, window.location.pathname);
-      }
-      const hasPlayed = sessionStorage.getItem("splashPlayed") === "true";
-      const phone = sessionStorage.getItem("savedPhone");
-      if (!hasPlayed) { document.documentElement.classList.add('init-splash'); } 
-      else if (phone) { document.documentElement.classList.add('init-home'); } 
-      else { document.documentElement.classList.add('init-login'); }
-    })();
-  </script>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+
   <style>
-    :root { --primary: #4a7c59; --solid-bg: #162419; --solid-border: #2a3d2e; }
-    html, body { margin: 0; padding: 0; width: 100%; height: 100%; font-family: "Noto Sans TC", sans-serif; color: #fff; overflow: hidden; background-color: #111a13; touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adjust: 100%;}
+    :root { --primary: #4a7c59; --primary-dark: #2c4c3b; --solid-bg: #162419; --solid-border: #2a3d2e; --accent: #d4a373; }
+    html, body { margin: 0; padding: 0; width: 100vw; height: 100vh; font-family: "Noto Sans TC", sans-serif; color: #fff; background-color: #111a13; overflow: hidden; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; touch-action: manipulation;}
     
-    /* ★ 終極解法：內建 Base64 蕨類森林背景，保證 100% 絕對顯示 */
-    .bg-fixed { 
-      position: fixed; inset: 0; 
-      width: 100vw; height: 100vh; height: 100dvh; 
-      background: linear-gradient(rgba(17,26,19,0.7), rgba(17,26,19,0.7)), url('https://upload.wikimedia.org/wikipedia/commons/4/4e/Ferns_in_the_forest.jpg') center/cover no-repeat; 
-      z-index: -1; 
-    }
+    /* 雙背景預載 */
+    .bg-layer { position: fixed; inset: 0; width: 100vw; height: 100vh; background-size: cover; background-position: center; z-index: -1; transition: opacity 0.4s ease; opacity: 0; }
+    #bg-misty { background-image: url('https://images.unsplash.com/photo-1448375240586-882707db888b?q=80&w=1080&auto=format&fit=crop&v=1'); }
+    #bg-fern { background-image: url('https://images.unsplash.com/photo-1595180473268-2ddcc696e57a?q=80&w=1080&auto=format&fit=crop&v=1'); }
 
-    .screen { display: none; opacity: 0; visibility: hidden; position: absolute; inset: 0; width: 100%; height: 100%; flex-direction: column; justify-content: center; align-items: center; padding: 24px; box-sizing: border-box; z-index: 10; transition: opacity 0.5s ease; }
-    .screen.active-transition { display: flex; opacity: 1; visibility: visible; z-index: 20; }
+    /* 視圖控制 (SPA 核心)，無縫切換，0白屏 */
+    .view { display: none; position: absolute; inset: 0; width: 100%; height: 100%; flex-direction: column; justify-content: flex-start; align-items: center; box-sizing: border-box; overflow-y: auto; padding: 24px 16px 40px; }
+    .view.active { display: flex; animation: fadeIn 0.3s ease forwards; }
+    @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
 
-    html.init-splash #splash-screen { display: flex; opacity: 1; visibility: visible; z-index: 20; }
-    html.init-login #login-screen { display: flex; opacity: 1; visibility: visible; z-index: 20; }
-    html.init-home #home-screen { display: flex; opacity: 1; visibility: visible; z-index: 20; }
-
-    #splash-screen { background: rgba(17, 26, 19, 0.85); }
-    .collab-container { display: flex; align-items: center; justify-content: center; gap: 4vw; margin-bottom: 40px; width: 100%; max-width: 350px; margin-left: auto; margin-right: auto;}
-    .collab-logo { width: 30%; max-width: 100px; height: auto; object-fit: contain; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5)); }
-    .cross-mark { font-size: clamp(16px, 4vw, 24px); color: rgba(255,255,255,0.6); }
-    .title-large { font-size: clamp(28px, 8vw, 42px); font-weight: 900; letter-spacing: 4px; text-shadow: 0 4px 15px rgba(0,0,0,0.8); margin: 0; text-align: center; width: 100%;}
+    /* 共用元件 */
+    .wrap { width: 100%; max-width: 450px; z-index: 10; margin: 0 auto; }
+    .wrap-center { justify-content: center; display: flex; flex-direction: column; height: 100%; }
+    .card { background: rgba(22, 36, 25, 0.95); border-radius: 28px; padding: 30px 25px; margin-bottom: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.6); border: 1px solid var(--solid-border); text-align: center; }
+    .section-title { font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: #8fa896; margin-bottom: 10px; font-weight: 800; }
+    h1 { margin: 0 0 10px; font-size: 28px; font-weight: 900; letter-spacing: 2px; }
+    h3 { margin: 0 0 15px; font-size: 20px; font-weight: 800; color: #e8f0e8; }
+    p { margin: 0 0 20px; font-size: 15px; line-height: 1.6; color: #a3b8a8; }
+    .points { font-size: 45px; font-weight: 900; color: #d4a373; margin: 10px 0; }
+    .notice { padding: 16px; border-radius: 16px; background: #0c140e; border: 1px solid var(--solid-border); font-size: 14px; margin-bottom: 15px; color: #fff;}
     
-    .anim-item { opacity: 0; transform: translateY(25px); animation: fadeUp 2s forwards ease-out; }
-    @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
-    .item-1 { animation-delay: 0.6s; } .item-2 { animation-delay: 1.6s; } .item-3 { animation-delay: 2.6s; } .item-4 { animation-delay: 3.6s; } .item-5 { animation-delay: 4.6s; } .item-6 { animation-delay: 6.0s; }
-
-    /* ★ 強制鎖定最大寬度防放大 */
-    .solid-card { width: 100%; box-sizing: border-box; background: rgba(22, 36, 25, 0.95); border-radius: 28px; padding: 40px 25px; text-align: center; box-shadow: 0 25px 50px rgba(0,0,0,0.8); border: 1px solid var(--solid-border); margin: 0 auto; max-width: 400px !important; }
-    h1 { margin: 0 0 10px; font-size: 28px; font-weight: 900; letter-spacing: 2px; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
-    p { margin: 0 0 25px; font-size: 16px; line-height: 1.6; color: #a3b8a8; }
-
-    input[type="tel"] { width: 100%; box-sizing: border-box; padding: 18px; font-size: 22px; text-align: center; letter-spacing: 3px; border: 2px solid var(--solid-border); border-radius: 18px; margin-bottom: 20px; background: #0c140e; color: #fff; font-weight: bold; outline: none; transition: 0.3s; }
+    input[type="tel"] { width: 100%; box-sizing: border-box; padding: 18px; font-size: 22px; text-align: center; letter-spacing: 3px; border: 2px solid var(--solid-border); border-radius: 18px; margin-bottom: 20px; background: #0c140e; color: #fff; font-weight: bold; outline: none; }
     input[type="tel"]:focus { border-color: var(--primary); background: #111a13; }
-    input[type="tel"]::placeholder { color: #4a6350; }
-
-    .btn { width: 100%; box-sizing: border-box; border-radius: 18px; padding: 16px 12px; margin-bottom: 12px; font-size: 18px; font-weight: 700; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px; background: #233326; color: #ffffff !important; cursor: pointer; border: 1px solid var(--solid-border); transition: 0.3s; touch-action: manipulation; user-select: none; -webkit-tap-highlight-color: transparent; }
-    .btn:active { transform: scale(0.96); }
-    .btn.primary { background: linear-gradient(135deg, #5c8d6b, #2c4c3b); border: none; box-shadow: 0 8px 20px rgba(44, 76, 59, 0.4); }
-    .btn.accent { background: linear-gradient(135deg, #d4a373, #a67c52); border: none; }
     
-    #global-loader { display: none; position: fixed; inset: 0; background: rgba(17, 26, 19, 1); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; color: #fff; }
-    .spinner { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid #4a7c59; border-radius: 50%; width: 45px; height: 45px; animation: spin 1s linear infinite; margin-bottom: 20px; }
+    button.btn, a.btn { width: 100%; display: block; box-sizing: border-box; border-radius: 18px; padding: 16px 12px; font-size: 18px; font-weight: 700; text-decoration: none; border: 0; text-align: center; cursor: pointer; transition: 0.2s; touch-action: manipulation; -webkit-tap-highlight-color: transparent; margin-bottom: 12px; }
+    button.btn:active, a.btn:active { transform: scale(0.96); }
+    .btn-primary { background: linear-gradient(135deg, #5c8d6b, #2c4c3b); color: #fff; box-shadow: 0 8px 20px rgba(44, 76, 59, 0.4); }
+    .btn-secondary { background: #233326; color: #fff; border: 1px solid var(--solid-border); }
+    .btn-accent { background: linear-gradient(135deg, #d4a373, #a67c52); color: #fff; box-shadow: 0 8px 20px rgba(166, 124, 82, 0.4); }
+
+    /* 開場動畫 */
+    .collab-container { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 30px; width: 100%; }
+    .collab-logo { width: 120px !important; height: auto; object-fit: contain; }
+    .anim-item { opacity: 0; transform: translateY(20px); animation: fadeUp 1.5s forwards ease-out; }
+    @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+
+    /* 掃描器專用 */
+    #reader { width: 100%; min-height: 280px; border-radius: 16px; overflow: hidden; border: 2px dashed #ccc; display: none; background: #000; }
+    .status-box { margin-top: 15px; padding: 15px; border-radius: 14px; background: #e8f0e8; color: var(--primary-dark); font-weight: 700; line-height: 1.5; font-size: 15px; }
+
+    /* 徽章與明細 */
+    .badge-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
+    .badge-card { background: #233326; border: 1px solid #4a6350; border-radius: 16px; padding: 15px 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+    .history-list { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
+    .history-item { display: flex; justify-content: space-between; align-items: center; background: #233326; border: 1px solid var(--solid-border); padding: 14px 16px; border-radius: 16px; text-align: left;}
+    .pts-plus { color: #85c296; font-weight: 900; font-size:18px;}
+    .pts-minus { color: #e68a88; font-weight: 900; font-size:18px;}
+
+    /* AR 拍立得 */
+    #ar-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; display: none; }
+    #ar-overlay { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 2; pointer-events: none; display: none; }
+    #ar-controls { position: absolute; bottom: 40px; left: 0; width: 100%; display: flex; justify-content: center; z-index: 10; display: none; }
+    .btn-capture { background: var(--accent); color: white; width: 75px; height: 75px; border-radius: 50%; border: 4px solid #fff; display: flex; justify-content: center; align-items: center; font-size: 30px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+    .btn-close-ar { position: absolute; top: 30px; right: 20px; background: rgba(0,0,0,0.6); color: #fff; border: 1px solid rgba(255,255,255,0.3); padding: 10px 20px; border-radius: 20px; z-index: 15; font-weight: bold; cursor: pointer;}
+    #ar-result { position: absolute; inset: 0; background: rgba(0,0,0,0.9); z-index: 20; display: none; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
+    #ar-result img { width: 100%; max-width: 400px; max-height: 65vh; object-fit: contain; border-radius: 10px; margin-bottom: 20px; }
+    
+    /* 全局遮罩 */
+    #global-loader { display: none; position: fixed; inset: 0; background: rgba(17, 26, 19, 0.95); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; color: #fff; }
+    .spinner { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid #4a7c59; border-radius: 50%; width: 45px; height: 45px; animation: spin 1s linear infinite; margin-bottom: 15px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
-  <div class="bg-fixed"></div>
 
-  <!-- 開場動畫 -->
-  <div id="splash-screen" class="screen">
-    <div class="collab-container">
-      <img src="./logo_ark.png" class="collab-logo anim-item item-1" onerror="this.style.display='none'">
-      <span class="cross-mark anim-item item-2">✖</span>
-      <img src="./logo_nchu.png" class="collab-logo anim-item item-3" onerror="this.style.display='none'">
-      <span class="cross-mark anim-item item-4">✖</span>
-      <img src="./logo_huisun.png" class="collab-logo anim-item item-5" onerror="this.style.display='none'">
-    </div>
-    <h1 class="title-large anim-item item-6">方舟計畫展覽</h1>
-  </div>
+  <!-- 雙背景 -->
+  <div id="bg-misty" class="bg-layer"></div>
+  <div id="bg-fern" class="bg-layer"></div>
+  <div id="global-loader"><div class="spinner"></div><h3 id="loader-text">系統處理中...</h3></div>
 
-  <!-- 輸入電話頁面 -->
-  <div id="login-screen" class="screen">
-    <div class="solid-card">
-      <h1>🌿 專屬探索通行證</h1>
-      <p>請輸入手機號碼，開啟您的植物集點之旅。</p>
-      <input id="phoneInput" type="tel" placeholder="09XXXXXXXX" maxlength="10" autocomplete="off" name="phone-no-autofill">
-      <button class="btn primary" id="loginBtn">登入展覽</button>
+  <!-- ===============================
+       視圖 1：開場動畫 (Splash)
+  =============================== -->
+  <div id="view-splash" class="view">
+    <div class="wrap wrap-center" style="text-align:center;">
+      <div class="collab-container">
+        <img src="./logo_ark.png" class="collab-logo anim-item" style="animation-delay:0.2s">
+        <span class="cross-mark anim-item" style="animation-delay:0.8s">✖</span>
+        <img src="./logo_huisun.png" class="collab-logo anim-item" style="animation-delay:1.4s">
+      </div>
+      <h1 class="anim-item" style="animation-delay:2.2s; font-size:35px; letter-spacing:3px;">方舟計畫展覽</h1>
     </div>
   </div>
 
-  <!-- 主選單 -->
-  <div id="home-screen" class="screen">
-    <div class="solid-card">
-      <h1 style="font-size: 24px;">歡迎，<span id="displayPhone"></span></h1>
-      <p style="margin-bottom: 30px;">請選擇您要進行的探索動作</p>
-      
-      <button class="btn primary gas-link" data-href="scanner.html">🔍 進入展區掃描站</button>
-      <a href="https://sites.google.com/view/nat-bot-gard-nchu/%E9%A6%96%E9%A0%81/%E7%9B%AE%E5%89%8D%E9%A4%A8%E8%97%8F" target="_blank" class="btn accent" style="background: linear-gradient(135deg, #7c9885, #4a6350);">🌳 瀏覽目前館藏</a>
-      <button id="navQueryBtn" class="btn gas-link">🏆 查看探索進度</button>
-      <button id="navRewardBtn" class="btn gas-link">🎁 查看兌換獎勵</button>
-      <button id="logoutBtn" class="btn" style="margin-top:20px; background:transparent; color:#6d8c75; border-color:transparent; box-shadow:none;">登出切換帳號</button>
+  <!-- ===============================
+       視圖 2：登入 (Login)
+  =============================== -->
+  <div id="view-login" class="view">
+    <div class="wrap wrap-center">
+      <div class="card">
+        <h1>🌿 專屬通行證</h1>
+        <p>請輸入手機號碼，開啟您的探索之旅。</p>
+        <input id="phoneInput" type="tel" placeholder="09XXXXXXXX" maxlength="10" autocomplete="off">
+        <button class="btn btn-primary" onclick="login()">登入展覽</button>
+      </div>
     </div>
   </div>
 
-  <div id="global-loader"><div class="spinner"></div><h3 id="loader-text">載入中...</h3></div>
+  <!-- ===============================
+       視圖 3：主選單 (Home)
+  =============================== -->
+  <div id="view-home" class="view">
+    <div class="wrap wrap-center">
+      <div class="card">
+        <h1 style="font-size: 22px;">歡迎，<span id="displayPhone"></span></h1>
+        <p style="margin-bottom: 25px;">請選擇您要進行的動作</p>
+        <button class="btn btn-primary" onclick="switchView('scan')">🔍 進入展區掃描站</button>
+        <a href="https://sites.google.com/view/nat-bot-gard-nchu/%E9%A6%96%E9%A0%81/%E7%9B%AE%E5%89%8D%E9%A4%A8%E8%97%8F" target="_blank" class="btn btn-accent" style="background: linear-gradient(135deg, #7c9885, #4a6350);">🌳 瀏覽目前館藏</a>
+        <button class="btn btn-secondary" onclick="fetchGasData('query')">🏆 查看探索進度</button>
+        <button class="btn btn-secondary" onclick="fetchGasData('rewards')">🎁 兌換展覽獎勵</button>
+        <button class="btn" style="background:transparent; color:#6d8c75; margin-top:15px;" onclick="logout()">登出切換帳號</button>
+      </div>
+    </div>
+  </div>
 
+  <!-- ===============================
+       視圖 4：掃描站 (Scanner)
+  =============================== -->
+  <div id="view-scan" class="view">
+    <div class="wrap">
+      <div class="card">
+        <div class="section-title">SCANNER</div>
+        <h2>展區掃描器</h2>
+        <p style="font-size:14px; margin-bottom:15px;">請將相機對準植物旁的 QR Code。</p>
+        
+        <div id="reader"></div>
+        <div id="scan-status" class="status-box">相機已就緒，請點擊下方按鈕啟動。</div>
+
+        <div style="margin-top:20px;">
+          <button class="btn btn-primary" id="btn-start-scan" onclick="startScanner()">📷 點擊啟動相機</button>
+          <button class="btn btn-secondary" id="btn-stop-scan" style="display:none;" onclick="stopScanner()">暫停掃描</button>
+        </div>
+      </div>
+      <div class="card">
+        <button class="btn btn-secondary" onclick="fetchGasData('query')">🏆 查看我的進度</button>
+        <button class="btn btn-secondary" onclick="fetchGasData('rewards')">🎁 查看可兌換獎勵</button>
+        <button class="btn btn-secondary" onclick="stopScanner(); switchView('home');">🏠 返回主選單</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===============================
+       視圖 5：動態進度與獎勵 (Gas Data)
+  =============================== -->
+  <div id="view-gas" class="view">
+    <div class="wrap" id="gas-content"></div>
+  </div>
+
+  <!-- ===============================
+       視圖 6：AR 拍立得 (AR Camera)
+  =============================== -->
+  <div id="view-ar" class="view" style="padding:0; background:#000;">
+    <button class="btn-close-ar" onclick="closeArCamera()">✖ 結束拍攝</button>
+    <video id="ar-video" autoplay playsinline></video>
+    <img id="ar-overlay" src="" crossorigin="anonymous">
+    <div id="ar-controls" class="controls">
+      <button class="btn-capture" onclick="captureArPhoto()">📸</button>
+    </div>
+  </div>
+  <div id="ar-result">
+    <div style="color:#fff; font-weight:bold; margin-bottom:15px;">✨ 拍照成功！長按圖片儲存 ✨</div>
+    <img id="result-image" src="">
+    <div style="width:100%; max-width:300px;">
+      <button class="btn btn-secondary" onclick="retakeArPhoto()">🔄 重拍</button>
+      <button class="btn btn-primary" onclick="closeArCamera()">🏠 完成並返回掃描</button>
+    </div>
+  </div>
+  <canvas id="ar-canvas" style="display:none;"></canvas>
+
+  <!-- ===============================
+       核心腳本 (零跳轉、零白屏、鎖相機)
+  =============================== -->
   <script>
+    // ⚠️ 這裡填入你的 GAS 網址
     const APP_URL = "https://script.google.com/macros/s/AKfycbyoFlYdQfjyJUu0onsq2DOI5wZJmRcNI2maSEbU7b5uKiSQmajfFRJGYL8OisrhhNUYKg/exec";
+    const COLLECTION_URL = "https://sites.google.com/view/nat-bot-gard-nchu/%E9%A6%96%E9%A0%81/%E7%9B%AE%E5%89%8D%E9%A4%A8%E8%97%8F";
 
-    function normalizePhone(phone) { let p = String(phone || "").replace(/\D/g, "").trim(); if (p.length === 9 && p.startsWith("9")) p = "0" + p; return p; }
-    function buildUrl(base, params) { const u = new URL(base); Object.keys(params).forEach(key => { if (params[key]) u.searchParams.set(key, String(params[key]).replace(/[^0-9a-zA-Z_-]/g, '')); }); return u.toString(); }
+    let currentPhone = sessionStorage.getItem("savedPhone") || "";
+    let html5QrCode = null;
+    let arStream = null;
 
-    const splashScreen = document.getElementById('splash-screen');
-    const loginScreen = document.getElementById('login-screen');
-    const homeScreen = document.getElementById('home-screen');
-    let userPhone = normalizePhone(sessionStorage.getItem("savedPhone") || "");
-
-    function bindHomeData() {
-      document.getElementById('displayPhone').innerText = userPhone.replace(/(\d{4})(\d{3})(\d{3})/, '$1-$2-$3');
-      document.getElementById('navQueryBtn').dataset.href = APP_URL + "?mode=query&phone=" + userPhone;
-      document.getElementById('navRewardBtn').dataset.href = APP_URL + "?mode=rewards&phone=" + userPhone;
+    function setBackground(type) {
+      document.getElementById('bg-misty').style.opacity = type === 'misty' ? '1' : '0';
+      document.getElementById('bg-fern').style.opacity = type === 'fern' ? '1' : '0';
     }
 
-    document.querySelectorAll('.gas-link').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        document.getElementById('loader-text').innerHTML = "正在前往系統...";
-        document.getElementById('global-loader').style.display = 'flex';
-        setTimeout(() => { window.location.href = btn.dataset.href; }, 100);
-      });
-    });
-
-    window.addEventListener("pageshow", function() {
-      document.getElementById('global-loader').style.display = 'none';
-    });
+    function switchView(viewId) {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.getElementById('view-' + viewId).classList.add('active');
+      window.scrollTo(0,0);
+      if (viewId === 'login' || viewId === 'home' || viewId === 'splash') setBackground('misty');
+      else setBackground('fern'); 
+    }
 
     window.onload = () => {
       const hasPlayed = sessionStorage.getItem("splashPlayed") === "true";
-      if (hasPlayed) {
-        document.documentElement.className = ''; 
-        if (userPhone) { homeScreen.classList.add('active-transition'); bindHomeData(); } 
-        else { loginScreen.classList.add('active-transition'); }
-      } else {
+      if (!hasPlayed) {
+        setBackground('misty'); switchView('splash');
         sessionStorage.setItem("splashPlayed", "true");
-        setTimeout(() => {
-          splashScreen.style.opacity = "0"; 
-          setTimeout(() => {
-            document.documentElement.className = ''; 
-            splashScreen.style.opacity = ""; 
-            if (userPhone) { homeScreen.classList.add('active-transition'); bindHomeData(); } 
-            else { loginScreen.classList.add('active-transition'); }
-          }, 500); 
-        }, 8500);
+        setTimeout(() => { if (currentPhone) initHome(); else switchView('login'); }, 3500);
+      } else {
+        if (currentPhone) initHome(); else switchView('login');
       }
     };
 
-    document.getElementById('loginBtn').addEventListener('click', () => {
-      const input = normalizePhone(document.getElementById('phoneInput').value);
-      if (input.length === 10 && input.startsWith("09")) {
-        userPhone = input; sessionStorage.setItem("savedPhone", userPhone);
-        loginScreen.style.opacity = "0"; 
-        setTimeout(() => {
-          loginScreen.classList.remove('active-transition'); loginScreen.style.opacity = "";
-          homeScreen.classList.add('active-transition'); bindHomeData();
-        }, 400);
-      } else { alert("格式錯誤，請輸入正確的 09 開頭手機號碼！"); }
+    // ★ 按上一頁返回時，相機維持待命不強開，絕對防當機
+    window.addEventListener("pageshow", function(e) {
+      hideLoader();
+      if (currentPhone && sessionStorage.getItem('camAllowed') === 'true') {
+        stopScanner();
+        document.getElementById("scan-status").innerHTML = "相機已待命，請點擊下方按鈕啟動。";
+        document.getElementById("scan-status").style.background = "#e8f0e8";
+      }
     });
 
-    document.getElementById('logoutBtn').addEventListener('click', () => {
-      sessionStorage.removeItem("savedPhone"); userPhone = ""; document.getElementById('phoneInput').value = "";
-      homeScreen.style.opacity = "0"; 
-      setTimeout(() => {
-        homeScreen.classList.remove('active-transition'); homeScreen.style.opacity = "";
-        loginScreen.classList.add('active-transition');
-      }, 400);
-    });
+    function login() {
+      let p = document.getElementById('phoneInput').value.replace(/\D/g, "");
+      if (p.length === 9 && p.startsWith("9")) p = "0" + p;
+      if (/^09\d{8}$/.test(p)) { currentPhone = p; sessionStorage.setItem("savedPhone", currentPhone); initHome(); } 
+      else { alert("格式錯誤，請輸入 09 開頭十碼數字！"); }
+    }
+
+    function logout() {
+      currentPhone = ""; sessionStorage.removeItem("savedPhone"); sessionStorage.removeItem("camAllowed");
+      document.getElementById('phoneInput').value = ""; switchView('login');
+    }
+
+    function initHome() {
+      document.getElementById('displayPhone').innerText = currentPhone.replace(/(\d{4})(\d{3})(\d{3})/, '$1-$2-$3');
+      switchView('home');
+    }
+
+    // --- JSONP API (從 GAS 抓 HTML，不跳轉網頁) ---
+    function showLoader(text) { document.getElementById('loader-text').innerHTML = text; document.getElementById('global-loader').style.display = 'flex'; }
+    function hideLoader() { document.getElementById('global-loader').style.display = 'none'; }
+
+    function fetchGasData(mode, rewardId = '') {
+      showLoader("正在載入資料...");
+      stopScanner(); 
+      const cbName = "gasCb_" + Date.now();
+      const url = `${APP_URL}?mode=spa_html&page=${mode}&phone=${currentPhone}&reward_id=${rewardId}&callback=${cbName}`;
+      const script = document.createElement("script");
+      window[cbName] = (html) => {
+        delete window[cbName]; script.remove();
+        document.getElementById('gas-content').innerHTML = html;
+        switchView('gas');
+        hideLoader();
+      };
+      script.onerror = () => { hideLoader(); alert('載入失敗，請檢查網路'); };
+      script.src = url; document.body.appendChild(script);
+    }
+
+    // --- 掃描器 ---
+    async function startScanner() {
+      const statusEl = document.getElementById("scan-status");
+      const startBtn = document.getElementById("btn-start-scan");
+      const stopBtn = document.getElementById("btn-stop-scan");
+      
+      try {
+        statusEl.innerHTML = "啟動中... <span style='font-size:12px;'>(若跳出提示請點允許)</span>";
+        statusEl.style.background = "#e8f0e8";
+        const cameras = await Html5Qrcode.getCameras();
+        const rearCamera = cameras.find(c => /back|rear|environment|後/i.test(c.label || "")) || cameras[0];
+        
+        document.getElementById("reader").style.display = "block";
+        html5QrCode = new Html5Qrcode("reader");
+        await html5QrCode.start(rearCamera.id, { fps: 5, qrbox: { width: 250, height: 250 }, aspectRatio: 1.333 }, handleScan);
+        
+        sessionStorage.setItem("camAllowed", "true");
+        startBtn.style.display = "none"; stopBtn.style.display = "block";
+        statusEl.innerHTML = "✅ 相機已啟動，請掃描 QR Code。";
+      } catch (err) {
+        document.getElementById("reader").style.display = "none";
+        statusEl.innerHTML = "<b>無法啟動相機</b><br>請確認瀏覽器已允許相機權限。";
+        statusEl.style.background = "#f8d7da";
+      }
+    }
+
+    async function stopScanner() {
+      if (html5QrCode) { try { await html5QrCode.stop(); await html5QrCode.clear(); } catch(e){} html5QrCode = null; }
+      document.getElementById("reader").style.display = "none";
+      document.getElementById("btn-start-scan").style.display = "block";
+      document.getElementById("btn-stop-scan").style.display = "none";
+      document.getElementById("scan-status").innerHTML = "相機已暫停，點擊上方按鈕可重新啟動。";
+      document.getElementById("scan-status").style.background = "#e8f0e8";
+    }
+
+    async function handleScan(rawUrl) {
+      let urlObj, mode, picNum;
+      try { urlObj = new URL(rawUrl.trim()); mode = urlObj.searchParams.get("mode"); picNum = urlObj.searchParams.get("pic"); } catch (err) { return; }
+
+      if (mode === "ar" && picNum) {
+        if (navigator.vibrate) navigator.vibrate(100);
+        await stopScanner(); openArCamera(picNum); return;
+      }
+
+      if (mode !== "plant_go" && mode !== "stamp") return;
+
+      if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+      await stopScanner();
+      showLoader("正在存入點數...<br><span style='font-size:14px;color:#aaa;'>(請稍候約 2 秒)</span>");
+      
+      try {
+        if (mode === "plant_go") {
+          const plantId = urlObj.searchParams.get("plant");
+          let resp = await jsonpCall(plantId, currentPhone);
+          const target = resp.redirectUrl || COLLECTION_URL;
+          document.getElementById("scan-status").innerHTML = `🎉 <b>${resp.message || "已完成記點"}</b>`;
+          document.getElementById("scan-status").style.background = "#d4edda";
+          hideLoader();
+          window.open(target, '_blank'); 
+          document.getElementById("btn-start-scan").style.display = "block";
+        } else if (mode === "stamp") {
+          const spotId = urlObj.searchParams.get("spot");
+          let resp = await jsonpCallSpot(spotId, currentPhone);
+          document.getElementById("scan-status").innerHTML = `✅ <b>${resp.message || "展區打卡成功"}</b>`;
+          document.getElementById("scan-status").style.background = "#d4edda";
+          hideLoader();
+          document.getElementById("btn-start-scan").style.display = "block";
+        }
+      } catch (err) {
+        hideLoader();
+        document.getElementById("scan-status").innerHTML = "<b>網路連線失敗</b>，請重新掃描。";
+        document.getElementById("scan-status").style.background = "#f8d7da";
+      }
+    }
+
+    function jsonpCall(plant, phone) {
+      return new Promise((resolve, reject) => {
+        const cb = "__cb_" + Date.now();
+        const url = `${APP_URL}?mode=plant_mark_jsonp&plant=${plant}&phone=${phone}&callback=${cb}`;
+        const script = document.createElement("script"); let done = false;
+        const timer = setTimeout(() => { if(!done){ done=true; reject(new Error("Timeout")); } }, 10000);
+        window[cb] = (data) => { if(!done){ done=true; clearTimeout(timer); resolve(data); } };
+        script.onerror = () => { if(!done){ done=true; clearTimeout(timer); reject(new Error("Error")); } };
+        script.src = url; document.body.appendChild(script);
+      });
+    }
+
+    function jsonpCallSpot(spot, phone) {
+      return new Promise((resolve, reject) => {
+        const cb = "__cb_" + Date.now();
+        const url = `${APP_URL}?mode=spot_mark_jsonp&spot=${spot}&phone=${phone}&callback=${cb}`;
+        const script = document.createElement("script"); let done = false;
+        const timer = setTimeout(() => { if(!done){ done=true; reject(new Error("Timeout")); } }, 10000);
+        window[cb] = (data) => { if(!done){ done=true; clearTimeout(timer); resolve(data); } };
+        script.onerror = () => { if(!done){ done=true; clearTimeout(timer); reject(new Error("Error")); } };
+        script.src = url; document.body.appendChild(script);
+      });
+    }
+
+    // --- AR 拍立得系統 ---
+    async function openArCamera(picNum) {
+      document.getElementById('ar-overlay').src = `./ar_${picNum}.png`;
+      switchView('ar');
+      const video = document.getElementById('ar-video');
+      try {
+        arStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", width: {ideal:1280}, height: {ideal:720} } });
+        video.srcObject = arStream; video.style.display = 'block';
+        document.getElementById('ar-overlay').style.display = 'block';
+        document.getElementById('ar-controls').style.display = 'flex';
+      } catch (err) { alert("無法開啟相機！"); closeArCamera(); }
+    }
+
+    function closeArCamera() {
+      if (arStream) { arStream.getTracks().forEach(t => t.stop()); arStream = null; }
+      document.getElementById('ar-video').style.display = 'none';
+      document.getElementById('ar-overlay').style.display = 'none';
+      document.getElementById('ar-controls').style.display = 'none';
+      document.getElementById('ar-result').style.display = 'none';
+      switchView('scan'); 
+    }
+
+    function captureArPhoto() {
+      const video = document.getElementById('ar-video'); const canvas = document.getElementById('ar-canvas');
+      const ctx = canvas.getContext('2d'); const overlay = document.getElementById('ar-overlay');
+      canvas.width = video.offsetWidth; canvas.height = video.offsetHeight;
+      function drawCover(source) {
+        const sRatio = (source.videoWidth||source.naturalWidth) / (source.videoHeight||source.naturalHeight);
+        const cRatio = canvas.width / canvas.height; let dw, dh, sx, sy;
+        if (sRatio > cRatio) { dh = canvas.height; dw = (source.videoWidth||source.naturalWidth) * (canvas.height / (source.videoHeight||source.naturalHeight)); sx = (canvas.width - dw) / 2; sy = 0; } 
+        else { dw = canvas.width; dh = (source.videoHeight||source.naturalHeight) * (canvas.width / (source.videoWidth||source.naturalWidth)); sx = 0; sy = (canvas.height - dh) / 2; }
+        ctx.drawImage(source, sx, sy, dw, dh);
+      }
+      drawCover(video); drawCover(overlay);
+      document.getElementById('result-image').src = canvas.toDataURL('image/png', 0.9);
+      document.getElementById('ar-controls').style.display = 'none'; document.getElementById('ar-result').style.display = 'flex';
+    }
+
+    function retakeArPhoto() { document.getElementById('ar-result').style.display = 'none'; document.getElementById('ar-controls').style.display = 'flex'; }
   </script>
 </body>
 </html>
