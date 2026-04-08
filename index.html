@@ -30,12 +30,12 @@
   </script>
   <style>
     :root { --primary: #4a7c59; --solid-bg: #162419; --solid-border: #2a3d2e; }
-    html, body { margin: 0; padding: 0; width: 100%; height: 100%; font-family: "Noto Sans TC", sans-serif; color: #fff; overflow: hidden; background-color: #111a13; touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adjust: 100%;}
+    html, body { margin: 0; padding: 0; width: 100%; height: 100%; font-family: "Noto Sans TC", sans-serif; color: #fff; overflow: hidden; background-color: #111a13; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; touch-action: manipulation;}
     
-    /* ★ 改用最穩定的維基百科無版權樹林圖片，保證 100% 讀取 */
     .bg-fixed { 
-      position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100dvh; 
-      background: linear-gradient(rgba(17,26,19,0.7), rgba(17,26,19,0.7)), url('https://upload.wikimedia.org/wikipedia/commons/4/4e/Ferns_in_the_forest.jpg') center/cover no-repeat; 
+      position: fixed; inset: 0; 
+      width: 100vw; height: 100vh; height: 100dvh; 
+      background: url('https://raw.githubusercontent.com/huisunnbgap2026-pixel/plant-qr-scanner/main/bg_misty.jpg') center/cover no-repeat; 
       z-index: -1; 
     }
 
@@ -46,7 +46,7 @@
     html.init-login #login-screen { display: flex; opacity: 1; visibility: visible; z-index: 20; }
     html.init-home #home-screen { display: flex; opacity: 1; visibility: visible; z-index: 20; }
 
-    #splash-screen { background: rgba(17, 26, 19, 0.95); }
+    #splash-screen { background: rgba(17, 26, 19, 0.85); }
     .collab-container { display: flex; align-items: center; justify-content: center; gap: 4vw; margin-bottom: 40px; width: 100%; max-width: 350px; margin-left: auto; margin-right: auto;}
     .collab-logo { width: 30%; max-width: 100px; height: auto; object-fit: contain; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5)); }
     .cross-mark { font-size: clamp(16px, 4vw, 24px); color: rgba(255,255,255,0.6); }
@@ -105,8 +105,7 @@
       <h1 style="font-size: 24px;">歡迎，<span id="displayPhone"></span></h1>
       <p style="margin-bottom: 30px;">請選擇您要進行的探索動作</p>
       
-      <!-- ★ 強制寫死的網址，確保不迷路 -->
-      <button class="btn primary" onclick="window.location.href='scanner.html'">🔍 進入展區掃描站</button>
+      <a href="scanner.html" class="btn primary">🔍 進入展區掃描站</a>
       <a href="https://sites.google.com/view/nat-bot-gard-nchu/%E9%A6%96%E9%A0%81/%E7%9B%AE%E5%89%8D%E9%A4%A8%E8%97%8F" target="_blank" class="btn accent" style="background: linear-gradient(135deg, #7c9885, #4a6350);">🌳 瀏覽目前館藏</a>
       <button id="navQueryBtn" class="btn gas-link">🏆 查看探索進度</button>
       <button id="navRewardBtn" class="btn gas-link">🎁 查看兌換獎勵</button>
@@ -117,10 +116,19 @@
   <div id="global-loader"><div class="spinner"></div><h3 id="loader-text">載入中...</h3></div>
 
   <script>
+    // ★ 請確認你的 GAS 網址是否正確
     const APP_URL = "https://script.google.com/macros/s/AKfycbyoFlYdQfjyJUu0onsq2DOI5wZJmRcNI2maSEbU7b5uKiSQmajfFRJGYL8OisrhhNUYKg/exec";
 
     function normalizePhone(phone) { let p = String(phone || "").replace(/\D/g, "").trim(); if (p.length === 9 && p.startsWith("9")) p = "0" + p; return p; }
-    function buildUrl(base, params) { const u = new URL(base); Object.keys(params).forEach(key => { if (params[key]) u.searchParams.set(key, String(params[key]).replace(/[^0-9a-zA-Z_-]/g, '')); }); return u.toString(); }
+    
+    // 網址拼接工具
+    function buildUrl(base, params) { 
+      const u = new URL(base); 
+      Object.keys(params).forEach(key => { 
+        if (params[key]) u.searchParams.set(key, String(params[key]).replace(/[^0-9a-zA-Z_-]/g, '')); 
+      }); 
+      return u.toString(); 
+    }
 
     const splashScreen = document.getElementById('splash-screen');
     const loginScreen = document.getElementById('login-screen');
@@ -129,16 +137,21 @@
 
     function bindHomeData() {
       document.getElementById('displayPhone').innerText = userPhone.replace(/(\d{4})(\d{3})(\d{3})/, '$1-$2-$3');
+      // 將網址綁定到按鈕屬性
       document.getElementById('navQueryBtn').dataset.href = APP_URL + "?mode=query&phone=" + userPhone;
       document.getElementById('navRewardBtn').dataset.href = APP_URL + "?mode=rewards&phone=" + userPhone;
     }
 
+    // 處理跳轉按鈕點擊，加入遮罩
     document.querySelectorAll('.gas-link').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
-        document.getElementById('loader-text').innerHTML = "載入中...";
-        document.getElementById('global-loader').style.display = 'flex';
-        setTimeout(() => { window.location.href = btn.dataset.href; }, 100);
+        const targetHref = btn.dataset.href;
+        if (targetHref) {
+           document.getElementById('loader-text').innerHTML = "正在前往系統...";
+           document.getElementById('global-loader').style.display = 'flex';
+           setTimeout(() => { window.location.href = targetHref; }, 100);
+        }
       });
     });
 
