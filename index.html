@@ -32,11 +32,10 @@
     :root { --primary: #4a7c59; --solid-bg: #162419; --solid-border: #2a3d2e; }
     html, body { margin: 0; padding: 0; width: 100%; height: 100%; font-family: "Noto Sans TC", sans-serif; color: #fff; overflow: hidden; background-color: #111a13; touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adjust: 100%;}
     
-    /* ★ 加深遮罩 (rgba 0.8) 讓背景變淡，字體更清晰 */
     .bg-fixed { 
       position: fixed; inset: 0; 
       width: 100vw; height: 100vh; height: 100dvh; 
-      background: linear-gradient(rgba(17,26,19,0.8), rgba(17,26,19,0.8)), url('https://images.unsplash.com/photo-1448375240586-882707db888b?q=80&w=1080&auto=format&fit=crop') center/cover no-repeat; 
+      background: url('https://raw.githubusercontent.com/huisunnbgap2026-pixel/plant-qr-scanner/main/bg_misty.jpg') center/cover no-repeat; 
       z-index: -1; 
     }
 
@@ -47,7 +46,7 @@
     html.init-login #login-screen { display: flex; opacity: 1; visibility: visible; z-index: 20; }
     html.init-home #home-screen { display: flex; opacity: 1; visibility: visible; z-index: 20; }
 
-    #splash-screen { background: rgba(17, 26, 19, 0.95); }
+    #splash-screen { background: rgba(17, 26, 19, 0.85); }
     .collab-container { display: flex; align-items: center; justify-content: center; gap: 4vw; margin-bottom: 40px; width: 100%; max-width: 350px; margin-left: auto; margin-right: auto;}
     .collab-logo { width: 30%; max-width: 100px; height: auto; object-fit: contain; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5)); }
     .cross-mark { font-size: clamp(16px, 4vw, 24px); color: rgba(255,255,255,0.6); }
@@ -108,8 +107,10 @@
       
       <a href="scanner.html" class="btn primary">🔍 進入展區掃描站</a>
       <a href="https://sites.google.com/view/nat-bot-gard-nchu/%E9%A6%96%E9%A0%81/%E7%9B%AE%E5%89%8D%E9%A4%A8%E8%97%8F" target="_blank" class="btn accent" style="background: linear-gradient(135deg, #7c9885, #4a6350);">🌳 瀏覽目前館藏</a>
-      <button id="navQueryBtn" class="btn gas-link">🏆 查看探索進度</button>
-      <button id="navRewardBtn" class="btn gas-link">🎁 查看兌換獎勵</button>
+      <!-- 直接連到 scanner.html 讓它透過 API 載入進度 -->
+      <a href="scanner.html?view=query" class="btn secondary">🏆 查看探索進度</a>
+      <a href="scanner.html?view=rewards" class="btn secondary">🎁 查看兌換獎勵</a>
+      
       <button id="logoutBtn" class="btn" style="margin-top:20px; background:transparent; color:#6d8c75; border-color:transparent; box-shadow:none;">登出切換帳號</button>
     </div>
   </div>
@@ -117,11 +118,8 @@
   <div id="global-loader"><div class="spinner"></div><h3 id="loader-text">載入中...</h3></div>
 
   <script>
-    const APP_URL = "https://script.google.com/macros/s/AKfycbyoFlYdQfjyJUu0onsq2DOI5wZJmRcNI2maSEbU7b5uKiSQmajfFRJGYL8OisrhhNUYKg/exec";
-
     function normalizePhone(phone) { let p = String(phone || "").replace(/\D/g, "").trim(); if (p.length === 9 && p.startsWith("9")) p = "0" + p; return p; }
-    function buildUrl(base, params) { const u = new URL(base); Object.keys(params).forEach(key => { if (params[key]) u.searchParams.set(key, String(params[key]).replace(/[^0-9a-zA-Z_-]/g, '')); }); return u.toString(); }
-
+    
     const splashScreen = document.getElementById('splash-screen');
     const loginScreen = document.getElementById('login-screen');
     const homeScreen = document.getElementById('home-screen');
@@ -129,24 +127,10 @@
 
     function bindHomeData() {
       document.getElementById('displayPhone').innerText = userPhone.replace(/(\d{4})(\d{3})(\d{3})/, '$1-$2-$3');
-      document.getElementById('navQueryBtn').dataset.href = APP_URL + "?mode=query&phone=" + userPhone;
-      document.getElementById('navRewardBtn').dataset.href = APP_URL + "?mode=rewards&phone=" + userPhone;
     }
-
-    document.querySelectorAll('.gas-link').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.target.innerHTML = "⏳ 載入中...";
-        document.body.style.opacity = 0; 
-        document.body.style.transition = "opacity 0.2s";
-        setTimeout(() => { window.location.href = btn.dataset.href; }, 200);
-      });
-    });
 
     window.addEventListener("pageshow", function() {
       document.getElementById('global-loader').style.display = 'none';
-      document.getElementById('navQueryBtn').innerHTML = "🏆 查看探索進度";
-      document.getElementById('navRewardBtn').innerHTML = "🎁 查看兌換獎勵";
     });
 
     window.onload = () => {
