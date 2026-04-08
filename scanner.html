@@ -6,59 +6,72 @@
   <meta name="format-detection" content="telephone=no">
   <title>方舟植物展覽｜QR 探索掃描站</title>
   <script src="https://unpkg.com/html5-qrcode"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;500;700;900&display=swap" rel="stylesheet">
   <style>
-    :root { --primary-dark: #2c4c3b; --primary-light: #729075; }
-    html, body { margin: 0; padding: 0; font-family: "Noto Sans TC", sans-serif; color: var(--primary-dark); background-color:#111a13; touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adjust: 100%;}
+    :root { --primary: #4a7c59; --primary-dark: #2c4c3b; --solid-bg: #162419; --solid-border: #2a3d2e; --accent: #d4a373;}
+    html, body { margin: 0; padding: 0; font-family: "Noto Sans TC", sans-serif; color: #fff; background-color:#111a13; touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adjust: 100%;}
     
     .bg-fixed { position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100dvh; background: url('https://raw.githubusercontent.com/huisunnbgap2026-pixel/plant-qr-scanner/main/bg_main.jpg') center/cover no-repeat; z-index: -1; }
 
-    .page { position: relative; min-height: 100vh; padding: 24px 16px 32px; box-sizing: border-box; overflow-y: auto;}
-    .wrap { max-width: 400px; margin: 0 auto; z-index:10;}
+    .view { display: none; position: absolute; inset: 0; width: 100%; height: 100%; flex-direction: column; align-items: center; box-sizing: border-box; overflow-y: auto; padding: 24px 16px 40px; }
+    .view.active { display: flex; animation: fadeIn 0.3s ease forwards; }
+    @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+
+    .wrap { width: 100%; max-width: 400px; z-index: 10; margin: 0 auto; }
+    .card { width: 100%; box-sizing: border-box; background: rgba(22, 36, 25, 0.95); border-radius: 20px; padding: 25px; box-shadow: 0 15px 40px rgba(0,0,0, 0.6); border: 1px solid var(--solid-border); margin-bottom: 20px; text-align: center;}
     
-    .hero { margin-bottom: 24px; padding: 30px 25px; border-radius: 20px; background: linear-gradient(135deg, var(--primary-dark), var(--primary-light)); color: #fff; box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: center; }
+    .hero { margin-bottom: 24px; padding: 30px 25px; border-radius: 20px; background: linear-gradient(135deg, var(--primary-dark), var(--primary)); color: #fff; box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: center; }
     .hero h1 { margin: 0 0 10px; font-size: 28px; font-weight: 700; letter-spacing: 2px; text-shadow: 0 2px 10px rgba(0,0,0,0.5);}
     .hero p { margin: 0; line-height: 1.6; color: rgba(255,255,255,.9); font-size: 15px;}
 
-    .solid-card { width: 100%; box-sizing: border-box; max-width: 400px; margin: 0 auto 20px auto; background: rgba(255, 255, 255, 0.95); border-radius: 20px; padding: 25px; box-shadow: 0 15px 40px rgba(0,0,0, 0.6); border: 1px solid #e0e0e0; transform: translateZ(0); will-change: transform; }
-    .section-title { font-size: 14px; letter-spacing: 2px; color: var(--primary-light); margin-bottom: 10px; font-weight: 700; }
-    h2 { margin: 0 0 15px; font-size: 24px; font-weight: 700; color: var(--primary-dark); }
+    .section-title { font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: #8fa896; margin-bottom: 10px; font-weight: 800; }
+    h2 { margin: 0 0 15px; font-size: 24px; font-weight: 700; color: #fff; }
+    h3 { margin: 0 0 15px; font-size: 18px; font-weight: 800; color: #e8f0e8; }
+    p { margin: 0 0 15px; line-height: 1.6; color: #a3b8a8; font-size: 15px; word-break: break-word; }
+    .points { font-size: 45px; font-weight: 900; color: #d4a373; margin: 10px 0; }
     
-    #reader { width: 100%; min-height: 280px; border-radius: 16px; overflow: hidden; border: 2px dashed #ccc; transition: 0.3s; display: none; background:#000;}
-    .status { margin-top: 20px; padding: 16px; border-radius: 14px; background: #e8f0e8; color: var(--primary-dark); font-weight: 700; line-height: 1.6; text-align: center; }
+    #reader { width: 100%; min-height: 280px; border-radius: 16px; overflow: hidden; border: 2px dashed #ccc; display: none; background:#000;}
+    .status { margin-top: 20px; padding: 16px; border-radius: 14px; background: #233326; color: #fff; font-weight: 700; line-height: 1.6; text-align: center; }
     
-    input { width: 100%; box-sizing: border-box; border-radius: 16px; padding: 16px 14px; font-size: 18px; border: 2px solid #ddd; background: #fff; margin-top: 10px; color: var(--primary-dark); letter-spacing: 1px; text-align:center;}
-    input:focus { border-color: var(--primary-light); outline: none; }
-    
-    .actions { display: grid; gap: 12px; margin-top: 20px; }
-    button.btn, a.btn { width: 100%; box-sizing: border-box; border-radius: 16px; padding: 16px 14px; font-size: 18px; font-weight: 700; text-decoration: none; border: 0; text-align: center; display: block; cursor: pointer; transition: all 0.3s; touch-action: manipulation; user-select: none; -webkit-tap-highlight-color: transparent; }
-    .btn.primary { background: var(--primary-light); color: #fff !important; box-shadow: 0 4px 15px rgba(74, 124, 89, 0.3); }
-    .btn.primary:active { transform: scale(0.96); }
-    .btn.secondary { background: #fff; color: var(--primary-dark) !important; border: 2px solid #ddd; }
-    
-    /* AR 拍立得視窗 */
+    input[type="tel"] { width: 100%; box-sizing: border-box; padding: 18px; font-size: 22px; text-align: center; letter-spacing: 3px; border: 2px solid var(--solid-border); border-radius: 18px; margin-bottom: 20px; background: #0c140e; color: #fff; font-weight: bold; outline: none; }
+    input[type="tel"]:focus { border-color: var(--primary); }
+
+    button.btn, a.btn { width: 100%; box-sizing: border-box; border-radius: 18px; padding: 16px 12px; margin-bottom: 12px; font-size: 18px; font-weight: 700; text-decoration: none; display: flex; align-items: center; justify-content: center; background: #233326; color: #fff !important; cursor: pointer; border: 1px solid var(--solid-border); touch-action: manipulation; user-select: none; -webkit-tap-highlight-color: transparent;}
+    .btn:active { transform: scale(0.96); }
+    .btn.primary { background: linear-gradient(135deg, #5c8d6b, #2c4c3b); border: none; box-shadow: 0 8px 20px rgba(44, 76, 59, 0.4); }
+    .btn.accent { background: linear-gradient(135deg, #d4a373, #a67c52); border: none; box-shadow: 0 8px 20px rgba(166, 124, 82, 0.4); }
+
+    /* 動態內容專區設計 */
+    .badge-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
+    .badge-card { background: #233326; border: 1px solid #4a6350; border-radius: 16px; padding: 15px 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+    .badge-pts { font-size: 11px; color: #d4a373; font-weight: 700; background: #0c140e; display: inline-block; padding: 4px 10px; border-radius: 12px;}
+    .history-list { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
+    .history-item { display: flex; justify-content: space-between; align-items: center; background: #233326; border: 1px solid var(--solid-border); padding: 14px 16px; border-radius: 16px; text-align: left;}
+    .pts-plus { color: #85c296; font-weight: 900; font-size:18px;}
+    .pts-minus { color: #e68a88; font-weight: 900; font-size:18px;}
+
+    #global-loader { display: none; position: fixed; inset: 0; background: rgba(17, 26, 19, 0.95); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; color: #fff; }
+    .spinner { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid #4a7c59; border-radius: 50%; width: 45px; height: 45px; animation: spin 1s linear infinite; margin-bottom: 20px; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* AR 拍立得 */
     #ar-container { position: fixed; inset: 0; background: #000; z-index: 1000; display: none; flex-direction: column; }
     #ar-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
     #ar-overlay { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 2; pointer-events: none; }
-    
     .ar-controls { position: absolute; bottom: 40px; left: 0; width: 100%; display: flex; justify-content: center; z-index: 10; }
-    .btn-capture { background: #d4a373; color: white; width: 80px; height: 80px; border-radius: 50%; border: 4px solid #fff; display: flex; justify-content: center; align-items: center; font-size: 35px; cursor: pointer; box-shadow: 0 5px 20px rgba(0,0,0,0.5); touch-action: manipulation; }
-    .btn-capture:active { transform: scale(0.9); }
-    
+    .btn-capture { background: #d4a373; color: white; width: 80px; height: 80px; border-radius: 50%; border: 4px solid #fff; display: flex; justify-content: center; align-items: center; font-size: 35px; cursor: pointer; box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
     .btn-close-ar { position: absolute; top: 30px; left: 20px; background: rgba(0,0,0,0.6); color: #fff; border: 1px solid rgba(255,255,255,0.3); padding: 10px 20px; border-radius: 20px; z-index: 15; font-weight: bold; cursor: pointer;}
-    .btn-switch-cam { position: absolute; top: 30px; right: 20px; background: rgba(0,0,0,0.6); color: #fff; border: 1px solid rgba(255,255,255,0.3); padding: 10px 20px; border-radius: 20px; z-index: 15; font-weight: bold; cursor: pointer;}
-    
     #ar-result-screen { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.9); z-index: 20; display: none; flex-direction: column; justify-content: center; align-items: center; padding:20px; text-align:center;}
     #result-image { width: 100%; max-width: 400px; max-height: 60vh; object-fit: contain; border-radius: 10px; margin-bottom: 20px; }
-
-    #global-loader { display: none; position: fixed; inset: 0; background: rgba(17, 26, 19, 1); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; color: #fff; }
-    .spinner { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid #4a7c59; border-radius: 50%; width: 45px; height: 45px; animation: spin 1s linear infinite; margin-bottom: 20px; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
   <div class="bg-fixed"></div>
-  <div class="page">
+
+  <!-- ===============================
+       視圖 1：掃描站 (Scanner)
+  =============================== -->
+  <div id="view-scan" class="view active">
     <div class="wrap">
       <div class="hero">
         <h1>🔍 展區掃描站</h1>
@@ -69,40 +82,41 @@
         <div class="section-title">SCANNER</div>
         <div id="manualBox" style="display:none; margin-bottom: 25px;">
           <input id="phoneInput" type="tel" placeholder="請先輸入手機號碼：09..." maxlength="10" autocomplete="off" name="phone-no-autofill">
-          <button class="btn primary" id="savePhoneBtn" style="margin-top: 15px;">套用並就緒</button>
+          <button class="btn primary" id="savePhoneBtn">套用並就緒</button>
         </div>
 
         <div id="reader"></div>
         <div class="status" id="status">相機已待命，請點擊下方按鈕啟動。</div>
 
-        <div class="actions" id="scanActions">
-          <button class="btn primary" id="startBtn">📷 點擊啟動相機</button>
-          <button class="btn secondary" id="stopBtn" style="display:none;">暫停掃描</button>
+        <div style="margin-top: 20px;">
+          <button class="btn primary" id="startBtn" onclick="startScanner()">📷 點擊啟動相機</button>
+          <button class="btn secondary" id="stopBtn" style="display:none;" onclick="stopScanner()">暫停掃描</button>
         </div>
       </div>
 
-      <div class="solid-card" style="padding: 20px;">
-        <div class="actions" style="margin-top: 0;">
-          <button class="btn primary gas-link" id="queryBtn">🏆 查看我的進度</button>
-          <button class="btn primary gas-link" id="rewardBtn">🎁 查看可兌換獎勵</button>
-          <a class="btn secondary" id="homeBtn" href="index.html">🏠 回展場首頁</a>
-        </div>
+      <div class="solid-card">
+        <button class="btn primary" onclick="loadContent('query')">🏆 查看我的進度</button>
+        <button class="btn primary" onclick="loadContent('rewards')">🎁 查看可兌換獎勵</button>
+        <a class="btn secondary" href="index.html">🏠 回展場首頁</a>
       </div>
     </div>
   </div>
 
-  <div id="global-loader"><div class="spinner"></div><h3 id="loader-text">載入中...</h3></div>
+  <!-- ===============================
+       視圖 2：動態載入區 (Progress/Rewards)
+  =============================== -->
+  <div id="view-content" class="view">
+    <div class="wrap" id="dynamic-content"></div>
+  </div>
 
+  <!-- ===============================
+       視圖 3：AR 拍立得 (AR Camera)
+  =============================== -->
   <div id="ar-container">
     <button class="btn-close-ar" onclick="closeAr()">✖ 關閉</button>
-    <button class="btn-switch-cam" onclick="switchArCam()">🔄 翻轉</button>
     <video id="ar-video" autoplay playsinline></video>
     <img id="ar-overlay" src="" crossorigin="anonymous">
-    
-    <div id="ar-controls" class="ar-controls">
-      <button class="btn-capture" onclick="takeArPhoto()">📸</button>
-    </div>
-    
+    <div id="ar-controls" class="ar-controls"><button class="btn-capture" onclick="takeArPhoto()">📸</button></div>
     <div id="ar-result-screen">
       <div style="color:#fff; font-weight:bold; margin-bottom:15px; font-size:18px;">✨ 拍照成功！長按圖片即可儲存 ✨</div>
       <img id="result-image" src="">
@@ -114,44 +128,34 @@
     <canvas id="ar-canvas" style="display:none;"></canvas>
   </div>
 
-  <script>
-    const APP_URL = "https://script.google.com/macros/s/AKfycbyoFlYdQfjyJUu0onsq2DOI5wZJmRcNI2maSEbU7b5uKiSQmajfFRJGYL8OisrhhNUYKg/exec";
-    const COLLECTION_URL = "https://sites.google.com/view/nat-bot-gard-nchu/%E9%A6%96%E9%A0%81/%E7%9B%AE%E5%89%8D%E9%A4%A8%E8%97%8F";
+  <div id="global-loader"><div class="spinner"></div><h3 id="loader-text">載入中...</h3></div>
 
+  <script>
+    // ⚠️ 這裡填入你的 GAS 網址
+    const APP_URL = "https://script.google.com/macros/s/AKfycbyoFlYdQfjyJUu0onsq2DOI5wZJmRcNI2maSEbU7b5uKiSQmajfFRJGYL8OisrhhNUYKg/exec";
+    
     function normalizePhone(phone) { return String(phone || "").replace(/\D/g, "").trim(); }
     function isValidMobile(phone) { return /^09\d{8}$/.test(String(phone || "").trim()); }
-    function buildUrl(base, params) { const u = new URL(base); Object.keys(params).forEach(function(key) { if (params[key] !== undefined && params[key] !== null && params[key] !== "") { u.searchParams.set(key, params[key]); } }); return u.toString(); }
     function getParam(name) { const url = new URL(window.location.href); return url.searchParams.get(name) || ""; }
-
-    // ★ 徹底修復網路連線失敗，取消亂跳的 callback 變數
-    function jsonpMarkPlant(plant, phone) {
-      return new Promise((resolve, reject) => {
-        const cbName = "callback_" + plant + "_" + Date.now(); // 固定的 callback 名稱，防死結
-        const url = `${APP_URL}?mode=plant_mark_jsonp&plant=${plant}&phone=${phone}&callback=${cbName}`;
-        
-        const script = document.createElement("script"); let done = false;
-        function clean() { try{delete window[cbName];}catch(e){} if(script.parentNode) script.parentNode.removeChild(script); }
-        const timer = setTimeout(() => { if(!done){ done=true; clean(); reject(new Error("Timeout")); } }, 15000);
-        window[cbName] = (data) => { if(!done){ done=true; clearTimeout(timer); clean(); resolve(data); } };
-        script.onerror = () => { if(!done){ done=true; clearTimeout(timer); clean(); reject(new Error("Error")); } };
-        script.src = url; document.body.appendChild(script);
-      });
-    }
 
     const statusEl = document.getElementById("status");
     let html5QrCode = null; let currentPhone = "";
     let useFrontCam = false; let arStream = null;
 
-    // 返回頁面時，必定回到乾淨的相機待命狀態
+    function switchView(viewId) {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.getElementById('view-' + viewId).classList.add('active');
+      window.scrollTo(0,0);
+    }
+
+    function showLoader(text) { document.getElementById('loader-text').innerHTML = text; document.getElementById('global-loader').style.display = 'flex'; }
+    function hideLoader() { document.getElementById('global-loader').style.display = 'none'; }
+
+    // ★ 從植物頁返回時，自動重置相機待命
     window.addEventListener("pageshow", function(e) {
-      document.getElementById("global-loader").style.display = "none";
+      hideLoader();
       stopScanner(true);
-      document.getElementById("reader").style.display = "none";
-      document.getElementById("scanActions").style.display = "grid";
-      document.getElementById("startBtn").style.display = "block";
-      document.getElementById("stopBtn").style.display = "none";
-      statusEl.innerHTML = "相機已待命，請點擊下方按鈕啟動。";
-      statusEl.style.background = "#e8f0e8";
+      switchView('scan');
     });
 
     window.onload = () => {
@@ -159,93 +163,71 @@
       if(savedPhone && isValidMobile(savedPhone)) {
         currentPhone = savedPhone; sessionStorage.setItem("savedPhone", currentPhone);
         document.getElementById("manualBox").style.display = "none"; 
-        refreshActionLinks(); 
       } else {
         document.getElementById("manualBox").style.display = "block";
         statusEl.textContent = "請先輸入正確手機號碼。";
       }
     };
 
-    function refreshActionLinks() {
-      document.getElementById("queryBtn").dataset.href = APP_URL + "?mode=query&phone=" + currentPhone;
-      document.getElementById("rewardBtn").dataset.href = APP_URL + "?mode=rewards&phone=" + currentPhone;
-    }
-
-    document.querySelectorAll('.gas-link').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        document.getElementById('loader-text').innerHTML = "載入中...";
-        document.getElementById('global-loader').style.display = 'flex';
-        setTimeout(() => { window.location.href = btn.dataset.href; }, 100);
-      });
+    document.getElementById("savePhoneBtn").addEventListener("click", () => {
+      const p = normalizePhone(document.getElementById("phoneInput").value);
+      if (!isValidMobile(p)) { statusEl.textContent = "請輸入正確的 09 開頭十碼數字。"; return; }
+      currentPhone = p; sessionStorage.setItem("savedPhone", currentPhone);
+      document.getElementById("manualBox").style.display = "none";
     });
 
-    async function stopScanner(silent) {
-      if (html5QrCode) { try { await html5QrCode.stop(); await html5QrCode.clear(); } catch(e){} html5QrCode = null; }
-      document.getElementById("reader").style.display = "none";
-      document.getElementById("startBtn").style.display = "block"; document.getElementById("stopBtn").style.display = "none";
-      if (!silent) { statusEl.innerHTML = "已暫停相機。<br>點擊上方按鈕可再次啟動。"; statusEl.style.background = "#e8f0e8"; }
+    // --- JSONP API (從 GAS 背景抓取資料，100% 防白屏) ---
+    function jsonpApi(mode, rewardId = '') {
+      return new Promise((resolve, reject) => {
+        const cbName = "cb_" + Date.now() + Math.floor(Math.random() * 1000);
+        const url = `${APP_URL}?mode=${mode}&phone=${currentPhone}&reward_id=${rewardId}&callback=${cbName}&t=${Date.now()}`;
+        const script = document.createElement("script"); let done = false;
+        const timer = setTimeout(() => { if(!done){ done=true; reject(new Error("Timeout")); } }, 15000);
+        window[cbName] = (data) => { if(!done){ done=true; clearTimeout(timer); resolve(data); } };
+        script.onerror = () => { if(!done){ done=true; clearTimeout(timer); reject(new Error("Error")); } };
+        script.src = url; document.body.appendChild(script);
+      });
     }
 
-    async function handleScanResult(rawUrl) {
-      if (!isValidMobile(currentPhone)) return;
-      let urlObj, mode, plantId, spotId, picNum;
-      try { 
-        urlObj = new URL(rawUrl.trim()); 
-        mode = urlObj.searchParams.get("mode"); 
-        plantId = urlObj.searchParams.get("plant");
-        spotId = urlObj.searchParams.get("spot");
-        picNum = urlObj.searchParams.get("pic");
-      } catch (err) { return; }
-
-      if (mode === "ar" && picNum) {
-        if (navigator.vibrate) navigator.vibrate(100);
-        await stopScanner(true);
-        openAr(picNum);
-        return;
-      }
-
-      if (mode !== "plant_go" && mode !== "stamp") return;
-
-      if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-      document.getElementById("loader-text").innerHTML = "正在存入點數...<br><span style='font-size:14px;color:#aaa;'>(請稍候約 2 秒鐘)</span>";
-      document.getElementById("global-loader").style.display = "flex";
-      await stopScanner(true);
-      document.getElementById("scanActions").style.display = "none"; 
-      
+    // --- 載入進度與獎勵畫面 ---
+    async function loadContent(mode, rewardId = '') {
+      showLoader("正在為您讀取資料...");
+      stopScanner(true);
       try {
-        if (mode === "plant_go") {
-          let resp = await jsonpMarkPlant(plantId, currentPhone);
-          const target = resp.redirectUrl || COLLECTION_URL;
+        const data = await jsonpApi(mode === 'query' || mode === 'rewards' ? 'api_get_data' : 'api_redeem', rewardId);
+        if(!data.success) throw new Error(data.message);
+        
+        let html = '';
+        if (mode === 'query' || mode === 'redeem') {
+          const m = data.summary;
+          const bonusHtml = m.bonusList.length > 0 ? '<div class="badge-grid">' + m.bonusList.map(b => `<div class="badge-card"><div style="font-size:30px;">🎖️</div><div style="font-size:14px; font-weight:800; color:#fff; margin:5px 0;">${b.bonusName}</div><div class="badge-pts">+${b.bonusPoints} 點</div></div>`).join('') + '</div>' : '<div class="notice">尚未解鎖任何成就，繼續掃描解鎖吧！</div>';
+          const historyHtml = m.history.length > 0 ? '<div class="history-list">' + m.history.map(h => `<div class="history-item"><div style="display:flex; flex-direction:column; gap:4px;"><span style="font-size:15px; font-weight:700; color:#fff;">${h.name}</span><span style="font-size:12px; color:#8fa896;">${h.time}</span></div><div class="${h.class}">${h.points}</div></div>`).join('') + '</div>' : '<div class="notice">目前還沒有點數紀錄喔！</div>';
           
-          if (navigator.vibrate) navigator.vibrate(200); 
-          document.getElementById("global-loader").style.display = "none";
-          
-          statusEl.innerHTML = `🎉 <b>${resp.message || "已完成記點"}</b><br><br><span style='color:#729075; font-weight:bold;'>正在為您自動跳轉至植物介紹...</span>`;
-          statusEl.style.background = "#d4edda";
-          
-          // ★ 完美跳轉到植物頁
-          setTimeout(() => { window.location.href = target; }, 1500);
+          let alertHtml = mode === 'redeem' ? `<div class="card"><div class="section-title">Result</div><h2>兌換成功</h2><p>已成功兌換獎勵！</p></div>` : '';
 
-        } else if (mode === "stamp" && spotId) {
-          if (navigator.vibrate) navigator.vibrate(200);
-          document.getElementById("loader-text").innerHTML = "✅ 掃描展區成功！<br><span style='font-size:14px;color:#aaa;'>準備前往紀錄頁面...</span>";
-          urlObj.searchParams.set("phone", currentPhone);
-          setTimeout(() => { window.location.href = urlObj.toString(); }, 500);
+          html = `${alertHtml}<div class="solid-card"><div class="section-title">Progress</div><h2>我的探索紀錄</h2><p style="margin-bottom:12px; color:#000; font-weight:800; background:#fff; display:inline-block; padding:6px 16px; border-radius:20px;">📱 手機：${currentPhone}</p><p style="margin-bottom:8px;">已蒐集植物：${m.collectedPlants} 種</p><p style="margin-bottom:0;">探索總章數：${m.totalStamps}</p><div class="points">${m.totalPoints}</div><p>目前可用點數</p></div><div class="solid-card"><div class="section-title">Achievements</div><h3>🌟 成就徽章</h3>${bonusHtml}</div><div class="solid-card"><div class="section-title">History</div><h3>📝 點數明細</h3>${historyHtml}</div><div class="solid-card"><button class="btn primary" onclick="loadContent('rewards')">🎁 前往探索獎勵</button><button class="btn secondary" onclick="switchView('scan')">🔍 繼續探索植物</button><a class="btn secondary" href="index.html">🏠 返回展區首頁</a></div>`;
+        } 
+        else if (mode === 'rewards') {
+          const pts = data.summary.totalPoints;
+          const rewardHtml = data.rewards.map(r => { const can = pts >= r.requiredPoints; return `<div class="solid-card"><h3>${r.rewardName}</h3><p>${r.rewardDesc}</p><p style="color:#d4a373; font-weight:bold;">需要點數：${r.requiredPoints}</p><button class="btn ${can?'accent':'secondary'}" onclick="${can ? `loadContent('redeem', '${r.rewardId}')` : ''}">${can?'我要兌換':'點數不足'}</button></div>`; }).join('');
+          html = `<div class="solid-card"><div class="section-title">Rewards</div><h2>植物探索獎勵</h2><div class="points">${pts}</div><p>目前可用點數</p></div>${rewardHtml || '<div class="solid-card">目前沒有可兌換獎勵</div>'}<div class="solid-card"><button class="btn primary" onclick="switchView('scan')">🔍 繼續探索植物</button><button class="btn secondary" onclick="loadContent('query')">🏆 返回探索進度</button><a class="btn secondary" href="index.html">🏠 返回展區首頁</a></div>`;
         }
+
+        document.getElementById('dynamic-content').innerHTML = html;
+        hideLoader();
+        switchView('content');
       } catch (err) {
-        document.getElementById("global-loader").style.display = "none";
-        statusEl.innerHTML = "<b>網路連線錯誤 💦</b><br>請點擊下方按鈕重新啟動相機掃描。"; statusEl.style.background = "#f8d7da";
-        document.getElementById("scanActions").style.display = "grid"; document.getElementById("startBtn").style.display = "block"; document.getElementById("stopBtn").style.display = "none";
+        hideLoader();
+        alert("讀取失敗：" + err.message);
       }
     }
 
+    // --- 掃描器與相機 ---
     async function startScanner() {
       if (!isValidMobile(currentPhone)) { statusEl.textContent = "請先輸入手機號碼喔！"; return; }
       try {
-        statusEl.innerHTML = "正在啟動相機...<br><span style='font-size:12px;color:#888;'>(若跳出提示請點擊「允許」)</span>";
-        statusEl.style.background = "#e8f0e8";
-        document.getElementById("reader").style.display = "block"; 
+        statusEl.innerHTML = "啟動中... <span style='font-size:12px;'>(若跳出提示請點允許)</span>";
+        statusEl.style.background = "#2a3d2e";
         
         const cameras = await Html5Qrcode.getCameras();
         const rearCamera = cameras.find(c => /back|rear|environment|後/i.test(c.label || "")) || cameras[0];
@@ -256,88 +238,95 @@
         await html5QrCode.start(rearCamera.id, { fps: 5, qrbox: { width: 250, height: 250 }, aspectRatio: 1.333 }, handleScanResult, () => {});
         
         document.getElementById("startBtn").style.display = "none"; document.getElementById("stopBtn").style.display = "block";
-        statusEl.textContent = "✅ 相機已啟動，請掃描 QR Code。";
+        statusEl.textContent = "✅ 相機已啟動，請掃描展區條碼。";
+        statusEl.style.background = "#4a7c59";
       } catch (err) {
         document.getElementById("reader").style.display = "none";
         statusEl.innerHTML = "<b>無法啟動相機 📷</b><br>請確認瀏覽器是否允許相機權限。";
-        statusEl.style.background = "#f8d7da";
+        statusEl.style.background = "#8b2a2a";
         document.getElementById("startBtn").style.display = "block";
       }
     }
 
-    document.getElementById("savePhoneBtn").addEventListener("click", () => {
-      const p = normalizePhone(document.getElementById("phoneInput").value);
-      if (!isValidMobile(p)) { statusEl.textContent = "請輸入正確的 09 開頭十碼數字。"; return; }
-      setCurrentPhone(p); document.getElementById("manualBox").style.display = "none";
-    });
+    async function stopScanner(silent) {
+      if (html5QrCode) { try { await html5QrCode.stop(); await html5QrCode.clear(); } catch(e){} html5QrCode = null; }
+      document.getElementById("reader").style.display = "none";
+      document.getElementById("startBtn").style.display = "block"; document.getElementById("stopBtn").style.display = "none";
+      if (!silent) { statusEl.innerHTML = "相機已暫停，請點擊下方按鈕啟動。"; statusEl.style.background = "#e8f0e8"; }
+    }
 
-    document.getElementById("startBtn").addEventListener("click", startScanner);
-    document.getElementById("stopBtn").addEventListener("click", () => stopScanner(false));
+    async function handleScanResult(rawUrl) {
+      let urlObj, scanMode, plantId, spotId, picNum;
+      try { 
+        urlObj = new URL(rawUrl.trim()); 
+        scanMode = urlObj.searchParams.get("mode"); 
+        plantId = urlObj.searchParams.get("plant");
+        spotId = urlObj.searchParams.get("spot");
+        picNum = urlObj.searchParams.get("pic");
+      } catch (err) { return; }
 
-    // AR 拍立得系統
+      if (scanMode === "ar" && picNum) {
+        if (navigator.vibrate) navigator.vibrate(100);
+        await stopScanner(); openAr(picNum); return;
+      }
+
+      if (scanMode !== "plant_go" && scanMode !== "stamp") return;
+
+      if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+      await stopScanner();
+      showLoader("正在存入點數...<br><span style='font-size:14px;color:#aaa;'>(請稍候約 2 秒鐘)</span>");
+      
+      try {
+        let resp = await jsonpApi(scanMode === 'plant_go' ? 'plant_mark_jsonp' : 'spot_mark_jsonp', scanMode === 'plant_go' ? plantId : spotId);
+        hideLoader();
+
+        if (scanMode === "plant_go") {
+          statusEl.innerHTML = `🎉 <b>${resp.message || "已完成記點"}</b><br><br><span style='color:#fff;'>即將為您跳轉...</span>`;
+          statusEl.style.background = "#4a7c59";
+          setTimeout(() => { window.location.href = resp.redirectUrl; }, 1500); // 跳轉去植物頁
+        } else {
+          statusEl.innerHTML = `✅ <b>${resp.message || "展區打卡成功"}</b>`;
+          statusEl.style.background = "#4a7c59";
+          document.getElementById("startBtn").style.display = "block";
+        }
+      } catch (err) {
+        hideLoader();
+        statusEl.innerHTML = "<b>系統連線失敗 💦</b><br>請點擊下方按鈕重新掃描。"; statusEl.style.background = "#8b2a2a";
+        document.getElementById("startBtn").style.display = "block";
+      }
+    }
+
+    // --- AR 拍立得 ---
     async function openAr(picNum) {
       document.getElementById('ar-container').style.display = 'flex';
       document.getElementById('ar-overlay').src = `./ar_${picNum}.png`;
       const video = document.getElementById('ar-video');
       try {
-        arStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: useFrontCam ? "user" : "environment", width: {ideal: 1280}, height: {ideal: 720} } });
+        arStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", width: {ideal: 1280}, height: {ideal: 720} } });
         video.srcObject = arStream;
-        video.style.transform = useFrontCam ? "scaleX(-1)" : "scaleX(1)";
         await video.play();
-        document.getElementById('ar-overlay').style.display = 'block';
-        document.getElementById('ar-controls').style.display = 'flex';
-      } catch (err) {
-        alert("無法開啟相機進行拍攝！"); closeAr();
-      }
+      } catch (err) { alert("無法開啟相機！"); closeAr(); }
     }
-
-    function switchArCam() {
-      useFrontCam = !useFrontCam;
-      if (arStream) { arStream.getTracks().forEach(t => t.stop()); }
-      openAr(document.getElementById('ar-overlay').src.match(/ar_(\d+)/)[1]);
-    }
-
     function closeAr() {
       if (arStream) { arStream.getTracks().forEach(t => t.stop()); arStream = null; }
       document.getElementById('ar-container').style.display = 'none';
-      document.getElementById('ar-overlay').style.display = 'none';
-      document.getElementById('ar-controls').style.display = 'none';
       document.getElementById('ar-result-screen').style.display = 'none';
     }
-
-    function drawCover(ctx, source, cw, ch, isMirror) {
-      const sw = source.videoWidth || source.naturalWidth; const sh = source.videoHeight || source.naturalHeight;
-      if(!sw || !sh) return;
-      const sRatio = sw / sh; const cRatio = cw / ch;
-      let dw, dh, sx, sy;
-      if (sRatio > cRatio) { dh = ch; dw = sw * (ch / sh); sx = (cw - dw) / 2; sy = 0; } 
-      else { dw = cw; dh = sh * (cw / sw); sx = 0; sy = (ch - dh) / 2; }
-      ctx.save();
-      if (isMirror) { ctx.translate(cw, 0); ctx.scale(-1, 1); }
-      ctx.drawImage(source, sx, sy, dw, dh);
-      ctx.restore();
-    }
-
     function takeArPhoto() {
-      const video = document.getElementById('ar-video');
-      const canvas = document.getElementById('ar-canvas');
-      const ctx = canvas.getContext('2d');
-      const overlay = document.getElementById('ar-overlay');
+      const video = document.getElementById('ar-video'); const canvas = document.getElementById('ar-canvas'); const ctx = canvas.getContext('2d'); const overlay = document.getElementById('ar-overlay');
       canvas.width = video.offsetWidth; canvas.height = video.offsetHeight;
-      drawCover(ctx, video, canvas.width, canvas.height, useFrontCam);
-      drawCover(ctx, overlay, canvas.width, canvas.height, false);
-
+      function drawCover(source) {
+        const sw = source.videoWidth||source.naturalWidth; const sh = source.videoHeight||source.naturalHeight; if(!sw) return;
+        const sRatio = sw / sh; const cRatio = canvas.width / canvas.height; let dw, dh, sx, sy;
+        if (sRatio > cRatio) { dh = canvas.height; dw = sw * (canvas.height / sh); sx = (canvas.width - dw) / 2; sy = 0; } 
+        else { dw = canvas.width; dh = sh * (canvas.width / sw); sx = 0; sy = (canvas.height - dh) / 2; }
+        ctx.drawImage(source, sx, sy, dw, dh);
+      }
+      drawCover(video); drawCover(overlay);
       document.getElementById('result-image').src = canvas.toDataURL('image/png', 0.9);
-      document.getElementById('ar-controls').style.display = 'none';
-      document.getElementById('ar-overlay').style.display = 'none';
       document.getElementById('ar-result-screen').style.display = 'flex';
     }
-
-    function retakeAr() {
-      document.getElementById('ar-result-screen').style.display = 'none';
-      document.getElementById('ar-controls').style.display = 'flex';
-      document.getElementById('ar-overlay').style.display = 'block';
-    }
+    function retakeAr() { document.getElementById('ar-result-screen').style.display = 'none'; }
   </script>
 </body>
 </html>
